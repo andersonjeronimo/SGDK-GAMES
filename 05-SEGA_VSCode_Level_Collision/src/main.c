@@ -17,6 +17,8 @@
 #define ANIM_SPIN 11
 #define ANIM_SPIN_EFFECT 12
 #define ANIM_FALL 13
+#define ANIM_UNBALANCE 14
+#define ANIM_TURN 15
 
 #define PLAYER_1 0
 #define PLAYER_2 1
@@ -41,10 +43,10 @@
 #define PLAYER_WIDTH 48
 #define PLAYER_HEIGTH 48
 // player collision box
-#define PLAYER_COLBOX_LEFT 10
-#define PLAYER_COLBOX_RIGHT 38
-#define PLAYER_COLBOX_TOP 10
-#define PLAYER_COLBOX_BOTTON 38
+#define BOX_LEFT_EDGE 16
+#define BOX_RIGHT_EDGE 32
+#define BOX_TOP_EDGE 16
+#define BOX_BOTTON_EDGE 32
 
 struct Collision
 {
@@ -53,13 +55,19 @@ struct Collision
 	bool botton_left;
 	bool botton_right;
 };
-struct Collision collision_state[2];
+struct Collision collision_from[2];
+
+s16 blocked_left_coord[2] = {32, 32};
+s16 blocked_right_coord[2] = {288, 288};
+s16 blocked_top_coord[2] = {0, 0};
+s16 blocked_botton_coord[2] = {0, 0};
 
 Map *level_1_map;
 u16 ind = TILE_USER_INDEX;
 
-const u16 LEVEL_COL_ARRAY_LENGTH = 20;
+const u8 BGA_COLLISION_ARRAY_LENGTH = 20;
 #define SOLID_TILE 1
+#define TILE_IN_PIXELS 16
 char info[10];
 
 // collision for foreground (BGA)
@@ -69,14 +77,14 @@ const u8 BGA_COLLISION_ARRAY[280] =
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
-		0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1,
+		1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
@@ -97,7 +105,7 @@ s16 cur_camera_x = 0;
 s16 cur_camera_y = 0;
 
 Sprite *spr_players[2]; // screen res = 320 x 224
-s16 player_pos_x[2] = {48, 48};
+s16 player_pos_x[2] = {33, 33};
 s16 player_pos_y[2] = {144, 144};
 
 s16 player_order_x[2] = {1, 1}; // 1 = direction to right; -1 = to left
@@ -126,6 +134,7 @@ enum PLAYER_STATE
 	STATE_WALK,
 	STATE_RUN,
 	STATE_STOP,
+	STATE_TURN,
 	STATE_IMPULSE_JUMP,
 	STATE_JUMP,
 	STATE_PUSH,
@@ -166,7 +175,6 @@ struct Joystick
 struct Joystick joy_state[2];
 
 static void inputHandler(u16 joy, u16 changed, u16 state);
-static void updateAnimationState(int player);
 static void finiteStateMachine(int player);
 static void updatePlayerPosition(int player);
 static void updateCamera(int player);
@@ -182,7 +190,7 @@ static void controlFallAcceleration(int player);
 
 static void controlHorizontalFlip(int player);
 static void controlVerticalFlip(int player);
-static void controlCollision(int player);
+static void controlPlayerCollision(int player);
 
 int main()
 {
@@ -219,18 +227,19 @@ int main()
 		// VDP_waitVSync();
 		// updateAnimationState(PLAYER_1);
 		finiteStateMachine(PLAYER_1);
+		controlPlayerCollision(PLAYER_1);
 		updatePlayerPosition(PLAYER_1);
 		controlHorizontalFlip(PLAYER_1);
 		controlVerticalFlip(PLAYER_1);
 		updateWalkAcceleration(PLAYER_1);
 
-		// controlCollision(PLAYER_1);
 		addJumpImpulse(PLAYER_1);
 		controlJumpAcceleration(PLAYER_1);
 		// controlFallAcceleration(PLAYER_1);
+
 		controlAtackTimer(PLAYER_1);
 		controlIdleTimer(PLAYER_1);
-		// controlMapBoundaries(PLAYER_1);
+		controlMapBoundaries(PLAYER_1);
 		updateCamera(PLAYER_1);
 
 		SPR_setAnim(spr_players[PLAYER_1], player_animation[PLAYER_1]);
@@ -393,60 +402,72 @@ static void finiteStateMachine(int player)
 			player_state[player] = STATE_WALK;
 			player_animation[player] = ANIM_WALK;
 		}
+
 		if (joy_state[player].btn_up)
 		{
 			player_state[player] = STATE_LOOK_UP;
 			player_animation[player] = ANIM_LOOK_UP;
 		}
-		if (joy_state[player].btn_down)
+		else if (joy_state[player].btn_down)
 		{
 			player_state[player] = STATE_DUCK;
 			player_animation[player] = ANIM_DUCK;
 		}
+
 		else if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right) && !(joy_state[player].btn_up) && !(joy_state[player].btn_down))
 		{
 			if (idle_timer[player] > (idle_duration[player] / 2) && idle_timer[player] <= 320)
-			{				
+			{
 				player_animation[player] = ANIM_BORED;
 			}
 			else if (idle_timer[player] > 320 && idle_timer[player] < idle_duration[player])
-			{				
+			{
 				player_animation[player] = ANIM_GO;
 			}
 			else if (idle_timer[player] == idle_duration[player])
-			{				
+			{
 				player_animation[player] = ANIM_STANDING;
 			}
 		}
 		break;
 
-		/* case STATE_BORED:
-			if (idle_timer[player] > 320 && idle_timer[player] < idle_duration[player])
-			{
-				player_state[player] = STATE_GO;
-				player_animation[player] = ANIM_GO;
-			}
-			break;
-
-		case STATE_GO:
-			if (idle_timer[player] == idle_duration[player])
-			{
-				player_state[player] = STATE_STANDING;
-				player_animation[player] = ANIM_STANDING;
-			}
-			break; */
-
 	case STATE_WALK:
-		if (joy_state[player].btn_left || joy_state[player].btn_right)
+		if (joy_state[player].btn_left)
 		{
-			if (player_speed_x[player] > (player_max_speed_x[player] / 2))
+			if (player_speed_x[player] <= (player_max_speed_x[player] / 2))
+			{
+				if (player_pos_x[player] <= blocked_left_coord[player])
+				{
+					player_state[player] = STATE_PUSH;
+					player_animation[player] = ANIM_PUSH;
+				}
+			}
+
+			else if (player_speed_x[player] > (player_max_speed_x[player] / 2))
 			{
 				player_state[player] = STATE_RUN;
 				player_animation[player] = ANIM_RUN;
 			}
 		}
 
-		if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right))
+		else if (joy_state[player].btn_right)
+		{
+			if (player_speed_x[player] <= (player_max_speed_x[player] / 2))
+			{
+				if ((player_pos_x[player] + PLAYER_WIDTH) >= blocked_right_coord[player])
+				{
+					player_state[player] = STATE_PUSH;
+					player_animation[player] = ANIM_PUSH;
+				}
+			}
+			else if (player_speed_x[player] > (player_max_speed_x[player] / 2))
+			{
+				player_state[player] = STATE_RUN;
+				player_animation[player] = ANIM_RUN;
+			}
+		}
+
+		else if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right))
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
@@ -454,11 +475,37 @@ static void finiteStateMachine(int player)
 		break;
 
 	case STATE_RUN:
-		if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right))
+		if (joy_state[player].btn_left)
+		{
+			if (player_pos_x[player] <= blocked_left_coord[player])
+			{
+				player_state[player] = STATE_PUSH;
+				player_animation[player] = ANIM_PUSH;
+			}
+		}
+
+		else if (joy_state[player].btn_right)
+		{
+			if ((player_pos_x[player] + PLAYER_WIDTH) >= blocked_left_coord[player])
+			{
+				player_state[player] = STATE_PUSH;
+				player_animation[player] = ANIM_PUSH;
+			}
+		}
+
+		else if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right))
 		{
 			attack_timer[player] += 1;
 			player_state[player] = STATE_STOP;
 			player_animation[player] = ANIM_STOP;
+		}
+		break;
+
+	case STATE_PUSH:
+		if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right))
+		{
+			player_state[player] = STATE_STANDING;
+			player_animation[player] = ANIM_STANDING;
 		}
 		break;
 
@@ -596,13 +643,27 @@ static void controlVerticalFlip(int player)
 
 static void updatePlayerPosition(int player)
 {
-	if (player_order_x[player] > 0)
+	if (player_order_x[player] < 0)
 	{
-		player_pos_x[player] += player_speed_x[player];
+		if (player_pos_x[player] <= blocked_left_coord[player])
+		{
+			player_pos_x[player] = blocked_left_coord[player] + 1;
+		}
+		else
+		{
+			player_pos_x[player] -= player_speed_x[player];
+		}
 	}
-	else if (player_order_x[player] < 0)
+	else if (player_order_x[player] > 0)
 	{
-		player_pos_x[player] -= player_speed_x[player];
+		if ((player_pos_x[player] + BOX_RIGHT_EDGE) >= blocked_right_coord[player])
+		{
+			player_pos_x[player] -= 1; /* (blocked_right_coord[player] - BOX_RIGHT_EDGE); */
+		}
+		else
+		{
+			player_pos_x[player] += player_speed_x[player];
+		}
 	}
 	// jump
 	if (player_order_y[player] < 0)
@@ -764,39 +825,64 @@ static void controlMapBoundaries(int player)
 	}
 }
 
-static void controlCollision(int player)
+static void controlPlayerCollision(int player)
 {
-	s16 player_left_collision_coord = player_pos_x[player];						   // + PLAYER_COLBOX_LEFT;
-	s16 player_right_collision_coord = player_pos_x[player] + (s16)PLAYER_WIDTH;   // PLAYER_COLBOX_RIGHT;
-	s16 player_top_collision_coord = player_pos_y[player];						   //  + PLAYER_COLBOX_TOP;
-	s16 player_botton_collision_coord = player_pos_y[player] + (s16)PLAYER_HEIGTH; // PLAYER_COLBOX_BOTTON;
+	s16 left_edge_collision_box = player_pos_x[player]; /*  + BOX_LEFT_EDGE; */
+	s16 right_edge_collision_box = player_pos_x[player] + PLAYER_WIDTH;
+	s16 top_edge_collision_box = player_pos_y[player]; /*  + BOX_TOP_EDGE; */
+	s16 botton_edge_collision_box = player_pos_y[player] + PLAYER_HEIGTH;
 
-	// posição(índice) das arestas da caixa de colisão(player) no array de colisões	(coordenada apenas do index da linha)
-	s16 xtilecoord_left_collision = player_left_collision_coord >> 4; //(same as '/16')
-	s16 xtilecoord_right_collision = player_right_collision_coord >> 4;
-	s16 ytilecoord_top_collision = player_top_collision_coord >> 4;
-	s16 ytilecoord_botton_collision = player_botton_collision_coord >> 4;
+	s16 colbox_left_column_index = left_edge_collision_box >> 4; //(same as '/16')
+	s16 colbox_right_column_index = right_edge_collision_box >> 4;
+	s16 colbox_top_line_index = top_edge_collision_box >> 4;
+	s16 colbox_botton_line_index = botton_edge_collision_box >> 4;
+	// edge
+	// vertex
+	u16 top_left_colbox_vertex_array_index = colbox_left_column_index + (colbox_top_line_index * BGA_COLLISION_ARRAY_LENGTH);
+	u16 top_right_colbox_vertex_array_index = colbox_right_column_index + (colbox_top_line_index * BGA_COLLISION_ARRAY_LENGTH);
+	u16 botton_left_colbox_vertex_array_index = colbox_left_column_index + (colbox_botton_line_index * BGA_COLLISION_ARRAY_LENGTH);
+	u16 botton_right_colbox_vertex_array_index = colbox_right_column_index + (colbox_botton_line_index * BGA_COLLISION_ARRAY_LENGTH);
 
-	// posição(índice) dos vértices da caixa de colisões(player) no array de colisões (coordenada precisa - linha x coluna)
-	s16 array_index_topleft_colbox = xtilecoord_left_collision + (ytilecoord_top_collision * LEVEL_COL_ARRAY_LENGTH);
-	s16 array_index_topright_colbox = xtilecoord_right_collision + (ytilecoord_top_collision * LEVEL_COL_ARRAY_LENGTH);
-	s16 array_index_bottonleft_colbox = xtilecoord_left_collision + (ytilecoord_botton_collision * LEVEL_COL_ARRAY_LENGTH);
-	s16 array_index_bottonright_colbox = xtilecoord_left_collision + (ytilecoord_botton_collision * LEVEL_COL_ARRAY_LENGTH);
+	u8 top_left_tile_collision_type = BGA_COLLISION_ARRAY[top_left_colbox_vertex_array_index];
+	u8 top_right_tile_collision_type = BGA_COLLISION_ARRAY[top_right_colbox_vertex_array_index];
+	u8 botton_left_tile_collision_type = BGA_COLLISION_ARRAY[botton_left_colbox_vertex_array_index];
+	u8 botton_right_tile_collision_type = BGA_COLLISION_ARRAY[botton_right_colbox_vertex_array_index];
 
-	// checa se houve colisão (0 | 1)
-	u8 tile_collision_type_topleft = BGA_COLLISION_ARRAY[array_index_topleft_colbox];
-	u8 tile_collision_type_topright = BGA_COLLISION_ARRAY[array_index_topright_colbox];
-	u8 tile_collision_type_bottonleft = BGA_COLLISION_ARRAY[array_index_bottonleft_colbox];
-	u8 tile_collision_type_bottonright = BGA_COLLISION_ARRAY[array_index_bottonright_colbox];
-
-	// set the collision box state
-	collision_state[player].top_left = tile_collision_type_topleft == SOLID_TILE ? TRUE : FALSE;
-	collision_state[player].top_right = tile_collision_type_topright == SOLID_TILE ? TRUE : FALSE;
-	collision_state[player].botton_left = tile_collision_type_bottonleft == SOLID_TILE ? TRUE : FALSE;
-	collision_state[player].botton_right = tile_collision_type_bottonright == SOLID_TILE ? TRUE : FALSE;
-
-	sprintf(info, "%10i", tile_collision_type_topleft);
-	// sprintf(info, "%10i", player_speed_y[player]);
+	if (player_order_x[player] < 0)
+	{
+		collision_from[player].top_left = top_left_tile_collision_type == SOLID_TILE ? TRUE : FALSE;
+		if (collision_from[player].top_left)
+		{
+			// blocked_right_coord[player] = 320;
+			blocked_left_coord[player] = (colbox_left_column_index << 4); // equals to 'left_edge_collision_box'
+		}
+	}
+	else if (player_order_x[player] > 0)
+	{
+		collision_from[player].top_right = top_right_tile_collision_type == SOLID_TILE ? TRUE : FALSE;
+		if (collision_from[player].top_right)
+		{
+			// blocked_left_coord[player] = 0;
+			blocked_right_coord[player] = (colbox_right_column_index << 4); // equals to 'right_edge_collision_box'
+		}
+	}
+	/* else if (player_order_y[player] < 0)
+	{
+		collision_from[player].botton_left = botton_left_tile_collision_type == SOLID_TILE ? TRUE : FALSE;
+		if (collision_from[player].botton_left)
+		{
+			blocked_top_coord[player] = (colbox_top_line_index << 4) + 16 - (s16)BOX_TOP_EDGE;
+		}
+	}
+	else if (player_order_y[player] > 0)
+	{
+		collision_from[player].botton_right = botton_right_tile_collision_type == SOLID_TILE ? TRUE : FALSE;
+		if (collision_from[player].botton_right)
+		{
+			blocked_botton_coord[player] = (colbox_botton_line_index << 4) + 16 - (s16)BOX_BOTTON_EDGE;
+		}
+	} */
+	sprintf(info, "%10i", top_right_tile_collision_type);
 	VDP_drawTextBG(BG_A, info, 28, 5);
 }
 
