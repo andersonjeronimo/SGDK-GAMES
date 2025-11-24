@@ -33,12 +33,12 @@
 #define HORIZONTAL_RESOLUTION 320
 #define VERTICAL_RESOLUTION 224
 
-/* #define MAP_WIDTH 10240
-#define MAP_HEIGTH 1280 */
+#define MAP_WIDTH 10240
+#define MAP_HEIGTH 1280
 /* #define MAP_WIDTH 5120
 #define MAP_HEIGTH 256 */
-#define MAP_WIDTH 320
-#define MAP_HEIGTH 224
+/* #define MAP_WIDTH 320
+#define MAP_HEIGTH 224 */
 
 #define PLAYER_WIDTH 48
 #define PLAYER_HEIGTH 48
@@ -57,10 +57,12 @@ struct Collision
 };
 struct Collision collision_from[2];
 
-s16 blocked_left_coord[2] = {32, 32};
-s16 blocked_right_coord[2] = {288, 288};
+// s16 blocked_left_coord[2] = {32, 32};
+// s16 blocked_right_coord[2] = {288, 288};
+s16 blocked_left_coord[2] = {0, 0};
+s16 blocked_right_coord[2] = {10239, 10239};
 s16 blocked_top_coord[2] = {0, 0};
-s16 blocked_botton_coord[2] = {0, 0};
+s16 blocked_botton_coord[2] = {510, 510};
 
 Map *level_1_map;
 u16 ind = TILE_USER_INDEX;
@@ -71,7 +73,7 @@ const u8 BGA_COLLISION_ARRAY_LENGTH = 20;
 char info[10];
 
 // collision for foreground (BGA)
-const u8 BGA_COLLISION_ARRAY[280] =
+/* const u8 BGA_COLLISION_ARRAY[280] =
 	{
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -86,11 +88,19 @@ const u8 BGA_COLLISION_ARRAY[280] =
 		1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1,
 		1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}; */
+
+const u8 BGA_COLLISION_ARRAY[280] =
+	{
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 // background(BGB)
 s16 hscroll_offset_bg = 0;
-s16 vscroll_offset_bg = 0;
+s16 vscroll_offset_bg = 32;
 u16 background_x = 0;
 u16 background_y = 0;
 
@@ -105,8 +115,10 @@ s16 cur_camera_x = 0;
 s16 cur_camera_y = 0;
 
 Sprite *spr_players[2]; // screen res = 320 x 224
-s16 player_pos_x[2] = {33, 33};
-s16 player_pos_y[2] = {144, 144};
+// s16 player_pos_x[2] = {33, 33};
+// s16 player_pos_y[2] = {144, 144};
+s16 player_pos_x[2] = {5100, 33};
+s16 player_pos_y[2] = {700, 144};
 
 s16 player_order_x[2] = {1, 1}; // 1 = direction to right; -1 = to left
 s16 player_order_y[2] = {0, 0}; // 1 = direction to down; -1 = to up; 0 to stationary
@@ -115,7 +127,7 @@ bool player_flip_v[2] = {FALSE, FALSE};
 bool player_flip_h[2] = {FALSE, FALSE};
 
 s16 player_impulse_x[2] = {0, 0}; // spinning impulse
-s16 player_impulse_y[2] = {7, 7}; // jumping impulse
+s16 player_impulse_y[2] = {0, 0}; // jumping impulse
 
 s16 player_speed_x[2] = {0, 0};
 s16 player_speed_y[2] = {0, 0};
@@ -136,6 +148,7 @@ enum PLAYER_STATE
 	STATE_STOP,
 	STATE_TURN,
 	STATE_IMPULSE_JUMP,
+	STATE_START_JUMP,
 	STATE_JUMP,
 	STATE_PUSH,
 	STATE_IMPULSE_SPIN,
@@ -152,6 +165,7 @@ int attack_timer[2] = {0, 0};
 #define STOP_TIME 40
 #define SPIN_TIME 70
 #define JUMP_TIME 70
+#define TURN_TIME 20
 s16 attack_duration[2] = {0, 0}; // animation _speed * num of frames of animation
 
 s16 idle_timer[2] = {0, 0};
@@ -227,7 +241,7 @@ int main()
 		// VDP_waitVSync();
 		// updateAnimationState(PLAYER_1);
 		finiteStateMachine(PLAYER_1);
-		controlPlayerCollision(PLAYER_1);
+		// controlPlayerCollision(PLAYER_1);
 		updatePlayerPosition(PLAYER_1);
 		controlHorizontalFlip(PLAYER_1);
 		controlVerticalFlip(PLAYER_1);
@@ -235,7 +249,7 @@ int main()
 
 		addJumpImpulse(PLAYER_1);
 		controlJumpAcceleration(PLAYER_1);
-		// controlFallAcceleration(PLAYER_1);
+		controlFallAcceleration(PLAYER_1);
 
 		controlAtackTimer(PLAYER_1);
 		controlIdleTimer(PLAYER_1);
@@ -414,6 +428,12 @@ static void finiteStateMachine(int player)
 			player_animation[player] = ANIM_DUCK;
 		}
 
+		if (joy_state[player].btn_x)
+		{
+			player_state[player] = STATE_IMPULSE_JUMP;
+			player_animation[player] = ANIM_DUCK;
+		}
+
 		else if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right) && !(joy_state[player].btn_up) && !(joy_state[player].btn_down))
 		{
 			if (idle_timer[player] > (idle_duration[player] / 2) && idle_timer[player] <= 320)
@@ -486,7 +506,7 @@ static void finiteStateMachine(int player)
 
 		else if (joy_state[player].btn_right)
 		{
-			if ((player_pos_x[player] + PLAYER_WIDTH) >= blocked_left_coord[player])
+			if ((player_pos_x[player] + PLAYER_WIDTH) >= blocked_right_coord[player])
 			{
 				player_state[player] = STATE_PUSH;
 				player_animation[player] = ANIM_PUSH;
@@ -531,6 +551,39 @@ static void finiteStateMachine(int player)
 		}
 		break;
 
+	case STATE_IMPULSE_JUMP:
+		if (!(joy_state[player].btn_x))
+		{
+			player_state[player] = STATE_START_JUMP;
+			player_animation[player] = ANIM_IMPULSE;
+		}
+		break;
+
+	case STATE_START_JUMP:
+		// player_order_y[player] = -1;
+		player_state[player] = STATE_JUMP;
+		player_animation[player] = ANIM_JUMP;
+		// attack_timer[player] += 1;
+		break;
+
+	case STATE_JUMP:
+		if (player_speed_y[player] == 0 || player_order_y[player] > 0)
+		{
+			player_state[player] = STATE_FALL;
+			player_animation[player] = ANIM_FALL;
+		}
+		break;
+
+	case STATE_FALL:
+		if (player_pos_y[player] >= 144)
+		{
+			player_pos_y[player] = 144;
+			player_order_y[player] = 0;
+			player_state[player] = STATE_STANDING;
+			player_animation[player] = ANIM_STANDING;
+		}
+		break;
+
 	case STATE_IMPULSE_SPIN:
 		if (!(joy_state[player].btn_b))
 		{
@@ -540,7 +593,28 @@ static void finiteStateMachine(int player)
 		break;
 
 	case STATE_STOP:
-		if (player_speed_x[player] == 0)
+		if (player_speed_x[player] > 0)
+		{
+			if (player_order_x[player] < 0)
+			{
+				if (joy_state[player].btn_right)
+				{
+					attack_timer[player] += 1;
+					player_state[player] = STATE_TURN;
+					player_animation[player] = ANIM_TURN;
+				}
+			}
+			else if (player_order_x[player] > 0)
+			{
+				if (joy_state[player].btn_left)
+				{
+					attack_timer[player] += 1;
+					player_state[player] = STATE_TURN;
+					player_animation[player] = ANIM_TURN;
+				}
+			}
+		}
+		else if (player_speed_x[player] == 0)
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
@@ -554,6 +628,14 @@ static void finiteStateMachine(int player)
 		break;
 
 	case STATE_SPIN:
+		if (player_speed_x[player] == 0)
+		{
+			player_state[player] = STATE_STANDING;
+			player_animation[player] = ANIM_STANDING;
+		}
+		break;
+
+	case STATE_TURN:
 		if (player_speed_x[player] == 0)
 		{
 			player_state[player] = STATE_STANDING;
@@ -600,6 +682,7 @@ static void updateWalkAcceleration(int player)
 		if (player_speed_x[player] == 0)
 		{
 			player_speed_x[player] = player_impulse_x[player];
+			player_impulse_x[player] = 0;
 		}
 	}
 	else
@@ -690,6 +773,10 @@ static void controlAtackTimer(int player)
 	{
 		attack_duration[player] = (s16)JUMP_TIME;
 	}
+	else if (player_state[player] == STATE_TURN)
+	{
+		attack_duration[player] = (s16)TURN_TIME;
+	}
 	else
 	{
 		/*prevent function call with another state*/
@@ -729,53 +816,40 @@ static void addJumpImpulse(int player)
 {
 	if (player_state[player] == STATE_IMPULSE_JUMP)
 	{
-		if (player_speed_y[player] == 0)
+		if (player_impulse_y[player] < player_max_speed_y[player])
 		{
-			player_order_y[player] = -1;
-			attack_timer[player] += 1;
-			player_state[player] = STATE_JUMP;
-			player_animation[player] = ANIM_JUMP;
-			player_speed_y[player] = player_impulse_y[player];
+			// accelerate
+			counter_y[player] += 1;
+			if (counter_y[player] == (s16)COUNTER_LIMIT)
+			{
+				counter_y[player] = 0;
+				player_impulse_y[player] += 1;
+			}
 		}
 	}
 }
 
 static void controlJumpAcceleration(int player)
 {
-	if (player_state[player] == STATE_JUMP)
+	sprintf(info, "%10i", player_state[player]);
+	VDP_drawTextBG(BG_A, info, 28, 5);
+
+	if (player_state[player] == STATE_START_JUMP)
 	{
-		if (player_order_y[player] < 0)
+		player_order_y[player] = -1;
+		player_speed_y[player] = player_impulse_y[player];
+		player_impulse_y[player] = 0;
+	}
+	else if (player_state[player] == STATE_JUMP)
+	{
+		if (player_speed_y[player] > 0)
 		{
-			if (player_speed_y[player] > 0)
+			// slow down
+			counter_y[player] += 1;
+			if (counter_y[player] == (s16)COUNTER_LIMIT)
 			{
-				// slow down
-				counter_y[player] += 1;
-				if (counter_y[player] == (s16)COUNTER_LIMIT)
-				{
-					counter_y[player] = 0;
-					player_speed_y[player] -= 1;
-				}
-				/* if (player_speed_y[player] < player_max_speed_y[player])
-				{
-					// accelerate
-					counter_y[player] += 1;
-					if (counter_y[player] == (s16)COUNTER_LIMIT)
-					{
-						counter_y[player] = 0;
-						player_speed_y[player] += 1;
-					}
-				}
-				else
-				{
-					player_speed_y[player] = 0;
-					player_order_y[player] = 0;
-				} */
-			}
-			else
-			{
-				// player_state[player] = STATE_FALL;
-				player_speed_y[player] = 0;
-				player_order_y[player] = 0;
+				counter_y[player] = 0;
+				player_speed_y[player] -= 1;
 			}
 		}
 	}
@@ -785,20 +859,15 @@ static void controlFallAcceleration(int player)
 {
 	if (player_state[player] == STATE_FALL)
 	{
-		if (player_order_y[player] > 0)
+		player_order_y[player] = 1;
+		if (player_speed_y[player] < player_max_speed_y[player])
 		{
-			if (player_speed_y[player] > 0)
+			// accelerate
+			counter_y[player] += 1;
+			if (counter_y[player] == (s16)COUNTER_LIMIT)
 			{
-				if (player_speed_y[player] < player_max_speed_y[player])
-				{
-					// accelerate
-					counter_y[player] += 1;
-					if (counter_y[player] == (s16)COUNTER_LIMIT)
-					{
-						counter_y[player] = 0;
-						player_speed_y[player] += 1;
-					}
-				}
+				counter_y[player] = 0;
+				player_speed_y[player] += 1;
 			}
 		}
 	}
