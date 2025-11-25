@@ -33,12 +33,12 @@
 #define HORIZONTAL_RESOLUTION 320
 #define VERTICAL_RESOLUTION 224
 
-#define MAP_WIDTH 10240
-#define MAP_HEIGTH 1280
+/* #define MAP_WIDTH 10240
+#define MAP_HEIGTH 1280 */
 /* #define MAP_WIDTH 5120
 #define MAP_HEIGTH 256 */
-/* #define MAP_WIDTH 320
-#define MAP_HEIGTH 224 */
+#define MAP_WIDTH 320
+#define MAP_HEIGTH 224
 
 #define PLAYER_WIDTH 48
 #define PLAYER_HEIGTH 48
@@ -60,9 +60,9 @@ struct Collision collision_from[2];
 // s16 blocked_left_coord[2] = {32, 32};
 // s16 blocked_right_coord[2] = {288, 288};
 s16 blocked_left_coord[2] = {0, 0};
-s16 blocked_right_coord[2] = {10239, 10239};
+s16 blocked_right_coord[2] = {320, 320};
 s16 blocked_top_coord[2] = {0, 0};
-s16 blocked_botton_coord[2] = {510, 510};
+s16 blocked_botton_coord[2] = {224, 224};
 
 Map *level_1_map;
 u16 ind = TILE_USER_INDEX;
@@ -73,7 +73,7 @@ const u8 BGA_COLLISION_ARRAY_LENGTH = 20;
 char info[10];
 
 // collision for foreground (BGA)
-/* const u8 BGA_COLLISION_ARRAY[280] =
+const u8 BGA_COLLISION_ARRAY[280] =
 	{
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -88,37 +88,27 @@ char info[10];
 		1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1,
 		1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}; */
-
-const u8 BGA_COLLISION_ARRAY[280] =
-	{
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
 // background(BGB)
 s16 hscroll_offset_bg = 0;
-s16 vscroll_offset_bg = 32;
+s16 vscroll_offset_bg = 0;
 u16 background_x = 0;
 u16 background_y = 0;
 
 // foreground(BGA)
 // s16 hscroll_offset_fg = 0;
 // s16 vscroll_offset_fg = 0;
-// u16 fg_x = 0;
-// u16 fg_y = -4;
+// u16 foreground_x = 0;
+// u16 foreground_y = -4;
 
 // CAMERA
 s16 cur_camera_x = 0;
 s16 cur_camera_y = 0;
 
 Sprite *spr_players[2]; // screen res = 320 x 224
-// s16 player_pos_x[2] = {33, 33};
-// s16 player_pos_y[2] = {144, 144};
-s16 player_pos_x[2] = {5100, 33};
-s16 player_pos_y[2] = {700, 144};
+s16 player_pos_x[2] = {33, 33};
+s16 player_pos_y[2] = {144, 144};
 
 s16 player_order_x[2] = {1, 1}; // 1 = direction to right; -1 = to left
 s16 player_order_y[2] = {0, 0}; // 1 = direction to down; -1 = to up; 0 to stationary
@@ -239,9 +229,8 @@ int main()
 	while (1)
 	{
 		// VDP_waitVSync();
-		// updateAnimationState(PLAYER_1);
 		finiteStateMachine(PLAYER_1);
-		// controlPlayerCollision(PLAYER_1);
+		controlPlayerCollision(PLAYER_1);
 		updatePlayerPosition(PLAYER_1);
 		controlHorizontalFlip(PLAYER_1);
 		controlVerticalFlip(PLAYER_1);
@@ -253,7 +242,7 @@ int main()
 
 		controlAtackTimer(PLAYER_1);
 		controlIdleTimer(PLAYER_1);
-		controlMapBoundaries(PLAYER_1);
+		// controlMapBoundaries(PLAYER_1);
 		updateCamera(PLAYER_1);
 
 		SPR_setAnim(spr_players[PLAYER_1], player_animation[PLAYER_1]);
@@ -560,13 +549,12 @@ static void finiteStateMachine(int player)
 		break;
 
 	case STATE_START_JUMP:
-		// player_order_y[player] = -1;
 		player_state[player] = STATE_JUMP;
 		player_animation[player] = ANIM_JUMP;
 		// attack_timer[player] += 1;
 		break;
 
-	case STATE_JUMP:
+	case STATE_JUMP:		
 		if (player_speed_y[player] == 0 || player_order_y[player] > 0)
 		{
 			player_state[player] = STATE_FALL;
@@ -650,7 +638,7 @@ static void finiteStateMachine(int player)
 
 static void updateWalkAcceleration(int player)
 {
-	if (player_state[player] == STATE_WALK || player_state[player] == STATE_RUN)
+	if (player_state[player] == STATE_WALK || player_state[player] == STATE_RUN || player_state[player] == STATE_JUMP)
 	{
 		if (player_speed_x[player] < player_max_speed_x[player])
 		{
