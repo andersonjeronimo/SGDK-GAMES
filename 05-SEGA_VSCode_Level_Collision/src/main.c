@@ -106,8 +106,8 @@ u16 background_y = 0;
 s16 cur_camera_x = 0;
 s16 cur_camera_y = 0;
 
-Sprite *spr_players[2]; // screen res = 320 x 224
-s16 player_pos_x[2] = {33, 33};
+Sprite *player_sprite[2]; // screen res = 320 x 224
+s16 player_pos_x[2] = {240, 33};
 s16 player_pos_y[2] = {144, 144};
 
 s16 player_order_x[2] = {1, 1}; // 1 = direction to right; -1 = to left
@@ -218,13 +218,13 @@ int main()
 	MAP_scrollTo(level_1_map, cur_camera_x, cur_camera_y);
 
 	PAL_setPalette(PAL2, sonic.palette->data, DMA);
-	spr_players[PLAYER_1] = SPR_addSprite(&sonic, player_pos_x[PLAYER_1], player_pos_y[PLAYER_1], TILE_ATTR(PAL2, FALSE, player_flip_v[PLAYER_1], player_flip_h[PLAYER_1]));
+	player_sprite[PLAYER_1] = SPR_addSprite(&sonic, player_pos_x[PLAYER_1], player_pos_y[PLAYER_1], TILE_ATTR(PAL2, FALSE, player_flip_v[PLAYER_1], player_flip_h[PLAYER_1]));
 
 	// init states
 	player_state[PLAYER_1] = STATE_STANDING;
 	player_animation[PLAYER_1] = ANIM_STANDING;
 
-	SPR_setAnim(spr_players[PLAYER_1], player_animation[PLAYER_1]);
+	SPR_setAnim(player_sprite[PLAYER_1], player_animation[PLAYER_1]);
 
 	while (1)
 	{
@@ -243,10 +243,12 @@ int main()
 		controlAtackTimer(PLAYER_1);
 		controlIdleTimer(PLAYER_1);
 		// controlMapBoundaries(PLAYER_1);
-		updateCamera(PLAYER_1);
 
-		SPR_setAnim(spr_players[PLAYER_1], player_animation[PLAYER_1]);
-		SPR_setHFlip(spr_players[PLAYER_1], player_flip_h[PLAYER_1]);
+		// updateCamera(PLAYER_1);
+
+		SPR_setAnim(player_sprite[PLAYER_1], player_animation[PLAYER_1]);
+		SPR_setHFlip(player_sprite[PLAYER_1], player_flip_h[PLAYER_1]);
+		SPR_setPosition(player_sprite[PLAYER_1], (player_pos_x[PLAYER_1] /*  - update_camera_x */), (player_pos_y[PLAYER_1] /*  - update_camera_y */));
 		SPR_update();
 		SYS_doVBlankProcessEx(ON_VBLANK_START);
 	}
@@ -398,29 +400,34 @@ static void finiteStateMachine(int player)
 			player_order_x[player] = -1;
 			player_state[player] = STATE_WALK;
 			player_animation[player] = ANIM_WALK;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		else if (joy_state[player].btn_right)
 		{
 			player_order_x[player] = 1;
 			player_state[player] = STATE_WALK;
 			player_animation[player] = ANIM_WALK;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 
 		if (joy_state[player].btn_up)
 		{
 			player_state[player] = STATE_LOOK_UP;
 			player_animation[player] = ANIM_LOOK_UP;
+			SPR_setAnimationLoop(player_sprite[player], FALSE);
 		}
 		else if (joy_state[player].btn_down)
 		{
 			player_state[player] = STATE_DUCK;
 			player_animation[player] = ANIM_DUCK;
+			SPR_setAnimationLoop(player_sprite[player], FALSE);
 		}
 
 		if (joy_state[player].btn_x)
 		{
 			player_state[player] = STATE_IMPULSE_JUMP;
 			player_animation[player] = ANIM_DUCK;
+			SPR_setAnimationLoop(player_sprite[player], FALSE);
 		}
 
 		else if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right) && !(joy_state[player].btn_up) && !(joy_state[player].btn_down))
@@ -428,14 +435,17 @@ static void finiteStateMachine(int player)
 			if (idle_timer[player] > (idle_duration[player] / 2) && idle_timer[player] <= 320)
 			{
 				player_animation[player] = ANIM_BORED;
+				SPR_setAnimationLoop(player_sprite[player], TRUE);
 			}
 			else if (idle_timer[player] > 320 && idle_timer[player] < idle_duration[player])
 			{
 				player_animation[player] = ANIM_GO;
+				SPR_setAnimationLoop(player_sprite[player], TRUE);
 			}
 			else if (idle_timer[player] == idle_duration[player])
 			{
 				player_animation[player] = ANIM_STANDING;
+				SPR_setAnimationLoop(player_sprite[player], TRUE);
 			}
 		}
 		break;
@@ -443,7 +453,7 @@ static void finiteStateMachine(int player)
 	case STATE_WALK:
 		if (joy_state[player].btn_left)
 		{
-			if (player_speed_x[player] <= (player_max_speed_x[player] / 2))
+			/* if (player_speed_x[player] <= (player_max_speed_x[player] / 2))
 			{
 				if (player_pos_x[player] <= blocked_left_coord[player])
 				{
@@ -452,16 +462,18 @@ static void finiteStateMachine(int player)
 				}
 			}
 
-			else if (player_speed_x[player] > (player_max_speed_x[player] / 2))
+			else  */
+			if (player_speed_x[player] > (player_max_speed_x[player] / 2))
 			{
 				player_state[player] = STATE_RUN;
 				player_animation[player] = ANIM_RUN;
+				SPR_setAnimationLoop(player_sprite[player], TRUE);
 			}
 		}
 
 		else if (joy_state[player].btn_right)
 		{
-			if (player_speed_x[player] <= (player_max_speed_x[player] / 2))
+			/* if (player_speed_x[player] <= (player_max_speed_x[player] / 2))
 			{
 				if ((player_pos_x[player] + PLAYER_WIDTH) >= blocked_right_coord[player])
 				{
@@ -469,10 +481,12 @@ static void finiteStateMachine(int player)
 					player_animation[player] = ANIM_PUSH;
 				}
 			}
-			else if (player_speed_x[player] > (player_max_speed_x[player] / 2))
+			else */
+			if (player_speed_x[player] > (player_max_speed_x[player] / 2))
 			{
 				player_state[player] = STATE_RUN;
 				player_animation[player] = ANIM_RUN;
+				SPR_setAnimationLoop(player_sprite[player], TRUE);
 			}
 		}
 
@@ -480,11 +494,12 @@ static void finiteStateMachine(int player)
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
 	case STATE_RUN:
-		if (joy_state[player].btn_left)
+		/* if (joy_state[player].btn_left)
 		{
 			if (player_pos_x[player] <= blocked_left_coord[player])
 			{
@@ -502,11 +517,13 @@ static void finiteStateMachine(int player)
 			}
 		}
 
-		else if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right))
+		else */
+		if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right))
 		{
-			attack_timer[player] += 1;
+			// attack_timer[player] += 1;
 			player_state[player] = STATE_STOP;
 			player_animation[player] = ANIM_STOP;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
@@ -515,6 +532,7 @@ static void finiteStateMachine(int player)
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
@@ -523,6 +541,7 @@ static void finiteStateMachine(int player)
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
@@ -531,12 +550,14 @@ static void finiteStateMachine(int player)
 		{
 			player_state[player] = STATE_IMPULSE_SPIN;
 			player_animation[player] = ANIM_SPIN;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 
 		if (!(joy_state[player].btn_down))
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
@@ -545,30 +566,36 @@ static void finiteStateMachine(int player)
 		{
 			player_state[player] = STATE_START_JUMP;
 			player_animation[player] = ANIM_IMPULSE;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
 	case STATE_START_JUMP:
+		// attack_timer[player] += 1;
+		player_order_y[player] = -1;
 		player_state[player] = STATE_JUMP;
 		player_animation[player] = ANIM_JUMP;
-		// attack_timer[player] += 1;
+		SPR_setAnimationLoop(player_sprite[player], TRUE);
 		break;
 
-	case STATE_JUMP:		
-		if (player_speed_y[player] == 0 || player_order_y[player] > 0)
+	case STATE_JUMP:
+		if (player_speed_y[player] <= 0)
 		{
+			player_order_y[player] = 1;
 			player_state[player] = STATE_FALL;
 			player_animation[player] = ANIM_FALL;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
 	case STATE_FALL:
 		if (player_pos_y[player] >= 144)
 		{
-			player_pos_y[player] = 144;
 			player_order_y[player] = 0;
+			player_pos_y[player] = 144;
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
@@ -577,6 +604,7 @@ static void finiteStateMachine(int player)
 		{
 			player_state[player] = STATE_START_SPIN;
 			player_animation[player] = ANIM_SPIN;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
@@ -590,6 +618,7 @@ static void finiteStateMachine(int player)
 					attack_timer[player] += 1;
 					player_state[player] = STATE_TURN;
 					player_animation[player] = ANIM_TURN;
+					SPR_setAnimationLoop(player_sprite[player], TRUE);
 				}
 			}
 			else if (player_order_x[player] > 0)
@@ -599,6 +628,7 @@ static void finiteStateMachine(int player)
 					attack_timer[player] += 1;
 					player_state[player] = STATE_TURN;
 					player_animation[player] = ANIM_TURN;
+					SPR_setAnimationLoop(player_sprite[player], TRUE);
 				}
 			}
 		}
@@ -606,6 +636,7 @@ static void finiteStateMachine(int player)
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
@@ -613,6 +644,7 @@ static void finiteStateMachine(int player)
 		attack_timer[player] += 1;
 		player_state[player] = STATE_SPIN;
 		player_animation[player] = ANIM_SPIN;
+		SPR_setAnimationLoop(player_sprite[player], TRUE);
 		break;
 
 	case STATE_SPIN:
@@ -620,6 +652,7 @@ static void finiteStateMachine(int player)
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
@@ -628,6 +661,7 @@ static void finiteStateMachine(int player)
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
@@ -638,7 +672,7 @@ static void finiteStateMachine(int player)
 
 static void updateWalkAcceleration(int player)
 {
-	if (player_state[player] == STATE_WALK || player_state[player] == STATE_RUN || player_state[player] == STATE_JUMP)
+	if (player_state[player] == STATE_WALK || player_state[player] == STATE_RUN)
 	{
 		if (player_speed_x[player] < player_max_speed_x[player])
 		{
@@ -688,6 +722,65 @@ static void updateWalkAcceleration(int player)
 	}
 }
 
+static void addJumpImpulse(int player)
+{
+	if (player_state[player] == STATE_IMPULSE_JUMP)
+	{
+		if (player_impulse_y[player] < player_max_speed_y[player])
+		{
+			// accelerate
+			counter_y[player] += 1;
+			if (counter_y[player] == (s16)COUNTER_LIMIT)
+			{
+				counter_y[player] = 0;
+				player_impulse_y[player] += 1;
+			}
+		}
+	}
+}
+
+static void controlJumpAcceleration(int player)
+{
+	// sprintf(info, "%10i", player_state[player]);
+	// VDP_drawTextBG(BG_A, info, 28, 5);
+
+	if (player_state[player] == STATE_START_JUMP)
+	{
+		player_speed_y[player] = player_impulse_y[player];
+		player_impulse_y[player] = 0;
+	}
+	else if (player_state[player] == STATE_JUMP)
+	{
+		if (player_speed_y[player] > 0)
+		{
+			// slow down
+			counter_y[player] += 1;
+			if (counter_y[player] == (s16)COUNTER_LIMIT)
+			{
+				counter_y[player] = 0;
+				player_speed_y[player] -= 1;
+			}
+		}
+	}
+}
+
+static void controlFallAcceleration(int player)
+{
+	if (player_state[player] == STATE_FALL)
+	{
+		if (player_speed_y[player] < player_max_speed_y[player])
+		{
+			// accelerate
+			counter_y[player] += 1;
+			if (counter_y[player] == (s16)COUNTER_LIMIT)
+			{
+				counter_y[player] = 0;
+				player_speed_y[player] += 1;
+			}
+		}
+	}
+}
+
 static void controlHorizontalFlip(int player)
 {
 	if (player_order_x[player] > 0)
@@ -716,25 +809,25 @@ static void updatePlayerPosition(int player)
 {
 	if (player_order_x[player] < 0)
 	{
-		if (player_pos_x[player] <= blocked_left_coord[player])
+		player_pos_x[player] -= player_speed_x[player];
+		/* if (player_pos_x[player] <= blocked_left_coord[player])
 		{
 			player_pos_x[player] = blocked_left_coord[player] + 1;
 		}
 		else
 		{
-			player_pos_x[player] -= player_speed_x[player];
-		}
+		} */
 	}
 	else if (player_order_x[player] > 0)
 	{
-		if ((player_pos_x[player] + BOX_RIGHT_EDGE) >= blocked_right_coord[player])
+		player_pos_x[player] += player_speed_x[player];
+		/* if ((player_pos_x[player] + BOX_RIGHT_EDGE) >= blocked_right_coord[player])
 		{
-			player_pos_x[player] -= 1; /* (blocked_right_coord[player] - BOX_RIGHT_EDGE); */
+			player_pos_x[player] = (blocked_right_coord[player] - BOX_RIGHT_EDGE);
 		}
 		else
 		{
-			player_pos_x[player] += player_speed_x[player];
-		}
+		} */
 	}
 	// jump
 	if (player_order_y[player] < 0)
@@ -797,67 +890,6 @@ static void controlIdleTimer(int player)
 	else
 	{
 		idle_timer[player] = 0;
-	}
-}
-
-static void addJumpImpulse(int player)
-{
-	if (player_state[player] == STATE_IMPULSE_JUMP)
-	{
-		if (player_impulse_y[player] < player_max_speed_y[player])
-		{
-			// accelerate
-			counter_y[player] += 1;
-			if (counter_y[player] == (s16)COUNTER_LIMIT)
-			{
-				counter_y[player] = 0;
-				player_impulse_y[player] += 1;
-			}
-		}
-	}
-}
-
-static void controlJumpAcceleration(int player)
-{
-	sprintf(info, "%10i", player_state[player]);
-	VDP_drawTextBG(BG_A, info, 28, 5);
-
-	if (player_state[player] == STATE_START_JUMP)
-	{
-		player_order_y[player] = -1;
-		player_speed_y[player] = player_impulse_y[player];
-		player_impulse_y[player] = 0;
-	}
-	else if (player_state[player] == STATE_JUMP)
-	{
-		if (player_speed_y[player] > 0)
-		{
-			// slow down
-			counter_y[player] += 1;
-			if (counter_y[player] == (s16)COUNTER_LIMIT)
-			{
-				counter_y[player] = 0;
-				player_speed_y[player] -= 1;
-			}
-		}
-	}
-}
-
-static void controlFallAcceleration(int player)
-{
-	if (player_state[player] == STATE_FALL)
-	{
-		player_order_y[player] = 1;
-		if (player_speed_y[player] < player_max_speed_y[player])
-		{
-			// accelerate
-			counter_y[player] += 1;
-			if (counter_y[player] == (s16)COUNTER_LIMIT)
-			{
-				counter_y[player] = 0;
-				player_speed_y[player] += 1;
-			}
-		}
 	}
 }
 
@@ -1016,5 +1048,44 @@ static void updateCamera(int player)
 		MAP_scrollTo(level_1_map, update_camera_x, update_camera_y);
 	}
 
-	SPR_setPosition(spr_players[player], (player_pos_x[player] - update_camera_x), (player_pos_y[player] - update_camera_y));
+	SPR_setPosition(player_sprite[player], (player_pos_x[player] - update_camera_x), (player_pos_y[player] - update_camera_y));
 };
+
+//SGDK provides specific functions to control animation looping for sprites
+//. You can use the built-in functions to manage this, or handle the animation manually if needed. 
+//Controlling Animation Loop
+//The primary function to control if a sprite animation loops is SPR_setAnimationLoop(). 
+//
+//    SPR_setAnimationLoop(Sprite* sprite, bool loop): This function enables or disables the automatic looping for a specific sprite's current animation.
+//        To make an animation loop continuously, set loop to TRUE.
+//        To make an animation play only once and stop on the last frame, set loop to FALSE. 
+//
+//		// Assuming 'playerSprite' is a pointer to your Sprite structure
+//// and you have already initialized and added the sprite to the VDP.
+//
+//// Set the current animation (e.g., animation index 0)
+//	 SPR_setAnim(playerSprite, 0);
+//
+//// Enable looping for the current animation (it will loop indefinitely)
+//   SPR_setAnimationLoop(playerSprite, TRUE);
+//
+//// ... in your main game loop ...
+//while (1)
+//{
+//	// Update sprite animations (handles the actual frame updates and looping based on the flag)
+//	SPR_update();
+//
+//	// ... other game logic ...
+//
+//	SYS_doVBlankProcess();
+//}
+//
+//Manual Control(Alternative Method)
+//	If you need more granular control(e.g., looping only a specific range of frames, or triggering a different event after a non - looping animation finishes),
+//	you can disable the automatic system and manage the frames yourself within your game loop.
+//
+//	Disable automatic animation : Set the sprite's timer to 0 to stop SGDK from automatically advancing frames. Manually update : In your main game loop,
+//	you can use functions like SPR_setFrame() and SPR_nextFrame() within a conditional check(e.g., after a certain amount of time has passed or in the V - blank process) to manage the animation sequence and looping logic manually.
+//
+//	For most standard use cases,
+//	SPR_setAnimationLoop() is the recommended and simplest method.
