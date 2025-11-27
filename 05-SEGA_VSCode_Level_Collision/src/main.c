@@ -20,8 +20,12 @@
 #define ANIM_UNBALANCE 14
 #define ANIM_TURN 15
 
+// player sprite array index
 #define PLAYER_1 0
 #define PLAYER_2 1
+// effect sprite array index
+#define EFFECT_1 0
+#define EFFECT_2 1
 #define COUNTER_LIMIT 5
 
 // How far to (left, right, up, down) before camera moves
@@ -106,9 +110,13 @@ u16 background_y = 0;
 s16 cur_camera_x = 0;
 s16 cur_camera_y = 0;
 
-Sprite *player_sprite[2]; // screen res = 320 x 224
+Sprite *player_sprite[2];
+Sprite *effect_sprite[2];
 s16 player_pos_x[2] = {240, 33};
 s16 player_pos_y[2] = {144, 144};
+// desvio do efeito do spin em relação ao personagem
+s16 effect_offset_x[2] = {16, 16};
+s16 effect_pos_x[2] = {240, 33};
 
 s16 player_order_x[2] = {1, 1}; // 1 = direction to right; -1 = to left
 s16 player_order_y[2] = {0, 0}; // 1 = direction to down; -1 = to up; 0 to stationary
@@ -220,11 +228,17 @@ int main()
 	PAL_setPalette(PAL2, sonic.palette->data, DMA);
 	player_sprite[PLAYER_1] = SPR_addSprite(&sonic, player_pos_x[PLAYER_1], player_pos_y[PLAYER_1], TILE_ATTR(PAL2, FALSE, player_flip_v[PLAYER_1], player_flip_h[PLAYER_1]));
 
+	PAL_setPalette(PAL3, effect.palette->data, DMA);
+	effect_pos_x[EFFECT_1] = player_flip_h[PLAYER_1] ? (player_pos_x[PLAYER_1] + effect_offset_x[EFFECT_1]) : (player_pos_x[PLAYER_1] - effect_offset_x[EFFECT_1]);	
+	effect_sprite[EFFECT_1] = SPR_addSprite(&effect, effect_pos_x[EFFECT_1], player_pos_y[PLAYER_1], TILE_ATTR(PAL3, TRUE, player_flip_v[PLAYER_1], player_flip_h[PLAYER_1]));
+	SPR_setVisibility(effect_sprite[EFFECT_1], HIDDEN);
+
 	// init states
 	player_state[PLAYER_1] = STATE_STANDING;
 	player_animation[PLAYER_1] = ANIM_STANDING;
 
 	SPR_setAnim(player_sprite[PLAYER_1], player_animation[PLAYER_1]);
+	SPR_setAnim(effect_sprite[EFFECT_1], 0);
 
 	while (1)
 	{
@@ -249,6 +263,12 @@ int main()
 		SPR_setAnim(player_sprite[PLAYER_1], player_animation[PLAYER_1]);
 		SPR_setHFlip(player_sprite[PLAYER_1], player_flip_h[PLAYER_1]);
 		SPR_setPosition(player_sprite[PLAYER_1], (player_pos_x[PLAYER_1] /*  - update_camera_x */), (player_pos_y[PLAYER_1] /*  - update_camera_y */));
+
+		SPR_setAnim(effect_sprite[EFFECT_1], 0);
+		SPR_setHFlip(effect_sprite[EFFECT_1], player_flip_h[PLAYER_1]);
+		effect_pos_x[EFFECT_1] = player_flip_h[PLAYER_1] ? (player_pos_x[PLAYER_1] + effect_offset_x[EFFECT_1]) : (player_pos_x[PLAYER_1] - effect_offset_x[EFFECT_1]);
+		SPR_setPosition(effect_sprite[EFFECT_1], (effect_pos_x[EFFECT_1] /*  - update_camera_x */), (player_pos_y[PLAYER_1] /*  - update_camera_y */));
+		//SPR_setVisibility(effect_sprite[EFFECT_1], HIDDEN);
 		SPR_update();
 		SYS_doVBlankProcessEx(ON_VBLANK_START);
 	}
@@ -452,7 +472,7 @@ static void finiteStateMachine(int player)
 
 	case STATE_WALK:
 		if (joy_state[player].btn_left)
-		{
+		{			
 			/* if (player_speed_x[player] <= (player_max_speed_x[player] / 2))
 			{
 				if (player_pos_x[player] <= blocked_left_coord[player])
@@ -467,12 +487,19 @@ static void finiteStateMachine(int player)
 			{
 				player_state[player] = STATE_RUN;
 				player_animation[player] = ANIM_RUN;
+				SPR_setVisibility(effect_sprite[EFFECT_1], VISIBLE);
 				SPR_setAnimationLoop(player_sprite[player], TRUE);
 			}
 		}
 
 		else if (joy_state[player].btn_right)
 		{
+			if (joy_state[player].btn_x)
+			{
+				player_state[player] = STATE_IMPULSE_JUMP;
+				player_animation[player] = ANIM_DUCK;
+				SPR_setAnimationLoop(player_sprite[player], FALSE);
+			}
 			/* if (player_speed_x[player] <= (player_max_speed_x[player] / 2))
 			{
 				if ((player_pos_x[player] + PLAYER_WIDTH) >= blocked_right_coord[player])
@@ -486,6 +513,7 @@ static void finiteStateMachine(int player)
 			{
 				player_state[player] = STATE_RUN;
 				player_animation[player] = ANIM_RUN;
+				SPR_setVisibility(effect_sprite[EFFECT_1], VISIBLE);
 				SPR_setAnimationLoop(player_sprite[player], TRUE);
 			}
 		}
@@ -498,7 +526,7 @@ static void finiteStateMachine(int player)
 		}
 		break;
 
-	case STATE_RUN:
+	case STATE_RUN:		
 		/* if (joy_state[player].btn_left)
 		{
 			if (player_pos_x[player] <= blocked_left_coord[player])
@@ -550,6 +578,7 @@ static void finiteStateMachine(int player)
 		{
 			player_state[player] = STATE_IMPULSE_SPIN;
 			player_animation[player] = ANIM_SPIN;
+			SPR_setVisibility(effect_sprite[EFFECT_1], VISIBLE);
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 
@@ -603,7 +632,7 @@ static void finiteStateMachine(int player)
 		if (!(joy_state[player].btn_b))
 		{
 			player_state[player] = STATE_START_SPIN;
-			player_animation[player] = ANIM_SPIN;
+			player_animation[player] = ANIM_SPIN;			
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
@@ -636,12 +665,13 @@ static void finiteStateMachine(int player)
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
+			SPR_setVisibility(effect_sprite[EFFECT_1], HIDDEN);
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
 	case STATE_START_SPIN:
-		attack_timer[player] += 1;
+		//attack_timer[player] += 1;
 		player_state[player] = STATE_SPIN;
 		player_animation[player] = ANIM_SPIN;
 		SPR_setAnimationLoop(player_sprite[player], TRUE);
@@ -652,6 +682,7 @@ static void finiteStateMachine(int player)
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
+			SPR_setVisibility(effect_sprite[EFFECT_1], HIDDEN);
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
@@ -661,6 +692,7 @@ static void finiteStateMachine(int player)
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
+			SPR_setVisibility(effect_sprite[EFFECT_1], HIDDEN);
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
@@ -1051,14 +1083,14 @@ static void updateCamera(int player)
 	SPR_setPosition(player_sprite[player], (player_pos_x[player] - update_camera_x), (player_pos_y[player] - update_camera_y));
 };
 
-//SGDK provides specific functions to control animation looping for sprites
-//. You can use the built-in functions to manage this, or handle the animation manually if needed. 
-//Controlling Animation Loop
-//The primary function to control if a sprite animation loops is SPR_setAnimationLoop(). 
+// SGDK provides specific functions to control animation looping for sprites
+//. You can use the built-in functions to manage this, or handle the animation manually if needed.
+// Controlling Animation Loop
+// The primary function to control if a sprite animation loops is SPR_setAnimationLoop().
 //
-//    SPR_setAnimationLoop(Sprite* sprite, bool loop): This function enables or disables the automatic looping for a specific sprite's current animation.
-//        To make an animation loop continuously, set loop to TRUE.
-//        To make an animation play only once and stop on the last frame, set loop to FALSE. 
+//     SPR_setAnimationLoop(Sprite* sprite, bool loop): This function enables or disables the automatic looping for a specific sprite's current animation.
+//         To make an animation loop continuously, set loop to TRUE.
+//         To make an animation play only once and stop on the last frame, set loop to FALSE.
 //
 //		// Assuming 'playerSprite' is a pointer to your Sprite structure
 //// and you have already initialized and added the sprite to the VDP.
@@ -1070,7 +1102,7 @@ static void updateCamera(int player)
 //   SPR_setAnimationLoop(playerSprite, TRUE);
 //
 //// ... in your main game loop ...
-//while (1)
+// while (1)
 //{
 //	// Update sprite animations (handles the actual frame updates and looping based on the flag)
 //	SPR_update();
@@ -1078,9 +1110,9 @@ static void updateCamera(int player)
 //	// ... other game logic ...
 //
 //	SYS_doVBlankProcess();
-//}
+// }
 //
-//Manual Control(Alternative Method)
+// Manual Control(Alternative Method)
 //	If you need more granular control(e.g., looping only a specific range of frames, or triggering a different event after a non - looping animation finishes),
 //	you can disable the automatic system and manage the frames yourself within your game loop.
 //

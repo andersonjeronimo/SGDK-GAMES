@@ -5,3 +5,4 @@ MAP level_map "bga/foreground.png" level_tileset BEST 0
 PALETTE level_palette "bga/foreground.png"
 
 SPRITE sonic "sprites/sonic3_all_anim_6_6.png" 6 6 BEST 10
+SPRITE effect "sprites/spin_effect.png" 6 6 BEST 10
