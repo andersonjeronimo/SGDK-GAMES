@@ -2,23 +2,21 @@
 #include <resources.h>
 
 // https://gameprogrammingpatterns.com/state.html
+// https://www.youtube.com/watch?v=xldCreKST3s
 
-#define ANIM_DUCK 0
-#define ANIM_LOOK_UP 1
-#define ANIM_STANDING 2
-#define ANIM_BORED 3
-#define ANIM_GO 4
-#define ANIM_WALK 5
-#define ANIM_RUN 6
-#define ANIM_STOP 7
-#define ANIM_IMPULSE 8
-#define ANIM_JUMP 9
-#define ANIM_PUSH 10
-#define ANIM_SPIN 11
-#define ANIM_SPIN_EFFECT 12
-#define ANIM_FALL 13
-#define ANIM_UNBALANCE 14
-#define ANIM_TURN 15
+#define ANIM_STANDING 0
+#define ANIM_CROUCH 1
+#define ANIM_ATTACK_SIDE 2
+#define ANIM_ATTACK_CROUCH 3
+#define ANIM_ATTACK_UP 4
+#define ANIM_JUMP_ATTACK 5
+#define ANIM_JUMP 6
+#define ANIM_RUN 7
+#define ANIM_SWORD_SLASH 8
+#define ANIM_CROUCH_SWORD_SLASH 9
+#define ANIM_PLAYER_HURT 10
+#define ANIM_AIR_SWORD_SLASH 11
+#define ANIM_CLIMB_LEDGE 12
 
 // player sprite array index
 #define PLAYER_1 0
@@ -44,8 +42,8 @@
 #define MAP_WIDTH 320
 #define MAP_HEIGTH 224
 
-#define PLAYER_WIDTH 48
-#define PLAYER_HEIGTH 48
+#define PLAYER_WIDTH 128
+#define PLAYER_HEIGTH 96
 // player collision box
 #define BOX_LEFT_EDGE 16
 #define BOX_RIGHT_EDGE 32
@@ -113,47 +111,48 @@ s16 cur_camera_y = 0;
 Sprite *player_sprite[2];
 Sprite *effect_sprite[2];
 s16 player_pos_x[2] = {240, 33};
-s16 player_pos_y[2] = {144, 144};
+s16 player_pos_y[2] = {100, 100};
+s16 ground_position[2] = {100, 100};
 // desvio do efeito do spin em relação ao personagem
 s16 effect_offset_x[2] = {16, 16};
 s16 effect_pos_x[2] = {240, 33};
 
-s16 player_order_x[2] = {1, 1}; // 1 = direction to right; -1 = to left
+s16 player_order_x[2] = {0, 0}; // 1 = direction to right; -1 = to left
 s16 player_order_y[2] = {0, 0}; // 1 = direction to down; -1 = to up; 0 to stationary
 
 bool player_flip_v[2] = {FALSE, FALSE};
 bool player_flip_h[2] = {FALSE, FALSE};
 
-s16 player_impulse_x[2] = {0, 0}; // spinning impulse
-s16 player_impulse_y[2] = {0, 0}; // jumping impulse
+s16 player_impulse_x[2] = {1, 1}; // spinning impulse
+s16 player_impulse_y[2] = {5, 5}; // jumping impulse
 
 s16 player_speed_x[2] = {0, 0};
 s16 player_speed_y[2] = {0, 0};
-s16 player_max_speed_x[2] = {8, 8};
+s16 player_max_speed_x[2] = {5, 5};
 s16 player_max_speed_y[2] = {8, 8};
 s16 counter_x[2] = {0, 0};
 s16 counter_y[2] = {0, 0};
 
 enum PLAYER_STATE
 {
-	STATE_DUCK,
-	STATE_LOOK_UP,
 	STATE_STANDING,
-	STATE_BORED,
-	STATE_GO,
-	STATE_WALK,
+	STATE_CROUCH,
+	STATE_GET_UP,
+	STATE_ATTACK_SIDE,
+	STATE_ATTACK_CROUCH,
+	STATE_ATTACK_UP,
+	STATE_JUMP_ATTACK,
+	STATE_JUMP,
+	STATE_FALL,
 	STATE_RUN,
 	STATE_STOP,
-	STATE_TURN,
-	STATE_IMPULSE_JUMP,
-	STATE_START_JUMP,
-	STATE_JUMP,
-	STATE_PUSH,
-	STATE_IMPULSE_SPIN,
-	STATE_START_SPIN,
-	STATE_SPIN,
-	STATE_FALL
+	STATE_SWORD_SLASH,
+	STATE_CROUCH_SWORD_SLASH,
+	STATE_PLAYER_HURT,
+	STATE_AIR_SWORD_SLASH,
+	STATE_CLIMB_LEDGE
 };
+
 enum PLAYER_STATE player_state[2];
 
 s16 player_animation[2];
@@ -189,20 +188,23 @@ struct Joystick joy_state[2];
 static void inputHandler(u16 joy, u16 changed, u16 state);
 static void finiteStateMachine(int player);
 static void updatePlayerPosition(int player);
-static void updateCamera(int player);
+
 /*Perform full animation, blocking other animation starts until timer ends*/
-static void controlAtackTimer(int player);
-static void controlIdleTimer(int player);
-static void updateWalkAcceleration(int player);
-static void controlMapBoundaries(int player);
+static void controlAttackTimer(int player);
 
-static void addJumpImpulse(int player);
-static void controlJumpAcceleration(int player);
-static void controlFallAcceleration(int player);
+static void controlXAcceleration(int player);
+static void controlYAcceleration(int player);
 
+// FLIP
 static void controlHorizontalFlip(int player);
 static void controlVerticalFlip(int player);
+
+// COLLISION
 static void controlPlayerCollision(int player);
+
+// BOUNDARIES
+static void controlMapBoundaries(int player);
+static void updateCamera(int player);
 
 int main()
 {
@@ -225,8 +227,8 @@ int main()
 
 	MAP_scrollTo(level_1_map, cur_camera_x, cur_camera_y);
 
-	PAL_setPalette(PAL2, sonic.palette->data, DMA);
-	player_sprite[PLAYER_1] = SPR_addSprite(&sonic, player_pos_x[PLAYER_1], player_pos_y[PLAYER_1], TILE_ATTR(PAL2, FALSE, player_flip_v[PLAYER_1], player_flip_h[PLAYER_1]));
+	PAL_setPalette(PAL2, knight.palette->data, DMA);
+	player_sprite[PLAYER_1] = SPR_addSprite(&knight, player_pos_x[PLAYER_1], player_pos_y[PLAYER_1], TILE_ATTR(PAL2, FALSE, player_flip_v[PLAYER_1], player_flip_h[PLAYER_1]));
 
 	PAL_setPalette(PAL3, effect.palette->data, DMA);
 	effect_pos_x[EFFECT_1] = player_flip_h[PLAYER_1] ? (player_pos_x[PLAYER_1] + effect_offset_x[EFFECT_1]) : (player_pos_x[PLAYER_1] - effect_offset_x[EFFECT_1]);
@@ -244,21 +246,18 @@ int main()
 	{
 		// VDP_waitVSync();
 		finiteStateMachine(PLAYER_1);
-		controlPlayerCollision(PLAYER_1);
 		updatePlayerPosition(PLAYER_1);
+
 		controlHorizontalFlip(PLAYER_1);
 		controlVerticalFlip(PLAYER_1);
-		updateWalkAcceleration(PLAYER_1);
 
-		addJumpImpulse(PLAYER_1);
-		controlJumpAcceleration(PLAYER_1);
-		controlFallAcceleration(PLAYER_1);
+		controlXAcceleration(PLAYER_1);
+		controlYAcceleration(PLAYER_1);
 
-		controlAtackTimer(PLAYER_1);
-		controlIdleTimer(PLAYER_1);
+		// controlAttackTimer(PLAYER_1);
 		// controlMapBoundaries(PLAYER_1);
-
 		// updateCamera(PLAYER_1);
+		// controlPlayerCollision(PLAYER_1);
 
 		SPR_setAnim(player_sprite[PLAYER_1], player_animation[PLAYER_1]);
 		SPR_setHFlip(player_sprite[PLAYER_1], player_flip_h[PLAYER_1]);
@@ -418,145 +417,69 @@ static void finiteStateMachine(int player)
 		if (joy_state[player].btn_left)
 		{
 			player_order_x[player] = -1;
-			player_state[player] = STATE_WALK;
-			player_animation[player] = ANIM_WALK;
+			player_state[player] = STATE_RUN;
+			player_animation[player] = ANIM_RUN;
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		else if (joy_state[player].btn_right)
 		{
 			player_order_x[player] = 1;
-			player_state[player] = STATE_WALK;
-			player_animation[player] = ANIM_WALK;
+			player_state[player] = STATE_RUN;
+			player_animation[player] = ANIM_RUN;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
+		}
+		if (joy_state[player].btn_down)
+		{
+			player_state[player] = STATE_CROUCH;
+			player_animation[player] = ANIM_CROUCH;
+			SPR_setAnimationLoop(player_sprite[player], FALSE);
+		}
+
+		if (joy_state[player].btn_a)
+		{
+			player_state[player] = STATE_JUMP;
+			player_animation[player] = ANIM_JUMP;
+			player_order_y[player] = -1;
+			if (player_speed_y[player] == 0)
+			{
+				player_speed_y[player] += player_impulse_y[player];
+			}
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 
-		if (joy_state[player].btn_up)
+		if (joy_state[player].btn_b)
 		{
-			player_state[player] = STATE_LOOK_UP;
-			player_animation[player] = ANIM_LOOK_UP;
-			SPR_setAnimationLoop(player_sprite[player], FALSE);
-		}
-		else if (joy_state[player].btn_down)
-		{
-			player_state[player] = STATE_DUCK;
-			player_animation[player] = ANIM_DUCK;
-			SPR_setAnimationLoop(player_sprite[player], FALSE);
+			player_state[player] = STATE_ATTACK_SIDE;
+			player_animation[player] = ANIM_ATTACK_SIDE;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 
 		if (joy_state[player].btn_x)
 		{
-			player_state[player] = STATE_IMPULSE_JUMP;
-			player_animation[player] = ANIM_DUCK;
-			SPR_setAnimationLoop(player_sprite[player], FALSE);
+			player_state[player] = STATE_SWORD_SLASH;
+			player_animation[player] = ANIM_SWORD_SLASH;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 
-		else if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right) && !(joy_state[player].btn_up) && !(joy_state[player].btn_down))
+		if (joy_state[player].btn_y)
 		{
-			if (idle_timer[player] > (idle_duration[player] / 2) && idle_timer[player] <= 320)
-			{
-				player_animation[player] = ANIM_BORED;
-				SPR_setAnimationLoop(player_sprite[player], TRUE);
-			}
-			else if (idle_timer[player] > 320 && idle_timer[player] < idle_duration[player])
-			{
-				player_animation[player] = ANIM_GO;
-				SPR_setAnimationLoop(player_sprite[player], TRUE);
-			}
-			else if (idle_timer[player] == idle_duration[player])
-			{
-				player_animation[player] = ANIM_STANDING;
-				SPR_setAnimationLoop(player_sprite[player], TRUE);
-			}
-		}
-		break;
-
-	case STATE_WALK:
-		if (joy_state[player].btn_left)
-		{
-			/* if (player_speed_x[player] <= (player_max_speed_x[player] / 2))
-			{
-				if (player_pos_x[player] <= blocked_left_coord[player])
-				{
-					player_state[player] = STATE_PUSH;
-					player_animation[player] = ANIM_PUSH;
-				}
-			}
-
-			else  */
-			if (player_speed_x[player] > (player_max_speed_x[player] / 2))
-			{
-				player_state[player] = STATE_RUN;
-				player_animation[player] = ANIM_RUN;
-				SPR_setVisibility(effect_sprite[EFFECT_1], VISIBLE);
-				SPR_setAnimationLoop(player_sprite[player], TRUE);
-			}
-		}
-
-		else if (joy_state[player].btn_right)
-		{
-			if (joy_state[player].btn_x)
-			{
-				player_state[player] = STATE_IMPULSE_JUMP;
-				player_animation[player] = ANIM_DUCK;
-				SPR_setAnimationLoop(player_sprite[player], FALSE);
-			}
-			/* if (player_speed_x[player] <= (player_max_speed_x[player] / 2))
-			{
-				if ((player_pos_x[player] + PLAYER_WIDTH) >= blocked_right_coord[player])
-				{
-					player_state[player] = STATE_PUSH;
-					player_animation[player] = ANIM_PUSH;
-				}
-			}
-			else */
-			if (player_speed_x[player] > (player_max_speed_x[player] / 2))
-			{
-				player_state[player] = STATE_RUN;
-				player_animation[player] = ANIM_RUN;
-				SPR_setVisibility(effect_sprite[EFFECT_1], VISIBLE);
-				SPR_setAnimationLoop(player_sprite[player], TRUE);
-			}
-		}
-
-		else if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right))
-		{
-			player_state[player] = STATE_STANDING;
-			player_animation[player] = ANIM_STANDING;
+			player_state[player] = STATE_ATTACK_UP;
+			player_animation[player] = ANIM_ATTACK_UP;
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
 	case STATE_RUN:
-		/* if (joy_state[player].btn_left)
+		if (joy_state[player].btn_a)
 		{
-			if (player_pos_x[player] <= blocked_left_coord[player])
-			{
-				player_state[player] = STATE_PUSH;
-				player_animation[player] = ANIM_PUSH;
-			}
-		}
-
-		else if (joy_state[player].btn_right)
-		{
-			if ((player_pos_x[player] + PLAYER_WIDTH) >= blocked_right_coord[player])
-			{
-				player_state[player] = STATE_PUSH;
-				player_animation[player] = ANIM_PUSH;
-			}
-		}
-
-		else */
-		if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right))
-		{
-			// attack_timer[player] += 1;
-			player_state[player] = STATE_STOP;
-			player_animation[player] = ANIM_STOP;
+			player_state[player] = STATE_JUMP;
+			player_animation[player] = ANIM_JUMP;
+			player_order_y[player] = -1;
+			player_speed_y[player] += player_impulse_y[player];
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
-		break;
-
-	case STATE_PUSH:
-		if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right))
+		// if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right))
+		if (player_speed_x[player] == 0)
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
@@ -564,135 +487,122 @@ static void finiteStateMachine(int player)
 		}
 		break;
 
-	case STATE_LOOK_UP:
-		if (!(joy_state[player].btn_up))
-		{
-			player_state[player] = STATE_STANDING;
-			player_animation[player] = ANIM_STANDING;
-			SPR_setAnimationLoop(player_sprite[player], TRUE);
-		}
-		break;
+		/* case STATE_STOP:
+			if (player_speed_x[player] == 0)
+			{
+				player_state[player] = STATE_STANDING;
+				player_animation[player] = ANIM_STANDING;
+				SPR_setAnimationLoop(player_sprite[player], TRUE);
+			}
+			break; */
 
-	case STATE_DUCK:
-		if (joy_state[player].btn_b)
-		{
-			player_state[player] = STATE_IMPULSE_SPIN;
-			player_animation[player] = ANIM_SPIN;
-			SPR_setVisibility(effect_sprite[EFFECT_1], VISIBLE);
-			SPR_setAnimationLoop(player_sprite[player], TRUE);
-		}
-
+	case STATE_CROUCH:
 		if (!(joy_state[player].btn_down))
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
-		break;
-
-	case STATE_IMPULSE_JUMP:
-		if (!(joy_state[player].btn_x))
+		if (joy_state[player].btn_x)
 		{
-			player_state[player] = STATE_START_JUMP;
-			player_animation[player] = ANIM_IMPULSE;
+			player_state[player] = STATE_CROUCH_SWORD_SLASH;
+			player_animation[player] = ANIM_CROUCH_SWORD_SLASH;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
+		}
+		if (joy_state[player].btn_b)
+		{
+			player_state[player] = STATE_ATTACK_CROUCH;
+			player_animation[player] = ANIM_ATTACK_CROUCH;
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
-	case STATE_START_JUMP:
-		// attack_timer[player] += 1;
-		player_order_y[player] = -1;
-		player_state[player] = STATE_JUMP;
-		player_animation[player] = ANIM_JUMP;
-		SPR_setAnimationLoop(player_sprite[player], TRUE);
+	case STATE_CROUCH_SWORD_SLASH:
+		if (!(joy_state[player].btn_x))
+		{
+			player_state[player] = STATE_CROUCH;
+			player_animation[player] = ANIM_CROUCH;
+			SPR_setAnimationLoop(player_sprite[player], FALSE);
+		}
+		break;
+
+	case STATE_ATTACK_CROUCH:
+		if (!(joy_state[player].btn_b))
+		{
+			player_state[player] = STATE_CROUCH;
+			player_animation[player] = ANIM_CROUCH;
+			SPR_setAnimationLoop(player_sprite[player], FALSE);
+		}
 		break;
 
 	case STATE_JUMP:
-		if (player_speed_y[player] <= 0)
+		if (joy_state[player].btn_b)
 		{
-			player_order_y[player] = 1;
+			player_state[player] = STATE_JUMP_ATTACK;
+			player_animation[player] = ANIM_JUMP_ATTACK;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
+		}
+		if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right))
+		{
 			player_state[player] = STATE_FALL;
-			player_animation[player] = ANIM_FALL;
+			player_animation[player] = ANIM_JUMP;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
+		}
+		if ((player_order_y[player] == 0) && (player_pos_y[player] == ground_position[player]))
+		{
+			player_state[player] = STATE_STANDING;
+			player_animation[player] = ANIM_STANDING;
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
 	case STATE_FALL:
-		if (player_pos_y[player] >= 144)
+		if (joy_state[player].btn_b)
 		{
-			player_order_y[player] = 0;
-			player_pos_y[player] = 144;
+			player_state[player] = STATE_JUMP_ATTACK;
+			player_animation[player] = ANIM_JUMP_ATTACK;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
+		}
+		if ((player_order_y[player] == 0) && (player_pos_y[player] == ground_position[player]))
+		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
-	case STATE_IMPULSE_SPIN:
+	case STATE_JUMP_ATTACK:
+		if ((player_order_y[player] == 0) && (player_pos_y[player] == ground_position[player]))
+		{
+			player_state[player] = STATE_STANDING;
+			player_animation[player] = ANIM_STANDING;
+			SPR_setAnimationLoop(player_sprite[player], TRUE);
+		}
+		break;
+
+	case STATE_ATTACK_SIDE:
 		if (!(joy_state[player].btn_b))
 		{
-			player_state[player] = STATE_START_SPIN;
-			player_animation[player] = ANIM_SPIN;
+			player_state[player] = STATE_STANDING;
+			player_animation[player] = ANIM_STANDING;
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
-	case STATE_STOP:
-		if (player_speed_x[player] > 0)
-		{
-			if (player_order_x[player] < 0)
-			{
-				if (joy_state[player].btn_right)
-				{
-					attack_timer[player] += 1;
-					player_state[player] = STATE_TURN;
-					player_animation[player] = ANIM_TURN;
-					SPR_setAnimationLoop(player_sprite[player], TRUE);
-				}
-			}
-			else if (player_order_x[player] > 0)
-			{
-				if (joy_state[player].btn_left)
-				{
-					attack_timer[player] += 1;
-					player_state[player] = STATE_TURN;
-					player_animation[player] = ANIM_TURN;
-					SPR_setAnimationLoop(player_sprite[player], TRUE);
-				}
-			}
-		}
-		else if (player_speed_x[player] == 0)
+	case STATE_SWORD_SLASH:
+		if (!(joy_state[player].btn_x))
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
-			SPR_setVisibility(effect_sprite[EFFECT_1], HIDDEN);
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
 
-	case STATE_START_SPIN:
-		// attack_timer[player] += 1;
-		player_state[player] = STATE_SPIN;
-		player_animation[player] = ANIM_SPIN;
-		SPR_setAnimationLoop(player_sprite[player], TRUE);
-		break;
-
-	case STATE_SPIN:
-		if (player_speed_x[player] == 0)
+	case STATE_ATTACK_UP:
+		if (!(joy_state[player].btn_y))
 		{
 			player_state[player] = STATE_STANDING;
 			player_animation[player] = ANIM_STANDING;
-			SPR_setVisibility(effect_sprite[EFFECT_1], HIDDEN);
-			SPR_setAnimationLoop(player_sprite[player], TRUE);
-		}
-		break;
-
-	case STATE_TURN:
-		if (player_speed_x[player] == 0)
-		{
-			player_state[player] = STATE_STANDING;
-			player_animation[player] = ANIM_STANDING;
-			SPR_setVisibility(effect_sprite[EFFECT_1], HIDDEN);
 			SPR_setAnimationLoop(player_sprite[player], TRUE);
 		}
 		break;
@@ -702,10 +612,12 @@ static void finiteStateMachine(int player)
 	}
 }
 
-static void updateWalkAcceleration(int player)
+static void controlXAcceleration(int player)
 {
-	if (player_state[player] == STATE_WALK || player_state[player] == STATE_RUN)
+	// if (player_order_x[player] < 0)
+	if (joy_state[player].btn_left)
 	{
+		player_order_x[player] = -1;
 		if (player_speed_x[player] < player_max_speed_x[player])
 		{
 			// accelerate
@@ -717,29 +629,22 @@ static void updateWalkAcceleration(int player)
 			}
 		}
 	}
-
-	else if (player_state[player] == STATE_IMPULSE_SPIN)
+	// else if (player_order_x[player] > 0)
+	else if (joy_state[player].btn_right)
 	{
-		if (player_impulse_x[player] < player_max_speed_x[player])
+		player_order_x[player] = 1;
+		if (player_speed_x[player] < player_max_speed_x[player])
 		{
 			// accelerate
 			counter_x[player] += 1;
 			if (counter_x[player] == (s16)COUNTER_LIMIT)
 			{
 				counter_x[player] = 0;
-				player_impulse_x[player] += 1;
+				player_speed_x[player] += 1;
 			}
 		}
 	}
-	else if (player_state[player] == STATE_START_SPIN)
-	{
-		if (player_speed_x[player] == 0)
-		{
-			player_speed_x[player] = player_impulse_x[player];
-			player_impulse_x[player] = 0;
-		}
-	}
-	else
+	else if (!(joy_state[player].btn_left) && !(joy_state[player].btn_right))
 	{
 		if (player_speed_x[player] > 0)
 		{
@@ -754,34 +659,9 @@ static void updateWalkAcceleration(int player)
 	}
 }
 
-static void addJumpImpulse(int player)
+static void controlYAcceleration(int player)
 {
-	if (player_state[player] == STATE_IMPULSE_JUMP)
-	{
-		if (player_impulse_y[player] < player_max_speed_y[player])
-		{
-			// accelerate
-			counter_y[player] += 1;
-			if (counter_y[player] == (s16)COUNTER_LIMIT)
-			{
-				counter_y[player] = 0;
-				player_impulse_y[player] += 1;
-			}
-		}
-	}
-}
-
-static void controlJumpAcceleration(int player)
-{
-	// sprintf(info, "%10i", player_state[player]);
-	// VDP_drawTextBG(BG_A, info, 28, 5);
-
-	if (player_state[player] == STATE_START_JUMP)
-	{
-		player_speed_y[player] = player_impulse_y[player];
-		player_impulse_y[player] = 0;
-	}
-	else if (player_state[player] == STATE_JUMP)
+	if (player_order_y[player] < 0)
 	{
 		if (player_speed_y[player] > 0)
 		{
@@ -793,23 +673,38 @@ static void controlJumpAcceleration(int player)
 				player_speed_y[player] -= 1;
 			}
 		}
-	}
-}
-
-static void controlFallAcceleration(int player)
-{
-	if (player_state[player] == STATE_FALL)
-	{
-		if (player_speed_y[player] < player_max_speed_y[player])
+		else if (player_speed_y[player] <= 0)
 		{
-			// accelerate
+			// starts to fall
+			player_order_y[player] = 1;
+			player_speed_y[player] = 0;
+		}
+	}
+	else if (player_order_y[player] > 0)
+	{
+		if (player_pos_y[player] < ground_position[player])
+		{
+			// speed up
 			counter_y[player] += 1;
 			if (counter_y[player] == (s16)COUNTER_LIMIT)
 			{
 				counter_y[player] = 0;
-				player_speed_y[player] += 1;
+				if (player_speed_y[player] < player_max_speed_y[player])
+				{
+					player_speed_y[player] += 1;
+				}
 			}
 		}
+		else if (player_pos_y[player] >= ground_position[player])
+		{
+			counter_y[player] = 0;
+			player_order_y[player] = 0;
+		}
+	}
+	else
+	{
+		player_speed_y[player] = 0;
+		player_pos_y[player] = ground_position[player];
 	}
 }
 
@@ -823,6 +718,10 @@ static void controlHorizontalFlip(int player)
 	{
 		player_flip_h[player] = TRUE;
 	}
+	else
+	{
+		player_flip_h[player] = player_flip_h[player];
+	}
 }
 
 static void controlVerticalFlip(int player)
@@ -835,11 +734,15 @@ static void controlVerticalFlip(int player)
 	{
 		player_flip_v[player] = TRUE;
 	}
+	else
+	{
+		player_flip_v[player] = player_flip_v[player];
+	}
 }
 
 static void updatePlayerPosition(int player)
 {
-	if (player_order_x[player] < 0)
+	if (player_order_x[player] < (s16)0)
 	{
 		player_pos_x[player] -= player_speed_x[player];
 		/* if (player_pos_x[player] <= blocked_left_coord[player])
@@ -850,7 +753,7 @@ static void updatePlayerPosition(int player)
 		{
 		} */
 	}
-	else if (player_order_x[player] > 0)
+	else if (player_order_x[player] > (s16)0)
 	{
 		player_pos_x[player] += player_speed_x[player];
 		/* if ((player_pos_x[player] + BOX_RIGHT_EDGE) >= blocked_right_coord[player])
@@ -862,19 +765,19 @@ static void updatePlayerPosition(int player)
 		} */
 	}
 	// jump
-	if (player_order_y[player] < 0)
+	if (player_order_y[player] < (s16)0)
 	{
 		player_pos_y[player] -= player_speed_y[player];
 	}
-	else if (player_order_y[player] > 0)
+	else if (player_order_y[player] > (s16)0)
 	{
 		player_pos_y[player] += player_speed_y[player];
 	}
 }
 
-static void controlAtackTimer(int player)
+static void controlAttackTimer(int player)
 {
-	if (player_state[player] == STATE_SPIN)
+	/* if (player_state[player] == STATE_SPIN)
 	{
 		attack_duration[player] = (s16)SPIN_TIME;
 	}
@@ -892,7 +795,7 @@ static void controlAtackTimer(int player)
 	}
 	else
 	{
-		/*prevent function call with another state*/
+		prevent function call with another state
 		attack_duration[player] = 0;
 	}
 
@@ -903,12 +806,12 @@ static void controlAtackTimer(int player)
 	else if (attack_timer[player] == attack_duration[player])
 	{
 		attack_timer[player] = 0;
-	}
+	} */
 }
 
 static void controlIdleTimer(int player)
 {
-	if (player_state[player] == STATE_STANDING || player_state[player] == STATE_BORED || player_state[player] == STATE_GO)
+	/* if (player_state[player] == STATE_STANDING || player_state[player] == STATE_BORED || player_state[player] == STATE_GO)
 	{
 		if (idle_timer[player] < idle_duration[player])
 		{
@@ -922,7 +825,7 @@ static void controlIdleTimer(int player)
 	else
 	{
 		idle_timer[player] = 0;
-	}
+	} */
 }
 
 static void controlMapBoundaries(int player)
