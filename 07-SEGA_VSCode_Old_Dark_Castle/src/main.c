@@ -114,12 +114,9 @@ s16 cur_camera_x = 0;
 s16 cur_camera_y = 0;
 
 Sprite *player_sprite[2];
-Sprite *effect_sprite[2];
 s16 player_pos_x[2] = {240, 33};
 s16 player_pos_y[2] = {144, 144};
-// desvio do efeito do spin em relação ao personagem
-s16 effect_offset_x[2] = {16, 16};
-s16 effect_pos_x[2] = {240, 33};
+
 
 s16 player_order_x[2] = {1, 1}; // 1 = direction to right; -1 = to left
 s16 player_order_y[2] = {0, 0}; // 1 = direction to down; -1 = to up; 0 to stationary
@@ -136,6 +133,11 @@ s16 player_max_speed_x[2] = {4, 4};
 s16 player_max_speed_y[2] = {8, 8};
 s16 counter_x[2] = {0, 0};
 s16 counter_y[2] = {0, 0};
+
+// desvio do efeito do spin em relação ao personagem
+Sprite *effect_sprite[2];
+s16 effect_offset_x[2] = {16, 16};
+s16 effect_pos_x[2] = {240, 33};
 
 enum PLAYER_STATE
 {
