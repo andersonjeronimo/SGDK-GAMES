@@ -259,9 +259,9 @@ int main()
 	player[ONE].flip_h = FALSE;
 	player[ONE].flip_v = FALSE;
 	player[ONE].impulse_x = 0;
-	player[ONE].impulse_y = 3;
-	player[ONE].max_speed_x = 3;
-	player[ONE].max_speed_y = 3;
+	player[ONE].impulse_y = 4;
+	player[ONE].max_speed_x = 2;
+	player[ONE].max_speed_y = 4;
 	player[ONE].order_x = NEUTRAL;
 	player[ONE].order_y = DOWN;
 	player[ONE].last_order_x = NEUTRAL;
@@ -483,9 +483,9 @@ static void finiteStateMachine(int numOfPlayer)
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
 		}
 
-		if (joystick[numOfPlayer].btn_a && player[numOfPlayer].has_stamina)
+		if (joystick[numOfPlayer].btn_a /*  && player[numOfPlayer].has_stamina */)
 		{
-			player[numOfPlayer].has_stamina = FALSE;
+			// player[numOfPlayer].has_stamina = FALSE;
 			player[numOfPlayer].state = STATE_JUMP;
 			player[numOfPlayer].anim = ANIM_JUMP;
 			player[numOfPlayer].order_y = UP;
@@ -493,44 +493,44 @@ static void finiteStateMachine(int numOfPlayer)
 			{
 				player[numOfPlayer].speed_y += player[numOfPlayer].impulse_y;
 			}
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
 		}
 
-		if (joystick[numOfPlayer].btn_b && player[numOfPlayer].has_stamina)
+		if (joystick[numOfPlayer].btn_b /*  && player[numOfPlayer].has_stamina */)
 		{
 			player[numOfPlayer].attacking = TRUE;
-			player[numOfPlayer].has_stamina = FALSE;
+			// player[numOfPlayer].has_stamina = FALSE;
 			attack_duration[numOfPlayer] = ATTACK_SIDE;
 			player[numOfPlayer].state = STATE_ATTACK_SIDE;
 			player[numOfPlayer].anim = ANIM_ATTACK_SIDE;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
 
-		if (joystick[numOfPlayer].btn_x && player[numOfPlayer].has_stamina)
+		if (joystick[numOfPlayer].btn_x /*  && player[numOfPlayer].has_stamina */)
 		{
 			player[numOfPlayer].attacking = TRUE;
-			player[numOfPlayer].has_stamina = FALSE;
+			// player[numOfPlayer].has_stamina = FALSE;
 			attack_duration[numOfPlayer] = SWORD_SLASH;
 			player[numOfPlayer].state = STATE_SWORD_SLASH;
 			player[numOfPlayer].anim = ANIM_SWORD_SLASH;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
 
-		if (joystick[numOfPlayer].btn_y && player[numOfPlayer].has_stamina)
+		if (joystick[numOfPlayer].btn_y/*  && player[numOfPlayer].has_stamina */)
 		{
 			player[numOfPlayer].attacking = TRUE;
-			player[numOfPlayer].has_stamina = FALSE;
+			//player[numOfPlayer].has_stamina = FALSE;
 			attack_duration[numOfPlayer] = ATTACK_UP;
 			player[numOfPlayer].state = STATE_ATTACK_UP;
 			player[numOfPlayer].anim = ANIM_ATTACK_UP;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
 		break;
 
 	case STATE_RUN:
-		if (joystick[numOfPlayer].btn_a && player[numOfPlayer].has_stamina)
+		if (joystick[numOfPlayer].btn_a /* && player[numOfPlayer].has_stamina */)
 		{
-			player[numOfPlayer].has_stamina = FALSE;
+			// player[numOfPlayer].has_stamina = FALSE;
 			player[numOfPlayer].state = STATE_JUMP;
 			player[numOfPlayer].anim = ANIM_JUMP;
 			player[numOfPlayer].order_y = UP;
@@ -538,9 +538,9 @@ static void finiteStateMachine(int numOfPlayer)
 			{
 				player[numOfPlayer].speed_y += player[numOfPlayer].impulse_y;
 			}
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
 		}
-		if (joystick[numOfPlayer].btn_b && player[numOfPlayer].has_stamina)
+		/* if (joystick[numOfPlayer].btn_b && player[numOfPlayer].has_stamina)
 		{
 			player[numOfPlayer].order_x = NEUTRAL;
 			player[numOfPlayer].attacking = TRUE;
@@ -549,18 +549,9 @@ static void finiteStateMachine(int numOfPlayer)
 			player[numOfPlayer].state = STATE_ATTACK_SIDE;
 			player[numOfPlayer].anim = ANIM_ATTACK_SIDE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
-		}
-		if (joystick[numOfPlayer].btn_x && player[numOfPlayer].has_stamina)
-		{
-			player[numOfPlayer].order_x = NEUTRAL;
-			player[numOfPlayer].attacking = TRUE;
-			player[numOfPlayer].has_stamina = FALSE;
-			attack_duration[numOfPlayer] = SWORD_SLASH;
-			player[numOfPlayer].state = STATE_SWORD_SLASH;
-			player[numOfPlayer].anim = ANIM_SWORD_SLASH;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
-		}
-		if (joystick[numOfPlayer].btn_y && player[numOfPlayer].has_stamina)
+		} */
+
+		/* if (joystick[numOfPlayer].btn_y && player[numOfPlayer].has_stamina)
 		{
 			player[numOfPlayer].order_x = NEUTRAL;
 			player[numOfPlayer].attacking = TRUE;
@@ -569,7 +560,7 @@ static void finiteStateMachine(int numOfPlayer)
 			player[numOfPlayer].state = STATE_ATTACK_UP;
 			player[numOfPlayer].anim = ANIM_ATTACK_UP;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
-		}
+		} */
 		if (!(joystick[numOfPlayer].btn_left) && !(joystick[numOfPlayer].btn_right))
 		{
 			player[numOfPlayer].order_x = NEUTRAL;
@@ -586,19 +577,19 @@ static void finiteStateMachine(int numOfPlayer)
 			player[numOfPlayer].anim = ANIM_STANDING;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
-		if (joystick[numOfPlayer].btn_x && player[numOfPlayer].has_stamina)
+		if (joystick[numOfPlayer].btn_x /*  && player[numOfPlayer].has_stamina */)
 		{
 			player[numOfPlayer].attacking = TRUE;
-			player[numOfPlayer].has_stamina = FALSE;
+			// player[numOfPlayer].has_stamina = FALSE;
 			attack_duration[numOfPlayer] = CROUCH_SWORD_SLASH;
 			player[numOfPlayer].state = STATE_CROUCH_SWORD_SLASH;
 			player[numOfPlayer].anim = ANIM_CROUCH_SWORD_SLASH;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
-		if (joystick[numOfPlayer].btn_b && player[numOfPlayer].has_stamina)
+		if (joystick[numOfPlayer].btn_b /*  && player[numOfPlayer].has_stamina */)
 		{
 			player[numOfPlayer].attacking = TRUE;
-			player[numOfPlayer].has_stamina = FALSE;
+			// player[numOfPlayer].has_stamina = FALSE;
 			attack_duration[numOfPlayer] = ATTACK_CROUCH;
 			player[numOfPlayer].state = STATE_ATTACK_CROUCH;
 			player[numOfPlayer].anim = ANIM_ATTACK_CROUCH;
@@ -609,10 +600,10 @@ static void finiteStateMachine(int numOfPlayer)
 	case STATE_CROUCH_SWORD_SLASH:
 		if (!player[numOfPlayer].attacking)
 		{
-			if (!joystick[numOfPlayer].btn_x)
+			/* if (!joystick[numOfPlayer].btn_x)
 			{
 				player[numOfPlayer].has_stamina = TRUE;
-			}
+			} */
 			player[numOfPlayer].state = STATE_CROUCH;
 			player[numOfPlayer].anim = ANIM_CROUCH;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
@@ -622,10 +613,10 @@ static void finiteStateMachine(int numOfPlayer)
 	case STATE_ATTACK_CROUCH:
 		if (!player[numOfPlayer].attacking)
 		{
-			if (!joystick[numOfPlayer].btn_b)
+			/* if (!joystick[numOfPlayer].btn_b)
 			{
 				player[numOfPlayer].has_stamina = TRUE;
-			}
+			} */
 			player[numOfPlayer].state = STATE_CROUCH;
 			player[numOfPlayer].anim = ANIM_CROUCH;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
@@ -637,73 +628,67 @@ static void finiteStateMachine(int numOfPlayer)
 		{
 			player[numOfPlayer].state = STATE_JUMP_ATTACK;
 			player[numOfPlayer].anim = ANIM_JUMP_ATTACK;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
 		}
-		if ((player[numOfPlayer].order_y == NEUTRAL) && (player[numOfPlayer].pos_y == ground_position[numOfPlayer]))
+		if (joystick[numOfPlayer].btn_x)
 		{
-			if (!joystick[numOfPlayer].btn_a)
-			{
-				player[numOfPlayer].has_stamina = TRUE;
-			}
-
-			if (joystick[numOfPlayer].btn_left)
-			{
-				player[numOfPlayer].order_x = LEFT;
-				player[numOfPlayer].last_order_x = LEFT;
-				player[numOfPlayer].state = STATE_RUN;
-				player[numOfPlayer].anim = ANIM_RUN;
-				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
-			}
-			else if (joystick[numOfPlayer].btn_right)
-			{
-				player[numOfPlayer].order_x = RIGHT;
-				player[numOfPlayer].last_order_x = RIGHT;
-				player[numOfPlayer].state = STATE_RUN;
-				player[numOfPlayer].anim = ANIM_RUN;
-				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
-			}
-			else if (!(joystick[numOfPlayer].btn_left) && !(joystick[numOfPlayer].btn_right))
-			{
-				player[numOfPlayer].order_x = NEUTRAL;
-				player[numOfPlayer].state = STATE_STANDING;
-				player[numOfPlayer].anim = ANIM_STANDING;
-				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
-			}
+			player[numOfPlayer].state = STATE_AIR_SWORD_SLASH;
+			player[numOfPlayer].anim = ANIM_AIR_SWORD_SLASH;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
+		}
+		if (joystick[numOfPlayer].btn_left && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
+		{
+			player[numOfPlayer].order_x = LEFT;
+			player[numOfPlayer].last_order_x = LEFT;
+		}
+		else if (joystick[numOfPlayer].btn_right && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
+		{
+			player[numOfPlayer].order_x = RIGHT;
+			player[numOfPlayer].last_order_x = RIGHT;
+		}
+		else if (!(joystick[numOfPlayer].btn_left) && !(joystick[numOfPlayer].btn_right) && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
+		{
+			player[numOfPlayer].order_x = NEUTRAL;
+		}
+		else if ((player[numOfPlayer].order_y == NEUTRAL) && (player[numOfPlayer].pos_y == ground_position[numOfPlayer]))
+		{
+			player[numOfPlayer].order_x = NEUTRAL;
+			player[numOfPlayer].state = STATE_STANDING;
+			player[numOfPlayer].anim = ANIM_STANDING;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
 		break;
 
 	case STATE_JUMP_ATTACK:
-		if ((player[numOfPlayer].order_y == NEUTRAL) && (player[numOfPlayer].pos_y == ground_position[numOfPlayer]))
+		if (joystick[numOfPlayer].btn_left && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
 		{
-			if (!joystick[numOfPlayer].btn_b)
-			{
-				player[numOfPlayer].has_stamina = TRUE;
-				player[numOfPlayer].state = STATE_STANDING;
-				player[numOfPlayer].anim = ANIM_STANDING;
-				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
-			}
-
-			/* if (player[numOfPlayer].order_x != NEUTRAL)
-			{
-				player[numOfPlayer].state = STATE_RUN;
-				player[numOfPlayer].anim = ANIM_RUN;
-				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
-			} */
-			//else
-			//{
-			//	player[numOfPlayer].state = STATE_STANDING;
-			//	player[numOfPlayer].anim = ANIM_STANDING;
-			//	SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
-			//}
+			player[numOfPlayer].order_x = LEFT;
+			player[numOfPlayer].last_order_x = LEFT;
+		}
+		else if (joystick[numOfPlayer].btn_right && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
+		{
+			player[numOfPlayer].order_x = RIGHT;
+			player[numOfPlayer].last_order_x = RIGHT;
+		}
+		else if (!(joystick[numOfPlayer].btn_left) && !(joystick[numOfPlayer].btn_right) && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
+		{
+			player[numOfPlayer].order_x = NEUTRAL;
+		}
+		else if ((player[numOfPlayer].order_y == NEUTRAL) && (player[numOfPlayer].pos_y == ground_position[numOfPlayer]))
+		{
+			player[numOfPlayer].order_x = NEUTRAL;
+			player[numOfPlayer].state = STATE_STANDING;
+			player[numOfPlayer].anim = ANIM_STANDING;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
 		break;
 
 	case STATE_ATTACK_SIDE:
-		if (!player[numOfPlayer].attacking)
+		if (!joystick[numOfPlayer].btn_b)
 		{
-			if (!joystick[numOfPlayer].btn_b)
+			if (!player[numOfPlayer].attacking)
 			{
-				player[numOfPlayer].has_stamina = TRUE;
+				// player[numOfPlayer].has_stamina = TRUE;
 				player[numOfPlayer].state = STATE_STANDING;
 				player[numOfPlayer].anim = ANIM_STANDING;
 				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
@@ -711,12 +696,36 @@ static void finiteStateMachine(int numOfPlayer)
 		}
 		break;
 
-	case STATE_SWORD_SLASH:
-		if (!player[numOfPlayer].attacking)
+	case STATE_AIR_SWORD_SLASH:
+		if (joystick[numOfPlayer].btn_left && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
 		{
-			if (!joystick[numOfPlayer].btn_x)
+			player[numOfPlayer].order_x = LEFT;
+			player[numOfPlayer].last_order_x = LEFT;
+		}
+		else if (joystick[numOfPlayer].btn_right && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
+		{
+			player[numOfPlayer].order_x = RIGHT;
+			player[numOfPlayer].last_order_x = RIGHT;
+		}
+		else if (!(joystick[numOfPlayer].btn_left) && !(joystick[numOfPlayer].btn_right) && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
+		{
+			player[numOfPlayer].order_x = NEUTRAL;
+		}
+		else if ((player[numOfPlayer].order_y == NEUTRAL) && (player[numOfPlayer].pos_y == ground_position[numOfPlayer]))
+		{
+			player[numOfPlayer].order_x = NEUTRAL;
+			player[numOfPlayer].state = STATE_STANDING;
+			player[numOfPlayer].anim = ANIM_STANDING;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+		}
+		break;
+
+	case STATE_SWORD_SLASH:
+		if (!joystick[numOfPlayer].btn_x)
+		{
+			if (!player[numOfPlayer].attacking)
 			{
-				player[numOfPlayer].has_stamina = TRUE;
+				// player[numOfPlayer].has_stamina = TRUE;
 				player[numOfPlayer].state = STATE_STANDING;
 				player[numOfPlayer].anim = ANIM_STANDING;
 				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
@@ -725,11 +734,11 @@ static void finiteStateMachine(int numOfPlayer)
 		break;
 
 	case STATE_ATTACK_UP:
-		if (!player[numOfPlayer].attacking)
+		if (!(joystick[numOfPlayer].btn_y))
 		{
-			if (!(joystick[numOfPlayer].btn_y))
+			if (!player[numOfPlayer].attacking)
 			{
-				player[numOfPlayer].has_stamina = TRUE;
+				//player[numOfPlayer].has_stamina = TRUE;
 				player[numOfPlayer].state = STATE_STANDING;
 				player[numOfPlayer].anim = ANIM_STANDING;
 				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
@@ -748,7 +757,6 @@ static void controlXAcceleration(int numOfPlayer)
 	{
 		if (player[numOfPlayer].speed_x < player[numOfPlayer].max_speed_x)
 		{
-			// accelerate
 			counter_x[numOfPlayer] += 1;
 			if (counter_x[numOfPlayer] == COUNTER_LIMIT)
 			{
@@ -761,7 +769,6 @@ static void controlXAcceleration(int numOfPlayer)
 	{
 		if (player[numOfPlayer].speed_x > 0)
 		{
-			// slow down
 			counter_x[numOfPlayer] += 1;
 			if (counter_x[numOfPlayer] == COUNTER_LIMIT)
 			{
@@ -778,7 +785,6 @@ static void controlYAcceleration(int numOfPlayer)
 	{
 		if (player[numOfPlayer].speed_y > 0)
 		{
-			// slow down
 			counter_y[numOfPlayer] += 1;
 			if (counter_y[numOfPlayer] == COUNTER_LIMIT)
 			{
@@ -788,8 +794,7 @@ static void controlYAcceleration(int numOfPlayer)
 		}
 		else if (player[numOfPlayer].speed_y <= 0)
 		{
-			// starts to fall
-			player[numOfPlayer].order_y = 1;
+			player[numOfPlayer].order_y = DOWN;
 			player[numOfPlayer].speed_y = 0;
 		}
 	}
@@ -797,7 +802,6 @@ static void controlYAcceleration(int numOfPlayer)
 	{
 		if (player[numOfPlayer].pos_y < ground_position[numOfPlayer])
 		{
-			// speed up
 			counter_y[numOfPlayer] += 1;
 			if (counter_y[numOfPlayer] == COUNTER_LIMIT)
 			{
@@ -814,7 +818,7 @@ static void controlYAcceleration(int numOfPlayer)
 			player[numOfPlayer].order_y = NEUTRAL;
 		}
 	}
-	else
+	else if (player[numOfPlayer].order_y == NEUTRAL)
 	{
 		player[numOfPlayer].speed_y = 0;
 		player[numOfPlayer].pos_y = ground_position[numOfPlayer];
@@ -835,7 +839,6 @@ static void updatePlayerPosition(int numOfPlayer)
 		}
 	}
 
-	// jump
 	if (player[numOfPlayer].speed_y > 0)
 	{
 		if (player[numOfPlayer].order_y == UP)
