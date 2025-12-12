@@ -5,9 +5,9 @@
 
 extern const Image background;
 extern const TileSet level_tileset;
-extern const MapDefinition level_map;
-extern const Palette level_palette;
-extern const SpriteDefinition sprite_element;
+extern const MapDefinition bga_map;
+extern const Palette bga_palette;
+extern const SpriteDefinition dagger;
 extern const SpriteDefinition knight;
 
 #endif // _RES_RESOURCES_H_
