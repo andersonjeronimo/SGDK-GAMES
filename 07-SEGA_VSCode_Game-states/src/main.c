@@ -8,20 +8,6 @@
 // PIGSY Retro Game Sega Genesis Tutotials
 // https://www.youtube.com/watch?v=BnGqc5OTTY4&list=PL1xqkpO_SvY2_rSwHTBIBxXMqmek--GAb
 
-#define ANIM_STANDING 0
-#define ANIM_CROUCH 1
-#define ANIM_ATTACK_SIDE 2
-#define ANIM_ATTACK_CROUCH 3
-#define ANIM_ATTACK_UP 4
-#define ANIM_JUMP_ATTACK 5
-#define ANIM_JUMP 6
-#define ANIM_RUN 7
-#define ANIM_SWORD_SLASH 8
-#define ANIM_CROUCH_SWORD_SLASH 9
-#define ANIM_PLAYER_HURT 10
-#define ANIM_AIR_SWORD_SLASH 11
-#define ANIM_CLIMB_LEDGE 12
-
 #define COUNTER_LIMIT 5
 // 320 X 224
 #define HORIZONTAL_RESOLUTION 320
@@ -40,20 +26,16 @@
 #define TOP_SCREEN_LIMIT 0
 #define BOTTON_SCREEN_LIMIT MAP_HEIGTH - VERTICAL_RESOLUTION
 // player
-#define PLAYER_WIDTH 128
-#define PLAYER_HEIGTH 96
-#define MIN_POS_X 0
-#define MAX_POS_X MAP_WIDTH - PLAYER_WIDTH
-#define MIN_POS_Y 0
-#define MAX_POS_Y MAP_HEIGTH - PLAYER_HEIGTH
+#define PLAYER_1_WIDTH 128
+#define PLAYER_1_HEIGTH 96
 
-enum GameState
-{
-	MENU,
-	GAME,
-};
-enum GameState current_game_state;
-bool game_on = FALSE;
+#define PLAYER_2_WIDTH 96
+#define PLAYER_2_HEIGTH 80
+
+#define MIN_POS_X 0
+#define MAX_POS_X MAP_WIDTH - PLAYER_1_WIDTH
+#define MIN_POS_Y 0
+#define MAX_POS_Y MAP_HEIGTH - PLAYER_1_HEIGTH
 
 typedef struct
 {
@@ -124,13 +106,11 @@ enum PlayerState
 {
 	STATE_STANDING,
 	STATE_CROUCH,
-	STATE_GET_UP,
 	STATE_ATTACK_SIDE,
 	STATE_ATTACK_CROUCH,
 	STATE_ATTACK_UP,
 	STATE_JUMP_ATTACK,
 	STATE_JUMP,
-	STATE_FALL,
 	STATE_RUN,
 	STATE_SWORD_SLASH,
 	STATE_CROUCH_SWORD_SLASH,
@@ -138,6 +118,39 @@ enum PlayerState
 	STATE_AIR_SWORD_SLASH,
 	STATE_CLIMB_LEDGE
 };
+
+//verificar se player I - II possuem o state
+bool HAS_STATE_STANDING[2] = {TRUE, TRUE};
+bool HAS_STATE_CROUCH[2] = {TRUE, FALSE};
+bool HAS_STATE_ATTACK_SIDE[2] = {TRUE, FALSE};
+bool HAS_STATE_ATTACK_CROUCH[2] = {TRUE, FALSE};
+bool HAS_STATE_ATTACK_UP[2] = {TRUE, FALSE};
+bool HAS_STATE_JUMP_ATTACK[2] = {TRUE, FALSE};
+bool HAS_STATE_JUMP[2] = {TRUE, TRUE};
+bool HAS_STATE_RUN[2] = {TRUE, TRUE};
+bool HAS_STATE_SWORD_SLASH[2] = {TRUE, FALSE};
+bool HAS_STATE_CROUCH_SWORD_SLASH[2] = {TRUE, FALSE};
+bool HAS_STATE_PLAYER_HURT[2] = {TRUE, FALSE};
+bool HAS_STATE_AIR_SWORD_SLASH[2] = {TRUE, FALSE};
+bool HAS_STATE_CLIMB_LEDGE[2] = {TRUE, FALSE};
+
+#define KNIGHT_NUM_OF_ANIM 15
+#define WEREWOLF_NUM_OF_ANIM 3
+
+/* #define ANIM_STANDING 0
+#define ANIM_CROUCH 1
+#define ANIM_ATTACK_SIDE 2
+#define ANIM_ATTACK_CROUCH 3
+#define ANIM_ATTACK_UP 4
+#define ANIM_JUMP_ATTACK 5
+#define ANIM_JUMP 6
+#define ANIM_RUN 7
+#define ANIM_SWORD_SLASH 8
+#define ANIM_CROUCH_SWORD_SLASH 9
+#define ANIM_PLAYER_HURT 10
+#define ANIM_AIR_SWORD_SLASH 11
+#define ANIM_CLIMB_LEDGE 12
+ */
 
 // player sprite array numOfPlayer
 #define ONE 0
@@ -156,6 +169,7 @@ typedef struct
 	bool flip_h;
 	bool flip_v;
 	s16 anim;
+	s16 *ptr_anim;
 	s16 frame;
 	bool is_full_anim;
 	s16 pos_x;
@@ -183,7 +197,7 @@ typedef struct
 	s16 pos_y;
 } SpriteElement;
 
-s16 ground_position[2] = {96, 96};
+s16 ground_position[2] = {96, 114};
 s16 counter_x[2] = {0, 0};
 s16 counter_y[2] = {0, 0};
 
@@ -225,15 +239,19 @@ typedef struct
 	bool btn_z;
 } Joystick;
 
-u16 ind = TILE_USER_INDEX;
+u16 ind;
 Map *bga;
+Map *title;
 Background bg[2]; // BGA & BGB
 Camera camera;
 Player player[2];
 SpriteElement spr_element[10];
 Joystick joystick[2];
 
-static void inputHandler(u16 joy, u16 changed, u16 state);
+// static void titleInputHandler(u16 joy, u16 changed, u16 state);
+// static void menuInputHandler(u16 joy, u16 changed, u16 state);
+static void gameInputHandler(u16 joy, u16 changed, u16 state);
+
 static void finiteStateMachine(int numOfPlayer);
 static void updatePlayerPosition(int numOfPlayer);
 static void controlEffects(int numOfPlayer);
@@ -255,6 +273,99 @@ static void controlPlayerCollision(int numOfPlayer);
 static void controlMapBoundaries(int numOfPlayer);
 static void updateCamera(int numOfPlayer);
 
+static void processGameTitle();
+static void processMainGame();
+static void releaseMemory();
+
+// GAME STATE - https://www.ohsat.com/tutorial/mdmisc/simple-menu/
+enum GameState
+{
+	TITLE,
+	GAME,
+	MENU
+};
+enum GameState current_game_state;
+
+typedef struct
+{
+	u16 x;
+	u16 y;
+	char label[10];
+} Option;
+
+#define NUM_OPTIONS 3
+Option options[NUM_OPTIONS] = {
+	{12, 21, "START"},
+	{12, 22, "OPTIONS"},
+	{12, 23, "EXIT"},
+};
+
+u8 currentIndex = 0;
+Sprite *cursor;
+
+void updateCursorPosition()
+{
+	SPR_setPosition(cursor, options[currentIndex].x * 8 - 30, options[currentIndex].y * 8 - 12);
+}
+
+void moveUp()
+{
+	if (currentIndex > 0)
+	{
+		currentIndex--;
+		updateCursorPosition();
+	}
+}
+
+void moveDown()
+{
+	if (currentIndex < NUM_OPTIONS - 1)
+	{
+		currentIndex++;
+		updateCursorPosition();
+	}
+}
+
+void select(u16 Option)
+{
+	switch (Option)
+	{
+	case 0:
+	{
+		pickStart();
+		break;
+	}
+	case 1:
+	{
+		pickOptions();
+		break;
+	}
+	case 2:
+	{
+		pickExit();
+		break;
+	}
+
+	default:
+		break;
+	}
+}
+
+void pickStart()
+{
+	current_game_state = GAME;
+}
+
+void pickOptions()
+{
+	current_game_state = MENU;
+}
+
+void pickExit()
+{
+	current_game_state = TITLE;
+}
+
 int main()
 {
 	VDP_setScreenWidth320();
@@ -262,8 +373,82 @@ int main()
 
 	SPR_init();
 	JOY_init();
-	JOY_setEventHandler(&inputHandler);
+	JOY_setEventHandler(&gameInputHandler);
+	current_game_state = TITLE;
+	// DMA_setBufferSize(9000);
 
+	while (1)
+	{
+		switch (current_game_state)
+		{
+		case TITLE:
+			processGameTitle();
+			break;
+
+		case MENU:
+
+			break;
+
+		case GAME:
+			processMainGame();
+			break;
+
+		default:
+			break;
+		}
+	}
+	return (0);
+}
+
+static void releaseMemory()
+{
+	PAL_fadeOut(0, 63, 20, FALSE);
+	SPR_reset();
+	SPR_update();
+	VDP_clearPlane(BG_A, TRUE);
+	VDP_clearPlane(BG_B, TRUE);
+	// VDP_clearPlane(WINDOW, TRUE);
+	// VDP_setColors(0, , 64);
+	bga = NULL;
+	title = NULL;
+	// clear move pointers
+	free(player[ONE].ptr_anim);
+	free(player[TWO].ptr_anim);
+}
+
+static void processGameTitle()
+{
+	ind = TILE_USER_INDEX;
+	VDP_loadTileSet(&title_tileset, ind, DMA);
+	PAL_setPalette(PAL0, title_palette.data, DMA);
+	title = MAP_create(&title_map, BG_B, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, ind));
+	MAP_scrollTo(title, 0, 0);
+	ind += level_tileset.numTile;
+
+	// MENU
+	cursor = SPR_addSprite(&dagger, 0, 0, TILE_ATTR(PAL3, FALSE, FALSE, FALSE));
+	PAL_setPalette(PAL3, dagger.palette->data, DMA);
+
+	// Draw options
+	VDP_setTextPriority(TRUE);
+	PAL_setColor(15, RGB24_TO_VDPCOLOR(0xff0000));
+	VDP_drawTextBG(BG_A, options[0].label, options[0].x, options[0].y);
+	VDP_drawTextBG(BG_A, options[1].label, options[0].x, options[1].y);
+	VDP_drawTextBG(BG_A, options[2].label, options[0].x, options[2].y);
+
+	// PAL_fadeIn(0, 63, title_palette.data, 20, FALSE);
+	while (current_game_state == TITLE)
+	{
+		updateCursorPosition();
+		SPR_update();
+		SYS_doVBlankProcessEx(ON_VBLANK_START);
+	}
+	releaseMemory();
+}
+
+static void processMainGame()
+{
+	ind = TILE_USER_INDEX;
 	VDP_setScrollingMode(HSCROLL_PLANE, VSCROLL_PLANE);
 	// init
 	// BGA (MAP)
@@ -284,8 +469,26 @@ int main()
 	VDP_drawImageEx(BG_B, &background, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, ind), bg[B].pos_x, bg[B].pos_y, FALSE, TRUE);
 	ind += background.tileset->numTile; */
 
-	// Player
-	player[ONE].anim = ANIM_STANDING;
+	// Player I
+	// Alocar a quantidade de animações no MAP (memória será liberada na função própria)
+	player[ONE].ptr_anim = malloc(sizeof(s16) * KNIGHT_NUM_OF_ANIM);
+	// Mapear os índices das animações para cada state
+	player[ONE].ptr_anim[STATE_STANDING] = 0;
+	player[ONE].ptr_anim[STATE_CROUCH] = 1;
+	player[ONE].ptr_anim[STATE_ATTACK_SIDE] = 2;
+	player[ONE].ptr_anim[STATE_ATTACK_CROUCH] = 3;
+	player[ONE].ptr_anim[STATE_ATTACK_UP] = 4;
+	player[ONE].ptr_anim[STATE_JUMP_ATTACK] = 5;
+	player[ONE].ptr_anim[STATE_JUMP] = 6;
+	player[ONE].ptr_anim[STATE_RUN] = 7;
+	player[ONE].ptr_anim[STATE_SWORD_SLASH] = 8;
+	player[ONE].ptr_anim[STATE_CROUCH_SWORD_SLASH] = 9;
+	player[ONE].ptr_anim[STATE_PLAYER_HURT] = 10;
+	player[ONE].ptr_anim[STATE_AIR_SWORD_SLASH] = 11;
+	player[ONE].ptr_anim[STATE_CLIMB_LEDGE] = 12;
+	// definir o animação inicial baseada no state já mapeado
+	player[ONE].state = STATE_STANDING;
+	player[ONE].anim = 0; // player[ONE].ptr_anim[STATE_STANDING];
 	player[ONE].is_full_anim = TRUE;
 	player[ONE].flip_h = FALSE;
 	player[ONE].flip_v = FALSE;
@@ -301,36 +504,69 @@ int main()
 	player[ONE].pos_y = HOW_FAR_TO_BOTTON;
 	player[ONE].speed_x = 0;
 	player[ONE].speed_y = 0;
-	player[ONE].state = STATE_STANDING;
 	player[ONE].attacking = FALSE;
 	player[ONE].has_stamina = TRUE;
 	player[ONE].sprite = SPR_addSprite(&knight, player[ONE].pos_x, player[ONE].pos_y, TILE_ATTR(PAL2, FALSE, player[ONE].flip_v, player[ONE].flip_h));
 	PAL_setPalette(PAL2, knight.palette->data, DMA);
 	SPR_setAnim(player[ONE].sprite, player[ONE].anim);
 
-	spr_element[ONE].offset_x = 32;
-	PAL_setPalette(PAL3, dagger.palette->data, DMA);
-	spr_element[ONE].pos_x = player[ONE].flip_h ? (player[ONE].pos_x + PLAYER_WIDTH) : (player[ONE].pos_x - spr_element[ONE].offset_x);
-	spr_element[ONE].pos_y = player[ONE].pos_y;
-	spr_element[ONE].sprite = SPR_addSprite(&dagger, spr_element[ONE].pos_x, player[ONE].pos_y, TILE_ATTR(PAL3, TRUE, player[ONE].flip_v, player[ONE].flip_h));
-	SPR_setAnim(spr_element[ONE].sprite, 0);
-	SPR_setVisibility(spr_element[ONE].sprite, HIDDEN);
+	// Player II
+	// Alocar a quantidade de animações no MAP (memória será liberada na função própria)
+	player[TWO].ptr_anim = malloc(sizeof(s16) * WEREWOLF_NUM_OF_ANIM);
+	// Mapear os índices das animações para cada state
+	player[TWO].ptr_anim[STATE_STANDING] = 0;
+	player[TWO].ptr_anim[STATE_RUN] = 1;
+	player[TWO].ptr_anim[STATE_JUMP] = 2;
+	// definir o animação inicial baseada no state já mapeado
+	player[TWO].state = STATE_STANDING;
+	player[TWO].anim = 0; // player[ONE].ptr_anim[STATE_STANDING];
+	player[TWO].is_full_anim = TRUE;
+	player[TWO].flip_h = FALSE;
+	player[TWO].flip_v = FALSE;
+	player[TWO].impulse_x = 0;
+	player[TWO].impulse_y = 4;
+	player[TWO].max_speed_x = 2;
+	player[TWO].max_speed_y = 4;
+	player[TWO].order_x = NEUTRAL;
+	player[TWO].order_y = DOWN;
+	player[TWO].last_order_x = NEUTRAL;
+	player[TWO].last_order_y = NEUTRAL;
+	player[TWO].pos_x = HOW_FAR_TO_RIGHT;
+	player[TWO].pos_y = HOW_FAR_TO_BOTTON;
+	player[TWO].speed_x = 0;
+	player[TWO].speed_y = 0;
+	player[TWO].attacking = FALSE;
+	player[TWO].has_stamina = TRUE;
+	player[TWO].sprite = SPR_addSprite(&werewolf, player[TWO].pos_x, player[TWO].pos_y, TILE_ATTR(PAL3, FALSE, player[TWO].flip_v, player[TWO].flip_h));
+	PAL_setPalette(PAL3, werewolf.palette->data, DMA);
+	SPR_setAnim(player[TWO].sprite, player[TWO].anim);
 
-	// DMA_setBufferSize(9000);
+	// spr_element[ONE].offset_x = 32;
+	// PAL_setPalette(PAL3, dagger.palette->data, DMA);
+	// spr_element[ONE].pos_x = player[ONE].flip_h ? (player[ONE].pos_x + PLAYER_1_WIDTH) : (player[ONE].pos_x - spr_element[ONE].offset_x);
+	// spr_element[ONE].pos_y = player[ONE].pos_y;
+	// spr_element[ONE].sprite = SPR_addSprite(&dagger, spr_element[ONE].pos_x, player[ONE].pos_y, TILE_ATTR(PAL3, TRUE, player[ONE].flip_v, player[ONE].flip_h));
+	// SPR_setAnim(spr_element[ONE].sprite, 0);
+	// SPR_setVisibility(spr_element[ONE].sprite, HIDDEN);
 
-	while (1)
+	// PAL_fadeIn(0, 63, bga_palette.data, 20, FALSE);
+	while (current_game_state == GAME)
 	{
-		// VDP_waitVSync();
 		finiteStateMachine(ONE);
+		finiteStateMachine(TWO);
 		updateCamera(ONE);
 		updatePlayerPosition(ONE);
+		updatePlayerPosition(TWO);
 		controlMapBoundaries(ONE);
 		// controlEffects(ONE);
 
 		controlHorizontalFlip(ONE);
+		controlHorizontalFlip(TWO);
 		// controlVerticalFlip(ONE);
 		controlXAcceleration(ONE);
+		controlXAcceleration(TWO);
 		controlYAcceleration(ONE);
+		controlYAcceleration(TWO);
 		controlAttackTimer(ONE);
 		// controlPlayerCollision(ONE);
 		if (player[ONE].is_full_anim)
@@ -342,35 +578,62 @@ int main()
 			SPR_setAnimAndFrame(player[ONE].sprite, player[ONE].anim, player[ONE].frame);
 		}
 
+		if (player[TWO].is_full_anim)
+		{
+			SPR_setAnim(player[TWO].sprite, player[TWO].anim);
+		}
+		else
+		{
+			SPR_setAnimAndFrame(player[TWO].sprite, player[TWO].anim, player[TWO].frame);
+		}
+
 		SPR_setHFlip(player[ONE].sprite, player[ONE].flip_h);
+		SPR_setHFlip(player[TWO].sprite, player[TWO].flip_h);
 
 		// SPR_setPosition(player[ONE].sprite, (player[ONE].pos_x - update_camera_x), player[ONE].pos_y);
 		// MAP_scrollTo(bga, update_camera_x, update_camera_y);
 		SPR_setPosition(player[ONE].sprite, (player[ONE].pos_x - camera.cur_pos_x), (player[ONE].pos_y - camera.cur_pos_y));
 		MAP_scrollTo(bga, camera.cur_pos_x, camera.cur_pos_y);
 
-		spr_element[ONE].offset_x = 32;
-		spr_element[ONE].pos_x = player[ONE].flip_h ? (player[ONE].pos_x + PLAYER_WIDTH) : (player[ONE].pos_x - spr_element[ONE].offset_x);
-		spr_element[ONE].pos_y = player[ONE].pos_y;
-		SPR_setAnim(spr_element[ONE].sprite, 0);
-		SPR_setHFlip(spr_element[ONE].sprite, player[ONE].flip_h);
-		SPR_setPosition(spr_element[ONE].sprite, spr_element[ONE].pos_x, spr_element[ONE].pos_y);
-		SPR_setVisibility(spr_element[ONE].sprite, HIDDEN);
+		SPR_setPosition(player[TWO].sprite, (player[TWO].pos_x - camera.cur_pos_x), (player[TWO].pos_y - camera.cur_pos_y));
 
+		// spr_element[ONE].offset_x = 32;
+		// spr_element[ONE].pos_x = player[ONE].flip_h ? (player[ONE].pos_x + PLAYER_1_WIDTH) : (player[ONE].pos_x - spr_element[ONE].offset_x);
+		// spr_element[ONE].pos_y = player[ONE].pos_y;
+		// SPR_setAnim(spr_element[ONE].sprite, 0);
+		// SPR_setHFlip(spr_element[ONE].sprite, player[ONE].flip_h);
+		// SPR_setPosition(spr_element[ONE].sprite, spr_element[ONE].pos_x, spr_element[ONE].pos_y);
+		// SPR_setVisibility(spr_element[ONE].sprite, HIDDEN);
 		SPR_update();
 		SYS_doVBlankProcessEx(ON_VBLANK_START);
 	}
-	return (0);
+	releaseMemory();
 }
 
-static void inputHandler(u16 joy, u16 changed, u16 state)
+static void titleInputHandler(u16 joy, u16 changed, u16 state)
 {
-	/*
-	JOY_update() refreshes joypad status (called every screen refresh so don't call it yourself unless you really need it)
-	JOY_readJoypad( joy ) gives you the joystick[ONE] status whenever you need it
-	JOY_waitPressBtn() waits for any buttons to be pressed (not directions)
-	JOY_waitPress(joy, BUTTON_A | BUTTON_UP) waits for wanted buttons to be pressed on specific joypad
-	*/
+	/* code */
+	/* if (changed & state & BUTTON_UP)
+	{
+		moveUp();
+	}
+	else if (changed & state & BUTTON_DOWN)
+	{
+		moveDown();
+	}
+	if (changed & state & BUTTON_START)
+	{
+		select(currentIndex);
+	} */
+}
+
+static void menuInputHandler(u16 joy, u16 changed, u16 state)
+{
+	/* code */
+}
+
+static void gameInputHandler(u16 joy, u16 changed, u16 state)
+{
 	if (joy == JOY_1)
 	{
 		if (state & BUTTON_LEFT)
@@ -384,12 +647,24 @@ static void inputHandler(u16 joy, u16 changed, u16 state)
 			joystick[ONE].btn_right = FALSE;
 
 		if (state & BUTTON_UP)
+		{
 			joystick[ONE].btn_up = TRUE;
+			if (current_game_state == TITLE)
+			{
+				moveUp();
+			}
+		}
 		else if (changed & BUTTON_UP)
 			joystick[ONE].btn_up = FALSE;
 
 		if (state & BUTTON_DOWN)
+		{
 			joystick[ONE].btn_down = TRUE;
+			if (current_game_state == TITLE)
+			{
+				moveDown();
+			}
+		}
 		else if (changed & BUTTON_DOWN)
 			joystick[ONE].btn_down = FALSE;
 
@@ -424,12 +699,19 @@ static void inputHandler(u16 joy, u16 changed, u16 state)
 			joystick[ONE].btn_z = FALSE;
 
 		if (state & BUTTON_START)
+		{
 			joystick[ONE].btn_start = TRUE;
+			if (current_game_state == TITLE)
+			{
+				select(currentIndex);
+			}
+		}
 		else if (changed & BUTTON_START)
 			joystick[ONE].btn_start = FALSE;
 
 		if (state & BUTTON_MODE)
 			joystick[ONE].btn_mode = TRUE;
+
 		else if (changed & BUTTON_MODE)
 			joystick[ONE].btn_mode = FALSE;
 	}
@@ -508,7 +790,7 @@ static void finiteStateMachine(int numOfPlayer)
 			player[numOfPlayer].order_x = LEFT;
 			player[numOfPlayer].last_order_x = LEFT;
 			player[numOfPlayer].state = STATE_RUN;
-			player[numOfPlayer].anim = ANIM_RUN;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_RUN];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -517,7 +799,7 @@ static void finiteStateMachine(int numOfPlayer)
 			player[numOfPlayer].order_x = RIGHT;
 			player[numOfPlayer].last_order_x = RIGHT;
 			player[numOfPlayer].state = STATE_RUN;
-			player[numOfPlayer].anim = ANIM_RUN;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_RUN];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -525,7 +807,7 @@ static void finiteStateMachine(int numOfPlayer)
 		{
 			attack_duration[numOfPlayer] = CROUCH;
 			player[numOfPlayer].state = STATE_CROUCH;
-			player[numOfPlayer].anim = ANIM_CROUCH;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_CROUCH];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
 		}
@@ -534,7 +816,7 @@ static void finiteStateMachine(int numOfPlayer)
 		{
 			// player[numOfPlayer].has_stamina = FALSE;
 			player[numOfPlayer].state = STATE_JUMP;
-			player[numOfPlayer].anim = ANIM_JUMP;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_JUMP];
 			player[numOfPlayer].order_y = UP;
 			if (player[numOfPlayer].speed_y == 0)
 			{
@@ -551,7 +833,7 @@ static void finiteStateMachine(int numOfPlayer)
 			// player[numOfPlayer].has_stamina = FALSE;
 			attack_duration[numOfPlayer] = ATTACK_SIDE;
 			player[numOfPlayer].state = STATE_ATTACK_SIDE;
-			player[numOfPlayer].anim = ANIM_ATTACK_SIDE;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_ATTACK_SIDE];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -563,7 +845,7 @@ static void finiteStateMachine(int numOfPlayer)
 			// player[numOfPlayer].has_stamina = FALSE;
 			attack_duration[numOfPlayer] = SWORD_SLASH;
 			player[numOfPlayer].state = STATE_SWORD_SLASH;
-			player[numOfPlayer].anim = ANIM_SWORD_SLASH;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_SWORD_SLASH];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -575,7 +857,7 @@ static void finiteStateMachine(int numOfPlayer)
 			// player[numOfPlayer].has_stamina = FALSE;
 			attack_duration[numOfPlayer] = ATTACK_UP;
 			player[numOfPlayer].state = STATE_ATTACK_UP;
-			player[numOfPlayer].anim = ANIM_ATTACK_UP;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_ATTACK_UP];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -586,7 +868,7 @@ static void finiteStateMachine(int numOfPlayer)
 		{
 			// player[numOfPlayer].has_stamina = FALSE;
 			player[numOfPlayer].state = STATE_JUMP;
-			player[numOfPlayer].anim = ANIM_JUMP;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_JUMP];
 			player[numOfPlayer].order_y = UP;
 			if (player[numOfPlayer].speed_y == 0)
 			{
@@ -602,7 +884,7 @@ static void finiteStateMachine(int numOfPlayer)
 			// player[numOfPlayer].has_stamina = FALSE;
 			attack_duration[numOfPlayer] = ATTACK_SIDE;
 			player[numOfPlayer].state = STATE_ATTACK_SIDE;
-			player[numOfPlayer].anim = ANIM_ATTACK_SIDE;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_ATTACK_SIDE];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -613,7 +895,7 @@ static void finiteStateMachine(int numOfPlayer)
 			// player[numOfPlayer].has_stamina = FALSE;
 			attack_duration[numOfPlayer] = SWORD_SLASH;
 			player[numOfPlayer].state = STATE_SWORD_SLASH;
-			player[numOfPlayer].anim = ANIM_SWORD_SLASH;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_SWORD_SLASH];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -624,7 +906,7 @@ static void finiteStateMachine(int numOfPlayer)
 			// player[numOfPlayer].has_stamina = FALSE;
 			attack_duration[numOfPlayer] = ATTACK_UP;
 			player[numOfPlayer].state = STATE_ATTACK_UP;
-			player[numOfPlayer].anim = ANIM_ATTACK_UP;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_ATTACK_UP];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -632,7 +914,7 @@ static void finiteStateMachine(int numOfPlayer)
 		{
 			player[numOfPlayer].order_x = NEUTRAL;
 			player[numOfPlayer].state = STATE_STANDING;
-			player[numOfPlayer].anim = ANIM_STANDING;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -645,7 +927,7 @@ static void finiteStateMachine(int numOfPlayer)
 			// player[numOfPlayer].has_stamina = FALSE;
 			attack_duration[numOfPlayer] = CROUCH_SWORD_SLASH;
 			player[numOfPlayer].state = STATE_CROUCH_SWORD_SLASH;
-			player[numOfPlayer].anim = ANIM_CROUCH_SWORD_SLASH;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_CROUCH_SWORD_SLASH];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -655,14 +937,14 @@ static void finiteStateMachine(int numOfPlayer)
 			// player[numOfPlayer].has_stamina = FALSE;
 			attack_duration[numOfPlayer] = ATTACK_CROUCH;
 			player[numOfPlayer].state = STATE_ATTACK_CROUCH;
-			player[numOfPlayer].anim = ANIM_ATTACK_CROUCH;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_ATTACK_CROUCH];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
 		if (!joystick[numOfPlayer].btn_down)
 		{
 			player[numOfPlayer].state = STATE_STANDING;
-			player[numOfPlayer].anim = ANIM_STANDING;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -674,7 +956,7 @@ static void finiteStateMachine(int numOfPlayer)
 			if (!player[numOfPlayer].attacking)
 			{
 				player[numOfPlayer].state = STATE_CROUCH;
-				player[numOfPlayer].anim = ANIM_CROUCH;
+				player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_CROUCH];
 				player[numOfPlayer].is_full_anim = FALSE;
 				player[numOfPlayer].frame = 1;
 				SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
@@ -688,7 +970,7 @@ static void finiteStateMachine(int numOfPlayer)
 			if (!player[numOfPlayer].attacking)
 			{
 				player[numOfPlayer].state = STATE_CROUCH;
-				player[numOfPlayer].anim = ANIM_CROUCH;
+				player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_CROUCH];
 				player[numOfPlayer].is_full_anim = FALSE;
 				player[numOfPlayer].frame = 1;
 				SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
@@ -700,14 +982,14 @@ static void finiteStateMachine(int numOfPlayer)
 		if (joystick[numOfPlayer].btn_b)
 		{
 			player[numOfPlayer].state = STATE_JUMP_ATTACK;
-			player[numOfPlayer].anim = ANIM_JUMP_ATTACK;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_JUMP_ATTACK];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
 		}
 		if (joystick[numOfPlayer].btn_x)
 		{
 			player[numOfPlayer].state = STATE_AIR_SWORD_SLASH;
-			player[numOfPlayer].anim = ANIM_AIR_SWORD_SLASH;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_AIR_SWORD_SLASH];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
 		}
@@ -729,7 +1011,7 @@ static void finiteStateMachine(int numOfPlayer)
 		{
 			player[numOfPlayer].order_x = NEUTRAL;
 			player[numOfPlayer].state = STATE_STANDING;
-			player[numOfPlayer].anim = ANIM_STANDING;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -754,7 +1036,7 @@ static void finiteStateMachine(int numOfPlayer)
 		{
 			player[numOfPlayer].order_x = NEUTRAL;
 			player[numOfPlayer].state = STATE_STANDING;
-			player[numOfPlayer].anim = ANIM_STANDING;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -767,7 +1049,7 @@ static void finiteStateMachine(int numOfPlayer)
 			{
 				// player[numOfPlayer].has_stamina = TRUE;
 				player[numOfPlayer].state = STATE_STANDING;
-				player[numOfPlayer].anim = ANIM_STANDING;
+				player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
 				player[numOfPlayer].is_full_anim = TRUE;
 				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 			}
@@ -793,7 +1075,7 @@ static void finiteStateMachine(int numOfPlayer)
 		{
 			player[numOfPlayer].order_x = NEUTRAL;
 			player[numOfPlayer].state = STATE_STANDING;
-			player[numOfPlayer].anim = ANIM_STANDING;
+			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -806,7 +1088,7 @@ static void finiteStateMachine(int numOfPlayer)
 			{
 				// player[numOfPlayer].has_stamina = TRUE;
 				player[numOfPlayer].state = STATE_STANDING;
-				player[numOfPlayer].anim = ANIM_STANDING;
+				player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
 				player[numOfPlayer].is_full_anim = TRUE;
 				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 			}
@@ -820,7 +1102,7 @@ static void finiteStateMachine(int numOfPlayer)
 			{
 				// player[numOfPlayer].has_stamina = TRUE;
 				player[numOfPlayer].state = STATE_STANDING;
-				player[numOfPlayer].anim = ANIM_STANDING;
+				player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
 				player[numOfPlayer].is_full_anim = TRUE;
 				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 			}
@@ -1082,9 +1364,9 @@ static void updateCamera(int numOfPlayer)
 static void controlPlayerCollision(int numOfPlayer)
 {
 	// s16 left_edge_collision_box = player_pos_x[player]; /*  + BOX_LEFT_EDGE; */
-	// s16 right_edge_collision_box = player_pos_x[player] + PLAYER_WIDTH;
+	// s16 right_edge_collision_box = player_pos_x[player] + PLAYER_1_WIDTH;
 	// s16 top_edge_collision_box = player_pos_y[player]; /*  + BOX_TOP_EDGE; */
-	// s16 botton_edge_collision_box = player_pos_y[player] + PLAYER_HEIGTH;
+	// s16 botton_edge_collision_box = player_pos_y[player] + PLAYER_1_HEIGTH;
 	//
 	// s16 colbox_left_column_index = left_edge_collision_box >> 4; //(same as '/16')
 	// s16 colbox_right_column_index = right_edge_collision_box >> 4;
