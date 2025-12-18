@@ -25,12 +25,15 @@
 #define RIGHT_SCREEN_LIMIT MAP_WIDTH - HORIZONTAL_RESOLUTION
 #define TOP_SCREEN_LIMIT 0
 #define BOTTON_SCREEN_LIMIT MAP_HEIGTH - VERTICAL_RESOLUTION
-// player
+// Knight
 #define PLAYER_1_WIDTH 128
 #define PLAYER_1_HEIGTH 96
-
+// Werewolf
 #define PLAYER_2_WIDTH 96
 #define PLAYER_2_HEIGTH 80
+// Hero
+#define PLAYER_3_WIDTH 128
+#define PLAYER_3_HEIGTH 72
 
 #define MIN_POS_X 0
 #define MAX_POS_X MAP_WIDTH - PLAYER_1_WIDTH
@@ -102,40 +105,68 @@ typedef struct
 #define A 0
 #define B 1
 
+#define ANIM_STANDING 0
+#define ANIM_STANDING_TURN 1
+#define ANIM_WALK 2
+#define ANIM_WALK_TURN 3
+#define ANIM_RUN 4
+#define ANIM_RUN_TO_IDLE 5
+#define ANIM_RUN_TURN 6
+#define ANIM_SLIDE 7
+#define ANIM_WALL_SLIDE 8
+#define ANIM_WALL_JUMP 9
+#define ANIM_LEDGE_HANG 10
+#define ANIM_CLIMB_LEDGE 11
+#define ANIM_JUMP 12
+#define ANIM_FALL 13
+#define ANIM_FALL_LOOP 14
+#define ANIM_HURT 15
+#define ANIM_DASH 16
+#define ANIM_ATTACK_1 17
+#define ANIM_ATTACK_1_END 18
+#define ANIM_ATTACK_2 19
+#define ANIM_ATTACK_2_END 20
+#define ANIM_ATTACK_3 21
+#define ANIM_ATTACK_3_END 22
+#define ANIM_DEATH 23
+
 enum PlayerState
 {
 	STATE_STANDING,
-	STATE_CROUCH,
-	STATE_ATTACK_SIDE,
-	STATE_ATTACK_CROUCH,
-	STATE_ATTACK_UP,
-	STATE_JUMP_ATTACK,
-	STATE_JUMP,
+	STATE_STANDING_TURN,
+	STATE_WALK,
+	STATE_WALK_TURN,
 	STATE_RUN,
-	STATE_SWORD_SLASH,
-	STATE_CROUCH_SWORD_SLASH,
-	STATE_PLAYER_HURT,
-	STATE_AIR_SWORD_SLASH,
-	STATE_CLIMB_LEDGE
+	STATE_RUN_TO_IDLE,
+	STATE_RUN_TURN,
+	STATE_SLIDE,
+	STATE_WALL_SLIDE,
+	STATE_WALL_JUMP,
+	STATE_LEDGE_HANG,
+	STATE_CLIMB_LEDGE,
+	STATE_JUMP,
+	STATE_FALL,
+	STATE_FALL_LOOP,
+	STATE_HURT,
+	STATE_DASH,
+	STATE_ATTACK_1,
+	STATE_ATTACK_1_END,
+	STATE_ATTACK_2,
+	STATE_ATTACK_2_END,
+	STATE_ATTACK_3,
+	STATE_ATTACK_3_END,
+	STATE_DEATH
 };
 
-#define KNIGHT_NUM_OF_ANIM 15
-#define WEREWOLF_NUM_OF_ANIM 3
-
-/* #define ANIM_STANDING 0
-#define ANIM_CROUCH 1
-#define ANIM_ATTACK_SIDE 2
-#define ANIM_ATTACK_CROUCH 3
-#define ANIM_ATTACK_UP 4
-#define ANIM_JUMP_ATTACK 5
-#define ANIM_JUMP 6
-#define ANIM_RUN 7
-#define ANIM_SWORD_SLASH 8
-#define ANIM_CROUCH_SWORD_SLASH 9
-#define ANIM_PLAYER_HURT 10
-#define ANIM_AIR_SWORD_SLASH 11
-#define ANIM_CLIMB_LEDGE 12
- */
+enum AnimationDuration
+{
+	TIME_ATTACK_1 = 30,
+	TIME_ATTACK_1_END = 40,
+	TIME_ATTACK_2 = 60,
+	TIME_ATTACK_2_END = 40,
+	TIME_ATTACK_3 = 120,
+	TIME_ATTACK_3_END = 60
+};
 
 // player sprite array numOfPlayer
 #define ONE 0
@@ -154,7 +185,7 @@ typedef struct
 	bool flip_h;
 	bool flip_v;
 	s16 anim;
-	s16 *ptr_anim;	
+	s16 *ptr_anim;
 	s16 frame;
 	bool is_full_anim;
 	s16 pos_x;
@@ -186,27 +217,9 @@ s16 ground_position[2] = {96, 114};
 s16 counter_x[2] = {0, 0};
 s16 counter_y[2] = {0, 0};
 
-enum AttackDuration
-{
-	CROUCH = 20,
-	GET_UP = 20,
-	ATTACK_SIDE = 20,
-	ATTACK_CROUCH = 30,
-	ATTACK_UP = 30,
-	JUMP_ATTACK = 30,
-	JUMP = 40,
-	FALL = 40,
-	// RUN = 120,
-	SWORD_SLASH = 60,
-	CROUCH_SWORD_SLASH = 40,
-	PLAYER_HURT = 30,
-	AIR_SWORD_SLASH = 60,
-	CLIMB_LEDGE = 50
-};
-
 u16 attack_timer[2] = {0, 0};
 u16 effect_timer[2] = {0, 0};
-u16 attack_duration[2] = {0, 0}; // animation _speed * num of frames of animation
+u16 anim_duration[2] = {0, 0}; // animation _speed * num of frames of animation
 
 typedef struct
 {
@@ -455,29 +468,12 @@ static void processMainGame()
 	ind += background.tileset->numTile; */
 
 	// Player I
-	// Alocar a quantidade de animações no MAP (memória será liberada na função própria)
-	player[ONE].ptr_anim = malloc(sizeof(s16) * KNIGHT_NUM_OF_ANIM);
-	// Mapear os índices das animações para cada state
-	player[ONE].ptr_anim[STATE_STANDING] = 0;
-	player[ONE].ptr_anim[STATE_CROUCH] = 1;
-	player[ONE].ptr_anim[STATE_ATTACK_SIDE] = 2;
-	player[ONE].ptr_anim[STATE_ATTACK_CROUCH] = 3;
-	player[ONE].ptr_anim[STATE_ATTACK_UP] = 4;
-	player[ONE].ptr_anim[STATE_JUMP_ATTACK] = 5;
-	player[ONE].ptr_anim[STATE_JUMP] = 6;
-	player[ONE].ptr_anim[STATE_RUN] = 7;
-	player[ONE].ptr_anim[STATE_SWORD_SLASH] = 8;
-	player[ONE].ptr_anim[STATE_CROUCH_SWORD_SLASH] = 9;
-	player[ONE].ptr_anim[STATE_PLAYER_HURT] = 10;
-	player[ONE].ptr_anim[STATE_AIR_SWORD_SLASH] = 11;
-	player[ONE].ptr_anim[STATE_CLIMB_LEDGE] = 12;
-	// definir o animação inicial baseada no state já mapeado
 	player[ONE].state = STATE_STANDING;
 	player[ONE].anim = 0; // player[ONE].ptr_anim[STATE_STANDING];
 	player[ONE].is_full_anim = TRUE;
 	player[ONE].flip_h = FALSE;
 	player[ONE].flip_v = FALSE;
-	player[ONE].impulse_x = 0;
+	player[ONE].impulse_x = 2;
 	player[ONE].impulse_y = 4;
 	player[ONE].max_speed_x = 2;
 	player[ONE].max_speed_y = 4;
@@ -491,40 +487,9 @@ static void processMainGame()
 	player[ONE].speed_y = 0;
 	player[ONE].attacking = FALSE;
 	player[ONE].has_stamina = TRUE;
-	player[ONE].sprite = SPR_addSprite(&knight, player[ONE].pos_x, player[ONE].pos_y, TILE_ATTR(PAL2, FALSE, player[ONE].flip_v, player[ONE].flip_h));
-	PAL_setPalette(PAL2, knight.palette->data, DMA);
+	player[ONE].sprite = SPR_addSprite(&hero, player[ONE].pos_x, player[ONE].pos_y, TILE_ATTR(PAL2, FALSE, player[ONE].flip_v, player[ONE].flip_h));
+	PAL_setPalette(PAL2, hero.palette->data, DMA);
 	SPR_setAnim(player[ONE].sprite, player[ONE].anim);
-
-	// Player II
-	// Alocar a quantidade de animações no MAP (memória será liberada na função própria)
-	player[TWO].ptr_anim = malloc(sizeof(s16) * WEREWOLF_NUM_OF_ANIM);
-	// Mapear os índices das animações para cada state
-	player[TWO].ptr_anim[STATE_STANDING] = 0;
-	player[TWO].ptr_anim[STATE_RUN] = 1;
-	player[TWO].ptr_anim[STATE_JUMP] = 2;
-	// definir o animação inicial baseada no state já mapeado
-	player[TWO].state = STATE_STANDING;
-	player[TWO].anim = 0; // player[ONE].ptr_anim[STATE_STANDING];
-	player[TWO].is_full_anim = TRUE;
-	player[TWO].flip_h = FALSE;
-	player[TWO].flip_v = FALSE;
-	player[TWO].impulse_x = 0;
-	player[TWO].impulse_y = 4;
-	player[TWO].max_speed_x = 2;
-	player[TWO].max_speed_y = 4;
-	player[TWO].order_x = NEUTRAL;
-	player[TWO].order_y = DOWN;
-	player[TWO].last_order_x = NEUTRAL;
-	player[TWO].last_order_y = NEUTRAL;
-	player[TWO].pos_x = HOW_FAR_TO_RIGHT;
-	player[TWO].pos_y = HOW_FAR_TO_BOTTON;
-	player[TWO].speed_x = 0;
-	player[TWO].speed_y = 0;
-	player[TWO].attacking = FALSE;
-	player[TWO].has_stamina = TRUE;
-	player[TWO].sprite = SPR_addSprite(&werewolf, player[TWO].pos_x, player[TWO].pos_y, TILE_ATTR(PAL3, FALSE, player[TWO].flip_v, player[TWO].flip_h));
-	PAL_setPalette(PAL3, werewolf.palette->data, DMA);
-	SPR_setAnim(player[TWO].sprite, player[TWO].anim);
 
 	// spr_element[ONE].offset_x = 32;
 	// PAL_setPalette(PAL3, dagger.palette->data, DMA);
@@ -538,20 +503,15 @@ static void processMainGame()
 	while (current_game_state == GAME)
 	{
 		finiteStateMachine(ONE);
-		finiteStateMachine(TWO);
 		updateCamera(ONE);
 		updatePlayerPosition(ONE);
-		updatePlayerPosition(TWO);
 		controlMapBoundaries(ONE);
 		// controlEffects(ONE);
 
 		controlHorizontalFlip(ONE);
-		controlHorizontalFlip(TWO);
 		// controlVerticalFlip(ONE);
 		controlXAcceleration(ONE);
-		controlXAcceleration(TWO);
 		controlYAcceleration(ONE);
-		controlYAcceleration(TWO);
 		controlAttackTimer(ONE);
 		// controlPlayerCollision(ONE);
 		if (player[ONE].is_full_anim)
@@ -563,24 +523,12 @@ static void processMainGame()
 			SPR_setAnimAndFrame(player[ONE].sprite, player[ONE].anim, player[ONE].frame);
 		}
 
-		if (player[TWO].is_full_anim)
-		{
-			SPR_setAnim(player[TWO].sprite, player[TWO].anim);
-		}
-		else
-		{
-			SPR_setAnimAndFrame(player[TWO].sprite, player[TWO].anim, player[TWO].frame);
-		}
-
 		SPR_setHFlip(player[ONE].sprite, player[ONE].flip_h);
-		SPR_setHFlip(player[TWO].sprite, player[TWO].flip_h);
 
 		// SPR_setPosition(player[ONE].sprite, (player[ONE].pos_x - update_camera_x), player[ONE].pos_y);
 		// MAP_scrollTo(bga, update_camera_x, update_camera_y);
 		SPR_setPosition(player[ONE].sprite, (player[ONE].pos_x - camera.cur_pos_x), (player[ONE].pos_y - camera.cur_pos_y));
 		MAP_scrollTo(bga, camera.cur_pos_x, camera.cur_pos_y);
-
-		SPR_setPosition(player[TWO].sprite, (player[TWO].pos_x - camera.cur_pos_x), (player[TWO].pos_y - camera.cur_pos_y));
 
 		// spr_element[ONE].offset_x = 32;
 		// spr_element[ONE].pos_x = player[ONE].flip_h ? (player[ONE].pos_x + PLAYER_1_WIDTH) : (player[ONE].pos_x - spr_element[ONE].offset_x);
@@ -772,36 +720,51 @@ static void finiteStateMachine(int numOfPlayer)
 	case STATE_STANDING:
 		if (joystick[numOfPlayer].btn_left)
 		{
-			player[numOfPlayer].order_x = LEFT;
-			player[numOfPlayer].last_order_x = LEFT;
-			player[numOfPlayer].state = STATE_RUN;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_RUN];
-			player[numOfPlayer].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+			if (player[numOfPlayer].last_order_x == LEFT || player[numOfPlayer].last_order_x == NEUTRAL)
+			{
+				player[numOfPlayer].order_x = LEFT;
+				player[numOfPlayer].last_order_x = LEFT;
+				player[numOfPlayer].state = STATE_WALK;
+				player[numOfPlayer].anim = ANIM_WALK;
+				player[numOfPlayer].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+			}
+			else if (player[numOfPlayer].last_order_x == RIGHT)
+			{
+				player[numOfPlayer].order_x = LEFT;
+				player[numOfPlayer].last_order_x = LEFT;
+				player[numOfPlayer].state = STATE_WALK_TURN;
+				player[numOfPlayer].anim = ANIM_WALK_TURN;
+				player[numOfPlayer].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+			}
 		}
 		else if (joystick[numOfPlayer].btn_right)
 		{
-			player[numOfPlayer].order_x = RIGHT;
-			player[numOfPlayer].last_order_x = RIGHT;
-			player[numOfPlayer].state = STATE_RUN;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_RUN];
-			player[numOfPlayer].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+			if (player[numOfPlayer].last_order_x == RIGHT || player[numOfPlayer].last_order_x == NEUTRAL)
+			{
+				player[numOfPlayer].order_x = RIGHT;
+				player[numOfPlayer].last_order_x = RIGHT;
+				player[numOfPlayer].state = STATE_WALK;
+				player[numOfPlayer].anim = ANIM_WALK;
+				player[numOfPlayer].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+			}
+			else if (player[numOfPlayer].last_order_x == LEFT)
+			{
+				player[numOfPlayer].order_x = RIGHT;
+				player[numOfPlayer].last_order_x = RIGHT;
+				player[numOfPlayer].state = STATE_WALK_TURN;
+				player[numOfPlayer].anim = ANIM_WALK_TURN;
+				player[numOfPlayer].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+			}
 		}
-		if (joystick[numOfPlayer].btn_down)
-		{
-			attack_duration[numOfPlayer] = CROUCH;
-			player[numOfPlayer].state = STATE_CROUCH;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_CROUCH];
-			player[numOfPlayer].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
-		}
-
-		if (joystick[numOfPlayer].btn_a /*  && player[numOfPlayer].has_stamina */)
+		if (joystick[numOfPlayer].btn_z /*  && player[numOfPlayer].has_stamina */)
 		{
 			// player[numOfPlayer].has_stamina = FALSE;
 			player[numOfPlayer].state = STATE_JUMP;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_JUMP];
+			player[numOfPlayer].anim = ANIM_JUMP;
 			player[numOfPlayer].order_y = UP;
 			if (player[numOfPlayer].speed_y == 0)
 			{
@@ -816,9 +779,9 @@ static void finiteStateMachine(int numOfPlayer)
 			player[numOfPlayer].order_x = NEUTRAL;
 			player[numOfPlayer].attacking = TRUE;
 			// player[numOfPlayer].has_stamina = FALSE;
-			attack_duration[numOfPlayer] = ATTACK_SIDE;
-			player[numOfPlayer].state = STATE_ATTACK_SIDE;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_ATTACK_SIDE];
+			anim_duration[numOfPlayer] = TIME_ATTACK_1;
+			player[numOfPlayer].state = STATE_ATTACK_1;
+			player[numOfPlayer].anim = ANIM_ATTACK_1;
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -828,9 +791,9 @@ static void finiteStateMachine(int numOfPlayer)
 			player[numOfPlayer].order_x = NEUTRAL;
 			player[numOfPlayer].attacking = TRUE;
 			// player[numOfPlayer].has_stamina = FALSE;
-			attack_duration[numOfPlayer] = SWORD_SLASH;
-			player[numOfPlayer].state = STATE_SWORD_SLASH;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_SWORD_SLASH];
+			anim_duration[numOfPlayer] = TIME_ATTACK_2;
+			player[numOfPlayer].state = STATE_ATTACK_2;
+			player[numOfPlayer].anim = ANIM_ATTACK_2;
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
@@ -840,20 +803,140 @@ static void finiteStateMachine(int numOfPlayer)
 			player[numOfPlayer].order_x = NEUTRAL;
 			player[numOfPlayer].attacking = TRUE;
 			// player[numOfPlayer].has_stamina = FALSE;
-			attack_duration[numOfPlayer] = ATTACK_UP;
-			player[numOfPlayer].state = STATE_ATTACK_UP;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_ATTACK_UP];
+			anim_duration[numOfPlayer] = TIME_ATTACK_3;
+			player[numOfPlayer].state = STATE_ATTACK_3;
+			player[numOfPlayer].anim = ANIM_ATTACK_3;
+			player[numOfPlayer].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+		}
+		break;
+
+	case STATE_WALK_TURN:
+		if (joystick[numOfPlayer].btn_left)
+		{
+			if (player[numOfPlayer].last_order_x == LEFT)
+			{
+				player[numOfPlayer].order_x = LEFT;
+				player[numOfPlayer].last_order_x = LEFT;
+				player[numOfPlayer].state = STATE_WALK;
+				player[numOfPlayer].anim = ANIM_WALK;
+				player[numOfPlayer].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+			}
+			else if (player[numOfPlayer].last_order_x == RIGHT)
+			{
+				player[numOfPlayer].order_x = LEFT;
+				player[numOfPlayer].last_order_x = LEFT;
+				player[numOfPlayer].state = STATE_WALK_TURN;
+				player[numOfPlayer].anim = ANIM_WALK_TURN;
+				player[numOfPlayer].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+			}
+		}
+		else if (joystick[numOfPlayer].btn_right)
+		{
+			if (player[numOfPlayer].last_order_x == RIGHT)
+			{
+				player[numOfPlayer].order_x = RIGHT;
+				player[numOfPlayer].last_order_x = RIGHT;
+				player[numOfPlayer].state = STATE_WALK;
+				player[numOfPlayer].anim = ANIM_WALK;
+				player[numOfPlayer].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+			}
+			else if (player[numOfPlayer].last_order_x == LEFT)
+			{
+				player[numOfPlayer].order_x = RIGHT;
+				player[numOfPlayer].last_order_x = RIGHT;
+				player[numOfPlayer].state = STATE_WALK_TURN;
+				player[numOfPlayer].anim = ANIM_WALK_TURN;
+				player[numOfPlayer].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+			}
+		}
+		if (!(joystick[numOfPlayer].btn_left) && !(joystick[numOfPlayer].btn_right))
+		{
+			player[numOfPlayer].order_x = NEUTRAL;
+			player[numOfPlayer].state = STATE_STANDING;
+			player[numOfPlayer].anim = ANIM_STANDING;
+			player[numOfPlayer].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+		}
+		break;
+
+	case STATE_WALK:
+		if (joystick[numOfPlayer].btn_z /* && player[numOfPlayer].has_stamina */)
+		{
+			// player[numOfPlayer].has_stamina = FALSE;
+			player[numOfPlayer].state = STATE_JUMP;
+			player[numOfPlayer].anim = ANIM_JUMP;
+			player[numOfPlayer].order_y = UP;
+			if (player[numOfPlayer].speed_y == 0)
+			{
+				player[numOfPlayer].speed_y += player[numOfPlayer].impulse_y;
+			}
+			player[numOfPlayer].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+		}
+		if (joystick[numOfPlayer].btn_c)
+		{
+			player[numOfPlayer].speed_x += player[numOfPlayer].impulse_x;
+			player[numOfPlayer].state = STATE_RUN;
+			player[numOfPlayer].anim = ANIM_RUN;
+			player[numOfPlayer].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+		}
+		if (joystick[numOfPlayer].btn_b /*  && player[numOfPlayer].has_stamina */)
+		{
+			player[numOfPlayer].order_x = NEUTRAL;
+			player[numOfPlayer].attacking = TRUE;
+			// player[numOfPlayer].has_stamina = FALSE;
+			anim_duration[numOfPlayer] = TIME_ATTACK_1;
+			player[numOfPlayer].state = STATE_ATTACK_1;
+			player[numOfPlayer].anim = ANIM_ATTACK_1;
+			player[numOfPlayer].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+		}
+
+		if (joystick[numOfPlayer].btn_x /*  && player[numOfPlayer].has_stamina */)
+		{
+			player[numOfPlayer].order_x = NEUTRAL;
+			player[numOfPlayer].attacking = TRUE;
+			// player[numOfPlayer].has_stamina = FALSE;
+			anim_duration[numOfPlayer] = TIME_ATTACK_2;
+			player[numOfPlayer].state = STATE_ATTACK_2;
+			player[numOfPlayer].anim = ANIM_ATTACK_2;
+			player[numOfPlayer].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+		}
+		if (joystick[numOfPlayer].btn_y /*  && player[numOfPlayer].has_stamina */)
+		{
+			player[numOfPlayer].order_x = NEUTRAL;
+			player[numOfPlayer].attacking = TRUE;
+			// player[numOfPlayer].has_stamina = FALSE;
+			anim_duration[numOfPlayer] = TIME_ATTACK_3;
+			player[numOfPlayer].state = STATE_ATTACK_3;
+			player[numOfPlayer].anim = ANIM_ATTACK_3;
+			player[numOfPlayer].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+		}
+
+		if (!(joystick[numOfPlayer].btn_left) && !(joystick[numOfPlayer].btn_right))
+		{
+			player[numOfPlayer].order_x = NEUTRAL;
+			player[numOfPlayer].state = STATE_STANDING;
+			player[numOfPlayer].anim = ANIM_STANDING;
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
 		break;
 
 	case STATE_RUN:
-		if (joystick[numOfPlayer].btn_a /* && player[numOfPlayer].has_stamina */)
+		if (joystick[numOfPlayer].btn_z /* && player[numOfPlayer].has_stamina */)
 		{
 			// player[numOfPlayer].has_stamina = FALSE;
 			player[numOfPlayer].state = STATE_JUMP;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_JUMP];
+			player[numOfPlayer].anim = ANIM_JUMP;
 			player[numOfPlayer].order_y = UP;
 			if (player[numOfPlayer].speed_y == 0)
 			{
@@ -867,117 +950,68 @@ static void finiteStateMachine(int numOfPlayer)
 			player[numOfPlayer].order_x = NEUTRAL;
 			player[numOfPlayer].attacking = TRUE;
 			// player[numOfPlayer].has_stamina = FALSE;
-			attack_duration[numOfPlayer] = ATTACK_SIDE;
-			player[numOfPlayer].state = STATE_ATTACK_SIDE;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_ATTACK_SIDE];
+			anim_duration[numOfPlayer] = TIME_ATTACK_1;
+			player[numOfPlayer].state = STATE_ATTACK_1;
+			player[numOfPlayer].anim = ANIM_ATTACK_1;
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
+
 		if (joystick[numOfPlayer].btn_x /*  && player[numOfPlayer].has_stamina */)
 		{
 			player[numOfPlayer].order_x = NEUTRAL;
 			player[numOfPlayer].attacking = TRUE;
 			// player[numOfPlayer].has_stamina = FALSE;
-			attack_duration[numOfPlayer] = SWORD_SLASH;
-			player[numOfPlayer].state = STATE_SWORD_SLASH;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_SWORD_SLASH];
+			anim_duration[numOfPlayer] = TIME_ATTACK_2;
+			player[numOfPlayer].state = STATE_ATTACK_2;
+			player[numOfPlayer].anim = ANIM_ATTACK_2;
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
-		if (joystick[numOfPlayer].btn_y)
+		if (joystick[numOfPlayer].btn_y /*  && player[numOfPlayer].has_stamina */)
 		{
 			player[numOfPlayer].order_x = NEUTRAL;
 			player[numOfPlayer].attacking = TRUE;
 			// player[numOfPlayer].has_stamina = FALSE;
-			attack_duration[numOfPlayer] = ATTACK_UP;
-			player[numOfPlayer].state = STATE_ATTACK_UP;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_ATTACK_UP];
+			anim_duration[numOfPlayer] = TIME_ATTACK_3;
+			player[numOfPlayer].state = STATE_ATTACK_3;
+			player[numOfPlayer].anim = ANIM_ATTACK_3;
+			player[numOfPlayer].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+		}
+		if (!joystick[numOfPlayer].btn_c)
+		{
+			player[numOfPlayer].speed_x -= player[numOfPlayer].impulse_x;
+			player[numOfPlayer].state = STATE_WALK;
+			player[numOfPlayer].anim = ANIM_WALK;
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
 		if (!(joystick[numOfPlayer].btn_left) && !(joystick[numOfPlayer].btn_right))
 		{
+			player[numOfPlayer].speed_x -= player[numOfPlayer].impulse_x;
+			player[numOfPlayer].state = STATE_RUN_TO_IDLE;
+			player[numOfPlayer].anim = ANIM_RUN_TO_IDLE;
+			player[numOfPlayer].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+		}
+		break;
+
+	case STATE_RUN_TO_IDLE:
+		if (!(joystick[numOfPlayer].btn_left) && !(joystick[numOfPlayer].btn_right))
+		{
 			player[numOfPlayer].order_x = NEUTRAL;
-			player[numOfPlayer].state = STATE_STANDING;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
-			player[numOfPlayer].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
-		}
-		break;
-
-	case STATE_CROUCH:
-		if (joystick[numOfPlayer].btn_x /*  && player[numOfPlayer].has_stamina */)
-		{
-			player[numOfPlayer].attacking = TRUE;
-			// player[numOfPlayer].has_stamina = FALSE;
-			attack_duration[numOfPlayer] = CROUCH_SWORD_SLASH;
-			player[numOfPlayer].state = STATE_CROUCH_SWORD_SLASH;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_CROUCH_SWORD_SLASH];
-			player[numOfPlayer].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
-		}
-		if (joystick[numOfPlayer].btn_b /*  && player[numOfPlayer].has_stamina */)
-		{
-			player[numOfPlayer].attacking = TRUE;
-			// player[numOfPlayer].has_stamina = FALSE;
-			attack_duration[numOfPlayer] = ATTACK_CROUCH;
-			player[numOfPlayer].state = STATE_ATTACK_CROUCH;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_ATTACK_CROUCH];
-			player[numOfPlayer].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
-		}
-		if (!joystick[numOfPlayer].btn_down)
-		{
-			player[numOfPlayer].state = STATE_STANDING;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
-			player[numOfPlayer].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
-		}
-		break;
-
-	case STATE_CROUCH_SWORD_SLASH:
-		if (!joystick[numOfPlayer].btn_x)
-		{
-			if (!player[numOfPlayer].attacking)
+			if (player[numOfPlayer].speed_x <= 0)
 			{
-				player[numOfPlayer].state = STATE_CROUCH;
-				player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_CROUCH];
-				player[numOfPlayer].is_full_anim = FALSE;
-				player[numOfPlayer].frame = 1;
-				SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
-			}
-		}
-		break;
-
-	case STATE_ATTACK_CROUCH:
-		if (!joystick[numOfPlayer].btn_b)
-		{
-			if (!player[numOfPlayer].attacking)
-			{
-				player[numOfPlayer].state = STATE_CROUCH;
-				player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_CROUCH];
-				player[numOfPlayer].is_full_anim = FALSE;
-				player[numOfPlayer].frame = 1;
-				SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
+				player[numOfPlayer].state = STATE_STANDING;
+				player[numOfPlayer].anim = ANIM_STANDING;
+				player[numOfPlayer].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 			}
 		}
 		break;
 
 	case STATE_JUMP:
-		if (joystick[numOfPlayer].btn_b)
-		{
-			player[numOfPlayer].state = STATE_JUMP_ATTACK;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_JUMP_ATTACK];
-			player[numOfPlayer].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
-		}
-		if (joystick[numOfPlayer].btn_x)
-		{
-			player[numOfPlayer].state = STATE_AIR_SWORD_SLASH;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_AIR_SWORD_SLASH];
-			player[numOfPlayer].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
-		}
 		if (joystick[numOfPlayer].btn_left && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
 		{
 			player[numOfPlayer].order_x = LEFT;
@@ -996,101 +1030,83 @@ static void finiteStateMachine(int numOfPlayer)
 		{
 			player[numOfPlayer].order_x = NEUTRAL;
 			player[numOfPlayer].state = STATE_STANDING;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
+			player[numOfPlayer].anim = ANIM_STANDING;
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
 		break;
 
-	case STATE_JUMP_ATTACK:
-		if (joystick[numOfPlayer].btn_left && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
-		{
-			player[numOfPlayer].order_x = LEFT;
-			player[numOfPlayer].last_order_x = LEFT;
-		}
-		else if (joystick[numOfPlayer].btn_right && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
-		{
-			player[numOfPlayer].order_x = RIGHT;
-			player[numOfPlayer].last_order_x = RIGHT;
-		}
-		else if (!(joystick[numOfPlayer].btn_left) && !(joystick[numOfPlayer].btn_right) && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
-		{
-			player[numOfPlayer].order_x = NEUTRAL;
-		}
-		else if ((player[numOfPlayer].order_y == NEUTRAL) && (player[numOfPlayer].pos_y == ground_position[numOfPlayer]))
-		{
-			player[numOfPlayer].order_x = NEUTRAL;
-			player[numOfPlayer].state = STATE_STANDING;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
-			player[numOfPlayer].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
-		}
-		break;
-
-	case STATE_ATTACK_SIDE:
+	case STATE_ATTACK_1:
 		if (!joystick[numOfPlayer].btn_b)
 		{
 			if (!player[numOfPlayer].attacking)
 			{
-				// player[numOfPlayer].has_stamina = TRUE;
-				player[numOfPlayer].state = STATE_STANDING;
-				player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
+				player[numOfPlayer].attacking = TRUE;
+				anim_duration[numOfPlayer] = TIME_ATTACK_1_END;
+				player[numOfPlayer].state = STATE_ATTACK_1_END;
+				player[numOfPlayer].anim = ANIM_ATTACK_1_END;
+				player[numOfPlayer].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[numOfPlayer].sprite, FALSE);
+			}
+		}
+		break;
+
+	case STATE_ATTACK_2:
+		if (!joystick[numOfPlayer].btn_x)
+		{
+			if (!player[numOfPlayer].attacking)
+			{
+				player[numOfPlayer].attacking = TRUE;
+				anim_duration[numOfPlayer] = TIME_ATTACK_2_END;
+				player[numOfPlayer].state = STATE_ATTACK_2_END;
+				player[numOfPlayer].anim = ANIM_ATTACK_2_END;
+				player[numOfPlayer].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
+			}
+		}
+		break;
+	case STATE_ATTACK_3:
+		if (!joystick[numOfPlayer].btn_y)
+		{
+			if (!player[numOfPlayer].attacking)
+			{
+				player[numOfPlayer].attacking = TRUE;
+				anim_duration[numOfPlayer] = TIME_ATTACK_3_END;
+				player[numOfPlayer].state = STATE_ATTACK_3_END;
+				player[numOfPlayer].anim = ANIM_ATTACK_3_END;
 				player[numOfPlayer].is_full_anim = TRUE;
 				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 			}
 		}
 		break;
 
-	case STATE_AIR_SWORD_SLASH:
-		if (joystick[numOfPlayer].btn_left && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
+	case STATE_ATTACK_1_END:
+		if (!player[numOfPlayer].attacking)
 		{
-			player[numOfPlayer].order_x = LEFT;
-			player[numOfPlayer].last_order_x = LEFT;
-		}
-		else if (joystick[numOfPlayer].btn_right && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
-		{
-			player[numOfPlayer].order_x = RIGHT;
-			player[numOfPlayer].last_order_x = RIGHT;
-		}
-		else if (!(joystick[numOfPlayer].btn_left) && !(joystick[numOfPlayer].btn_right) && (player[numOfPlayer].pos_y != ground_position[numOfPlayer]))
-		{
-			player[numOfPlayer].order_x = NEUTRAL;
-		}
-		else if ((player[numOfPlayer].order_y == NEUTRAL) && (player[numOfPlayer].pos_y == ground_position[numOfPlayer]))
-		{
-			player[numOfPlayer].order_x = NEUTRAL;
 			player[numOfPlayer].state = STATE_STANDING;
-			player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
+			player[numOfPlayer].anim = ANIM_STANDING;
 			player[numOfPlayer].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
 		break;
 
-	case STATE_SWORD_SLASH:
-		if (!joystick[numOfPlayer].btn_x)
+	case STATE_ATTACK_2_END:
+		if (!player[numOfPlayer].attacking)
 		{
-			if (!player[numOfPlayer].attacking)
-			{
-				// player[numOfPlayer].has_stamina = TRUE;
-				player[numOfPlayer].state = STATE_STANDING;
-				player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
-				player[numOfPlayer].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
-			}
+			player[numOfPlayer].state = STATE_STANDING;
+			player[numOfPlayer].anim = ANIM_STANDING;
+			player[numOfPlayer].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
 		break;
 
-	case STATE_ATTACK_UP:
-		if (!(joystick[numOfPlayer].btn_y))
+	case STATE_ATTACK_3_END:
+		if (!player[numOfPlayer].attacking)
 		{
-			if (!player[numOfPlayer].attacking)
-			{
-				// player[numOfPlayer].has_stamina = TRUE;
-				player[numOfPlayer].state = STATE_STANDING;
-				player[numOfPlayer].anim = player[numOfPlayer].ptr_anim[STATE_STANDING];
-				player[numOfPlayer].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
-			}
+			player[numOfPlayer].state = STATE_STANDING;
+			player[numOfPlayer].anim = ANIM_STANDING;
+			player[numOfPlayer].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[numOfPlayer].sprite, TRUE);
 		}
 		break;
 
@@ -1236,7 +1252,7 @@ static void controlAttackTimer(int numOfPlayer)
 {
 	if (player[numOfPlayer].attacking)
 	{
-		if (attack_timer[numOfPlayer] < attack_duration[numOfPlayer])
+		if (attack_timer[numOfPlayer] < anim_duration[numOfPlayer])
 			attack_timer[numOfPlayer]++;
 		else
 		{
