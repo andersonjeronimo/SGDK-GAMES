@@ -8,7 +8,7 @@ TILESET title_tileset "bgb/title.png" BEST ALL
 MAP title_map "bgb/title.png" title_tileset BEST 0
 PALETTE title_palette "bgb/title.png"
 
-SPRITE dagger "sprites/dagger.png" 4 4 NONE 0
+SPRITE cursor "sprites/cursor.png" 5 5 NONE 0
 SPRITE knight "sprites/terrible_knight_16_12.png" 16 12 BEST 10
 SPRITE werewolf "sprites/werewolf_12_10.png" 12 10 BEST 10
 SPRITE hero "sprites/hero_16_9.png" 16 9 BEST 10

@@ -10,7 +10,7 @@ extern const Palette bga_palette;
 extern const TileSet title_tileset;
 extern const MapDefinition title_map;
 extern const Palette title_palette;
-extern const SpriteDefinition dagger;
+extern const SpriteDefinition cursor;
 extern const SpriteDefinition knight;
 extern const SpriteDefinition werewolf;
 extern const SpriteDefinition hero;
