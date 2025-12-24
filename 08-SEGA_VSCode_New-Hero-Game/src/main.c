@@ -220,7 +220,7 @@ typedef struct
 	s16 pos_y;
 } SpriteElement;
 
-s16 ground_position[2] = {152, 152};
+s16 ground_position[2] = {MAP_HEIGTH - PLAYER_1_HEIGTH, 152};
 s16 counter_x[2] = {0, 0};
 s16 counter_y[2] = {0, 0};
 
@@ -825,6 +825,14 @@ static void finiteStateMachine(int num_of_player)
 		//	player[num_of_player].is_full_anim = TRUE;
 		//	SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
 		//}
+		if (player[num_of_player].pos_y < ground_position[num_of_player])
+		{
+			player[num_of_player].order_y = DOWN;
+			player[num_of_player].state = STATE_FALL;
+			player[num_of_player].anim = ANIM_FALL;
+			player[num_of_player].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+		}
 		break;
 
 	case STATE_WALK_TURN:
@@ -841,12 +849,23 @@ static void finiteStateMachine(int num_of_player)
 			}
 			else if (player[num_of_player].last_order_x == RIGHT)
 			{
-				player[num_of_player].order_x = LEFT;
-				player[num_of_player].last_order_x = LEFT;
-				player[num_of_player].state = STATE_WALK_TURN;
-				player[num_of_player].anim = ANIM_WALK_TURN;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+				if (player[num_of_player].pos_y < ground_position[num_of_player])
+				{
+					player[num_of_player].order_y = DOWN;
+					player[num_of_player].state = STATE_FALL;
+					player[num_of_player].anim = ANIM_FALL;
+					player[num_of_player].is_full_anim = TRUE;
+					SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+				}
+				else
+				{
+					player[num_of_player].order_x = LEFT;
+					player[num_of_player].last_order_x = LEFT;
+					player[num_of_player].state = STATE_WALK_TURN;
+					player[num_of_player].anim = ANIM_WALK_TURN;
+					player[num_of_player].is_full_anim = TRUE;
+					SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+				}
 			}
 		}
 		else if (joystick[num_of_player].btn_right)
@@ -862,12 +881,23 @@ static void finiteStateMachine(int num_of_player)
 			}
 			else if (player[num_of_player].last_order_x == LEFT)
 			{
-				player[num_of_player].order_x = RIGHT;
-				player[num_of_player].last_order_x = RIGHT;
-				player[num_of_player].state = STATE_WALK_TURN;
-				player[num_of_player].anim = ANIM_WALK_TURN;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+				if (player[num_of_player].pos_y < ground_position[num_of_player])
+				{
+					player[num_of_player].order_y = DOWN;
+					player[num_of_player].state = STATE_FALL;
+					player[num_of_player].anim = ANIM_FALL;
+					player[num_of_player].is_full_anim = TRUE;
+					SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+				}
+				else
+				{
+					player[num_of_player].order_x = RIGHT;
+					player[num_of_player].last_order_x = RIGHT;
+					player[num_of_player].state = STATE_WALK_TURN;
+					player[num_of_player].anim = ANIM_WALK_TURN;
+					player[num_of_player].is_full_anim = TRUE;
+					SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+				}
 			}
 		}
 		if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
@@ -937,13 +967,33 @@ static void finiteStateMachine(int num_of_player)
 		//	SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
 		// }
 
-		if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
+		if (player[num_of_player].pos_y < ground_position[num_of_player])
 		{
-			player[num_of_player].order_x = NEUTRAL;
-			player[num_of_player].state = STATE_STANDING;
-			player[num_of_player].anim = ANIM_STANDING;
+			player[num_of_player].order_y = DOWN;
+			player[num_of_player].state = STATE_FALL;
+			player[num_of_player].anim = ANIM_FALL;
 			player[num_of_player].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+		}
+
+		if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
+		{
+			if (player[num_of_player].pos_y < ground_position[num_of_player])
+			{
+				player[num_of_player].order_y = DOWN;
+				player[num_of_player].state = STATE_FALL;
+				player[num_of_player].anim = ANIM_FALL;
+				player[num_of_player].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			}
+			else
+			{
+				player[num_of_player].order_x = NEUTRAL;
+				player[num_of_player].state = STATE_STANDING;
+				player[num_of_player].anim = ANIM_STANDING;
+				player[num_of_player].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			}
 		}
 		break;
 
@@ -1014,12 +1064,33 @@ static void finiteStateMachine(int num_of_player)
 			player[num_of_player].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
 		}
-		if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
+
+		if (player[num_of_player].pos_y < ground_position[num_of_player])
 		{
-			player[num_of_player].state = STATE_RUN_TO_IDLE;
-			player[num_of_player].anim = ANIM_RUN_TO_IDLE;
+			player[num_of_player].order_y = DOWN;
+			player[num_of_player].state = STATE_FALL;
+			player[num_of_player].anim = ANIM_FALL;
 			player[num_of_player].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+		}
+
+		if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
+		{
+			if (player[num_of_player].pos_y < ground_position[num_of_player])
+			{
+				player[num_of_player].order_y = DOWN;
+				player[num_of_player].state = STATE_FALL;
+				player[num_of_player].anim = ANIM_FALL;
+				player[num_of_player].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			}
+			else
+			{
+				player[num_of_player].anim = ANIM_RUN_TO_IDLE;
+				player[num_of_player].state = STATE_RUN_TO_IDLE;
+				player[num_of_player].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			}
 		}
 		break;
 
@@ -1313,51 +1384,22 @@ static void updatePlayerPosition(int num_of_player)
 	{
 		if (player[num_of_player].last_order_x == LEFT)
 		{
-			if (player[num_of_player].pos_x <= blocked_left_coord[num_of_player])
-			{
-				player[num_of_player].pos_x = blocked_left_coord[num_of_player];
-			}
-			else
-			{
-				player[num_of_player].pos_x -= player[num_of_player].speed_x;
-			}
+			player[num_of_player].pos_x -= player[num_of_player].speed_x;
 		}
 		else if (player[num_of_player].last_order_x == RIGHT)
 		{
-			if (player[num_of_player].pos_x >= blocked_right_coord[num_of_player])
-			{
-				player[num_of_player].pos_x = blocked_right_coord[num_of_player];
-			}
-			else
-			{
-				player[num_of_player].pos_x += player[num_of_player].speed_x;
-			}
+			player[num_of_player].pos_x += player[num_of_player].speed_x;
 		}
 	}
-
 	if (player[num_of_player].speed_y > 0)
 	{
 		if (player[num_of_player].order_y == UP)
 		{
-			if (player[num_of_player].pos_y <= blocked_top_coord[num_of_player])
-			{
-				player[num_of_player].pos_y = blocked_top_coord[num_of_player];
-			}
-			else
-			{
-				player[num_of_player].pos_y -= player[num_of_player].speed_y;
-			}
+			player[num_of_player].pos_y -= player[num_of_player].speed_y;
 		}
 		else if (player[num_of_player].order_y == DOWN)
 		{
-			if (player[num_of_player].pos_y >= blocked_botton_coord[num_of_player])
-			{
-				player[num_of_player].pos_y = blocked_botton_coord[num_of_player];
-			}
-			else
-			{
-				player[num_of_player].pos_y += player[num_of_player].speed_y;
-			}
+			player[num_of_player].pos_y += player[num_of_player].speed_y;
 		}
 	}
 }
@@ -1541,7 +1583,7 @@ static void controlPlayerMapCollision(int num_of_player)
 	int botton_left_tile_collision_type = BGA_COLLISION_MATRIX[botton_edge_line_index][left_edge_column_index];
 	int botton_right_tile_collision_type = BGA_COLLISION_MATRIX[botton_edge_line_index][right_edge_column_index];
 
-	collision_from[num_of_player].top_left = top_left_tile_collision_type == SOLID_TILE ? TRUE : FALSE;
+	/* collision_from[num_of_player].top_left = top_left_tile_collision_type == SOLID_TILE ? TRUE : FALSE;
 	if (collision_from[num_of_player].top_left)
 	{
 		blocked_top_coord[num_of_player] = (top_edge_line_index * TILE_IN_PIXELS);	   // ou 'top_edge'
@@ -1551,9 +1593,9 @@ static void controlPlayerMapCollision(int num_of_player)
 	{
 		blocked_top_coord[num_of_player] = MIN_POS_Y;
 		blocked_left_coord[num_of_player] = MIN_POS_X;
-	}
+	} */
 
-	collision_from[num_of_player].top_right = top_right_tile_collision_type == SOLID_TILE ? TRUE : FALSE;
+	/* collision_from[num_of_player].top_right = top_right_tile_collision_type == SOLID_TILE ? TRUE : FALSE;
 	if (collision_from[num_of_player].top_right)
 	{
 		blocked_top_coord[num_of_player] = (top_edge_line_index * TILE_IN_PIXELS);		 // ou 'top_edge'
@@ -1563,49 +1605,38 @@ static void controlPlayerMapCollision(int num_of_player)
 	{
 		blocked_top_coord[num_of_player] = MIN_POS_Y;
 		blocked_right_coord[num_of_player] = MAX_POS_X;
-	}
+	} */
 
 	collision_from[num_of_player].botton_left = botton_left_tile_collision_type == SOLID_TILE ? TRUE : FALSE;
-	if (collision_from[num_of_player].botton_left)
-	{
-		blocked_botton_coord[num_of_player] = (botton_edge_line_index * TILE_IN_PIXELS);
-		blocked_left_coord[num_of_player] = (left_edge_column_index * TILE_IN_PIXELS);
-	}
-	else
-	{
-		blocked_botton_coord[num_of_player] = MAX_POS_Y;
-		blocked_left_coord[num_of_player] = MIN_POS_X;
-	}
-
 	collision_from[num_of_player].botton_right = botton_right_tile_collision_type == SOLID_TILE ? TRUE : FALSE;
-	if (collision_from[num_of_player].botton_right)
+	if (collision_from[num_of_player].botton_left || collision_from[num_of_player].botton_right)
 	{
 		blocked_botton_coord[num_of_player] = (botton_edge_line_index * TILE_IN_PIXELS);
-		blocked_right_coord[num_of_player] = (right_edge_column_index * TILE_IN_PIXELS); // ou 'right_edge'
+		ground_position[num_of_player] = blocked_botton_coord[num_of_player] - player[num_of_player].height;
 	}
 	else
 	{
 		blocked_botton_coord[num_of_player] = MAX_POS_Y;
-		blocked_right_coord[num_of_player] = MAX_POS_X;
+		ground_position[num_of_player] = blocked_botton_coord[num_of_player];
 	}
 
-	sprintf(top_buffer, "B.L:%d", blocked_left_coord[num_of_player] /* blocked_top_coord[num_of_player] */);
-	sprintf(botton_buffer, "B.R:%d", blocked_right_coord[num_of_player] /* blocked_botton_coord[num_of_player] */);
-	sprintf(left_buffer, "B.T:%d", blocked_top_coord[num_of_player] /* blocked_left_coord[num_of_player] */);
-	sprintf(right_buffer, "B.B.:%d", blocked_botton_coord[num_of_player] /* blocked_right_coord[num_of_player] */);
+	// sprintf(top_buffer, "B.L:%d", blocked_left_coord[num_of_player] /* blocked_top_coord[num_of_player] */);
+	// sprintf(botton_buffer, "B.R:%d", blocked_right_coord[num_of_player] /* blocked_botton_coord[num_of_player] */);
+	// sprintf(left_buffer, "B.T:%d", blocked_top_coord[num_of_player] /* blocked_left_coord[num_of_player] */);
+	sprintf(right_buffer, "GROUND:%d", blocked_botton_coord[num_of_player] /* blocked_right_coord[num_of_player] */);
 	// sprintf(top_buffer, "L.E.:%d", left_edge_column_index /* blocked_top_coord[num_of_player] */);
 	// sprintf(botton_buffer, "R.E.:%d", right_edge_column_index /* blocked_botton_coord[num_of_player] */);
 	// sprintf(left_buffer, "T.E.:%d", top_edge_line_index /* blocked_left_coord[num_of_player] */);
 	// sprintf(right_buffer, "B.E.:%d", botton_edge_line_index /* blocked_right_coord[num_of_player] */);
 
-	VDP_clearTextBG(BG_A, 28, 5, 10);
-	VDP_clearTextBG(BG_A, 28, 6, 10);
-	VDP_clearTextBG(BG_A, 28, 7, 10);
+	// VDP_clearTextBG(BG_A, 28, 5, 10);
+	// VDP_clearTextBG(BG_A, 28, 6, 10);
+	// VDP_clearTextBG(BG_A, 28, 7, 10);
 	VDP_clearTextBG(BG_A, 28, 8, 10);
 
-	VDP_drawTextBG(BG_A, top_buffer, 28, 5);
-	VDP_drawTextBG(BG_A, botton_buffer, 28, 6);
-	VDP_drawTextBG(BG_A, left_buffer, 28, 7);
+	// VDP_drawTextBG(BG_A, top_buffer, 28, 5);
+	// VDP_drawTextBG(BG_A, botton_buffer, 28, 6);
+	// VDP_drawTextBG(BG_A, left_buffer, 28, 7);
 	VDP_drawTextBG(BG_A, right_buffer, 28, 8);
 }
 
