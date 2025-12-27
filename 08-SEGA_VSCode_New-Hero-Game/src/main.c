@@ -45,10 +45,10 @@ u32 player_y_on_screen;
 #define BOX_TOP_OFFSET 36
 #define BOX_BOTTON_OFFSET 0
 
-#define MIN_POS_X 0 - BOX_LEFT_OFFSET
-#define MAX_POS_X MAP_WIDTH - PLAYER_1_WIDTH + BOX_RIGHT_OFFSET
-#define MIN_POS_Y 0 - BOX_TOP_OFFSET
-#define MAX_POS_Y MAP_HEIGTH - PLAYER_1_HEIGTH
+#define MIN_POS_X 0
+#define MAX_POS_X MAP_WIDTH
+#define MIN_POS_Y 0
+#define MAX_POS_Y MAP_HEIGTH
 
 //  How far to (left, right, up, down) before camera moves
 #define HOW_FAR_TO_LEFT 10
@@ -93,8 +93,8 @@ const int BGA_COLLISION_MATRIX[14][20] =
 		{0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
 
@@ -220,7 +220,6 @@ typedef struct
 	s16 pos_y;
 } SpriteElement;
 
-s16 ground_position[2] = {MAP_HEIGTH - PLAYER_1_HEIGTH, 152};
 s16 counter_x[2] = {0, 0};
 s16 counter_y[2] = {0, 0};
 
@@ -492,7 +491,7 @@ static void processMainGame()
 	player[ONE].max_speed_x = 2;
 	player[ONE].max_speed_y = 5;
 	player[ONE].order_x = NEUTRAL;
-	player[ONE].order_y = DOWN;
+	player[ONE].order_y = NEUTRAL;
 	player[ONE].last_order_x = RIGHT;
 	player[ONE].last_order_y = NEUTRAL;
 	player[ONE].pos_x = HOW_FAR_TO_LEFT;
@@ -734,6 +733,13 @@ static void finiteStateMachine(int num_of_player)
 	switch (player[num_of_player].state)
 	{
 	case STATE_STANDING:
+		if (player[num_of_player].order_y == DOWN)
+		{
+			player[num_of_player].state = STATE_FALL;
+			player[num_of_player].anim = ANIM_FALL;
+			player[num_of_player].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+		}
 		if (joystick[num_of_player].btn_left)
 		{
 			if (player[num_of_player].last_order_x == LEFT)
@@ -801,41 +807,16 @@ static void finiteStateMachine(int num_of_player)
 			player[num_of_player].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
 		}
+		break;
 
-		// if (joystick[num_of_player].btn_x /*  && player[num_of_player].has_stamina */)
-		//{
-		//	player[num_of_player].order_x = NEUTRAL;
-		//	player[num_of_player].is_attacking = TRUE;
-		//	// player[num_of_player].has_stamina = FALSE;
-		//	anim_duration[num_of_player] = TIME_ATTACK_2;
-		//	player[num_of_player].state = STATE_ATTACK_2;
-		//	player[num_of_player].anim = ANIM_ATTACK_2;
-		//	player[num_of_player].is_full_anim = TRUE;
-		//	SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-		// }
-		//
-		// if (joystick[num_of_player].btn_y /*  && player[num_of_player].has_stamina */)
-		//{
-		//	player[num_of_player].order_x = NEUTRAL;
-		//	player[num_of_player].is_attacking = TRUE;
-		//	// player[num_of_player].has_stamina = FALSE;
-		//	anim_duration[num_of_player] = TIME_ATTACK_3;
-		//	player[num_of_player].state = STATE_ATTACK_3;
-		//	player[num_of_player].anim = ANIM_ATTACK_3;
-		//	player[num_of_player].is_full_anim = TRUE;
-		//	SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-		//}
-		if (player[num_of_player].pos_y < ground_position[num_of_player])
+	case STATE_WALK_TURN:
+		if (player[num_of_player].order_y == DOWN)
 		{
-			player[num_of_player].order_y = DOWN;
 			player[num_of_player].state = STATE_FALL;
 			player[num_of_player].anim = ANIM_FALL;
 			player[num_of_player].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
 		}
-		break;
-
-	case STATE_WALK_TURN:
 		if (joystick[num_of_player].btn_left)
 		{
 			if (player[num_of_player].last_order_x == LEFT)
@@ -849,23 +830,12 @@ static void finiteStateMachine(int num_of_player)
 			}
 			else if (player[num_of_player].last_order_x == RIGHT)
 			{
-				if (player[num_of_player].pos_y < ground_position[num_of_player])
-				{
-					player[num_of_player].order_y = DOWN;
-					player[num_of_player].state = STATE_FALL;
-					player[num_of_player].anim = ANIM_FALL;
-					player[num_of_player].is_full_anim = TRUE;
-					SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-				}
-				else
-				{
-					player[num_of_player].order_x = LEFT;
-					player[num_of_player].last_order_x = LEFT;
-					player[num_of_player].state = STATE_WALK_TURN;
-					player[num_of_player].anim = ANIM_WALK_TURN;
-					player[num_of_player].is_full_anim = TRUE;
-					SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-				}
+				player[num_of_player].order_x = LEFT;
+				player[num_of_player].last_order_x = LEFT;
+				player[num_of_player].state = STATE_WALK_TURN;
+				player[num_of_player].anim = ANIM_WALK_TURN;
+				player[num_of_player].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
 			}
 		}
 		else if (joystick[num_of_player].btn_right)
@@ -881,23 +851,12 @@ static void finiteStateMachine(int num_of_player)
 			}
 			else if (player[num_of_player].last_order_x == LEFT)
 			{
-				if (player[num_of_player].pos_y < ground_position[num_of_player])
-				{
-					player[num_of_player].order_y = DOWN;
-					player[num_of_player].state = STATE_FALL;
-					player[num_of_player].anim = ANIM_FALL;
-					player[num_of_player].is_full_anim = TRUE;
-					SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-				}
-				else
-				{
-					player[num_of_player].order_x = RIGHT;
-					player[num_of_player].last_order_x = RIGHT;
-					player[num_of_player].state = STATE_WALK_TURN;
-					player[num_of_player].anim = ANIM_WALK_TURN;
-					player[num_of_player].is_full_anim = TRUE;
-					SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-				}
+				player[num_of_player].order_x = RIGHT;
+				player[num_of_player].last_order_x = RIGHT;
+				player[num_of_player].state = STATE_WALK_TURN;
+				player[num_of_player].anim = ANIM_WALK_TURN;
+				player[num_of_player].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
 			}
 		}
 		if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
@@ -911,6 +870,13 @@ static void finiteStateMachine(int num_of_player)
 		break;
 
 	case STATE_WALK:
+		if (player[num_of_player].order_y == DOWN)
+		{
+			player[num_of_player].state = STATE_FALL;
+			player[num_of_player].anim = ANIM_FALL;
+			player[num_of_player].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+		}
 		if (joystick[num_of_player].btn_z /* && player[num_of_player].has_stamina */)
 		{
 			// player[num_of_player].has_stamina = FALSE;
@@ -944,60 +910,24 @@ static void finiteStateMachine(int num_of_player)
 			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
 		}
 
-		// if (joystick[num_of_player].btn_x /*  && player[num_of_player].has_stamina */)
-		//{
-		//	player[num_of_player].order_x = NEUTRAL;
-		//	player[num_of_player].is_attacking = TRUE;
-		//	// player[num_of_player].has_stamina = FALSE;
-		//	anim_duration[num_of_player] = TIME_ATTACK_2;
-		//	player[num_of_player].state = STATE_ATTACK_2;
-		//	player[num_of_player].anim = ANIM_ATTACK_2;
-		//	player[num_of_player].is_full_anim = TRUE;
-		//	SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-		// }
-		// if (joystick[num_of_player].btn_y /*  && player[num_of_player].has_stamina */)
-		//{
-		//	player[num_of_player].order_x = NEUTRAL;
-		//	player[num_of_player].is_attacking = TRUE;
-		//	// player[num_of_player].has_stamina = FALSE;
-		//	anim_duration[num_of_player] = TIME_ATTACK_3;
-		//	player[num_of_player].state = STATE_ATTACK_3;
-		//	player[num_of_player].anim = ANIM_ATTACK_3;
-		//	player[num_of_player].is_full_anim = TRUE;
-		//	SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-		// }
-
-		if (player[num_of_player].pos_y < ground_position[num_of_player])
+		if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
 		{
-			player[num_of_player].order_y = DOWN;
+			player[num_of_player].order_x = NEUTRAL;
+			player[num_of_player].state = STATE_STANDING;
+			player[num_of_player].anim = ANIM_STANDING;
+			player[num_of_player].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+		}
+		break;
+
+	case STATE_RUN:
+		if (player[num_of_player].order_y == DOWN)
+		{
 			player[num_of_player].state = STATE_FALL;
 			player[num_of_player].anim = ANIM_FALL;
 			player[num_of_player].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
 		}
-
-		if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
-		{
-			if (player[num_of_player].pos_y < ground_position[num_of_player])
-			{
-				player[num_of_player].order_y = DOWN;
-				player[num_of_player].state = STATE_FALL;
-				player[num_of_player].anim = ANIM_FALL;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-			}
-			else
-			{
-				player[num_of_player].order_x = NEUTRAL;
-				player[num_of_player].state = STATE_STANDING;
-				player[num_of_player].anim = ANIM_STANDING;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-			}
-		}
-		break;
-
-	case STATE_RUN:
 		if (joystick[num_of_player].btn_z /* && player[num_of_player].has_stamina */)
 		{
 			// player[num_of_player].has_stamina = FALSE;
@@ -1034,28 +964,6 @@ static void finiteStateMachine(int num_of_player)
 			SPR_setAnimationLoop(player[num_of_player].sprite, FALSE);
 		}
 
-		// if (joystick[num_of_player].btn_x /*  && player[num_of_player].has_stamina */)
-		//{
-		//	player[num_of_player].order_x = NEUTRAL;
-		//	player[num_of_player].is_attacking = TRUE;
-		//	// player[num_of_player].has_stamina = FALSE;
-		//	anim_duration[num_of_player] = TIME_ATTACK_2;
-		//	player[num_of_player].state = STATE_ATTACK_2;
-		//	player[num_of_player].anim = ANIM_ATTACK_2;
-		//	player[num_of_player].is_full_anim = TRUE;
-		//	SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-		// }
-		// if (joystick[num_of_player].btn_y /*  && player[num_of_player].has_stamina */)
-		//{
-		//	player[num_of_player].order_x = NEUTRAL;
-		//	player[num_of_player].is_attacking = TRUE;
-		//	// player[num_of_player].has_stamina = FALSE;
-		//	anim_duration[num_of_player] = TIME_ATTACK_3;
-		//	player[num_of_player].state = STATE_ATTACK_3;
-		//	player[num_of_player].anim = ANIM_ATTACK_3;
-		//	player[num_of_player].is_full_anim = TRUE;
-		//	SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-		// }
 		if (!joystick[num_of_player].btn_c)
 		{
 			player[num_of_player].max_speed_x = 2;
@@ -1065,37 +973,24 @@ static void finiteStateMachine(int num_of_player)
 			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
 		}
 
-		if (player[num_of_player].pos_y < ground_position[num_of_player])
-		{
-			player[num_of_player].order_y = DOWN;
-			player[num_of_player].state = STATE_FALL;
-			player[num_of_player].anim = ANIM_FALL;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-		}
-
 		if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
 		{
-			if (player[num_of_player].pos_y < ground_position[num_of_player])
-			{
-				player[num_of_player].order_y = DOWN;
-				player[num_of_player].state = STATE_FALL;
-				player[num_of_player].anim = ANIM_FALL;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-			}
-			else
-			{
-				player[num_of_player].anim = ANIM_RUN_TO_IDLE;
-				player[num_of_player].state = STATE_RUN_TO_IDLE;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-			}
+			player[num_of_player].anim = ANIM_RUN_TO_IDLE;
+			player[num_of_player].state = STATE_RUN_TO_IDLE;
+			player[num_of_player].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
 		}
 		break;
 
 	case STATE_RUN_TO_IDLE:
 		player[num_of_player].order_x = NEUTRAL;
+		if (player[num_of_player].order_y == DOWN)
+		{
+			player[num_of_player].state = STATE_FALL;
+			player[num_of_player].anim = ANIM_FALL;
+			player[num_of_player].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+		}
 		if (player[num_of_player].speed_x <= 0)
 		{
 			player[num_of_player].state = STATE_STANDING;
@@ -1132,33 +1027,14 @@ static void finiteStateMachine(int num_of_player)
 		}
 		break;
 
-	case STATE_FALL:
-
-		if (joystick[num_of_player].btn_left && (player[num_of_player].pos_y != ground_position[num_of_player]))
+	case STATE_SLIDE:
+		if (player[num_of_player].order_y == DOWN)
 		{
-			player[num_of_player].order_x = LEFT;
-			player[num_of_player].last_order_x = LEFT;
-		}
-		else if (joystick[num_of_player].btn_right && (player[num_of_player].pos_y != ground_position[num_of_player]))
-		{
-			player[num_of_player].order_x = RIGHT;
-			player[num_of_player].last_order_x = RIGHT;
-		}
-		else if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right) && (player[num_of_player].pos_y != ground_position[num_of_player]))
-		{
-			player[num_of_player].order_x = NEUTRAL;
-		}
-		else if ((player[num_of_player].order_y == NEUTRAL) && (player[num_of_player].pos_y == ground_position[num_of_player]))
-		{
-			player[num_of_player].order_x = NEUTRAL;
-			player[num_of_player].state = STATE_STANDING;
-			player[num_of_player].anim = ANIM_STANDING;
+			player[num_of_player].state = STATE_FALL;
+			player[num_of_player].anim = ANIM_FALL;
 			player[num_of_player].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
 		}
-		break;
-
-	case STATE_SLIDE:
 		if (!joystick[num_of_player].btn_a)
 		{
 			player[num_of_player].state = STATE_SLIDE_END;
@@ -1179,10 +1055,45 @@ static void finiteStateMachine(int num_of_player)
 		break;
 
 	case STATE_SLIDE_END:
+		if (player[num_of_player].order_y == DOWN)
+		{
+			player[num_of_player].state = STATE_FALL;
+			player[num_of_player].anim = ANIM_FALL;
+			player[num_of_player].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+		}
 		if (!player[num_of_player].is_attacking)
 		{
 			player[num_of_player].state = STATE_RUN;
 			player[num_of_player].anim = ANIM_RUN;
+			player[num_of_player].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+		}
+		break;
+
+	case STATE_FALL:
+		if (player[num_of_player].order_y == DOWN)
+		{
+			if (joystick[num_of_player].btn_left)
+			{
+				player[num_of_player].order_x = LEFT;
+				player[num_of_player].last_order_x = LEFT;
+			}
+			else if (joystick[num_of_player].btn_right)
+			{
+				player[num_of_player].order_x = RIGHT;
+				player[num_of_player].last_order_x = RIGHT;
+			}
+			else if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
+			{
+				player[num_of_player].order_x = NEUTRAL;
+			}
+		}
+		else if (player[num_of_player].order_y == NEUTRAL)
+		{
+			player[num_of_player].order_x = NEUTRAL;
+			player[num_of_player].state = STATE_STANDING;
+			player[num_of_player].anim = ANIM_STANDING;
 			player[num_of_player].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
 		}
@@ -1353,28 +1264,20 @@ static void controlYAcceleration(int num_of_player)
 	}
 	else if (player[num_of_player].order_y == DOWN)
 	{
-		if (player[num_of_player].pos_y < ground_position[num_of_player])
-		{
-			counter_y[num_of_player] += 1;
-			if (counter_y[num_of_player] == COUNTER_LIMIT)
-			{
-				counter_y[num_of_player] = 0;
-				if (player[num_of_player].speed_y < player[num_of_player].max_speed_y)
-				{
-					player[num_of_player].speed_y += 1;
-				}
-			}
-		}
-		else if (player[num_of_player].pos_y >= ground_position[num_of_player])
+		counter_y[num_of_player] += 1;
+		if (counter_y[num_of_player] == COUNTER_LIMIT)
 		{
 			counter_y[num_of_player] = 0;
-			player[num_of_player].order_y = NEUTRAL;
+			if (player[num_of_player].speed_y < player[num_of_player].max_speed_y)
+			{
+				player[num_of_player].speed_y += 1;
+			}
 		}
 	}
 	else if (player[num_of_player].order_y == NEUTRAL)
 	{
+		counter_y[num_of_player] = 0;
 		player[num_of_player].speed_y = 0;
-		player[num_of_player].pos_y = ground_position[num_of_player];
 	}
 }
 
@@ -1384,22 +1287,34 @@ static void updatePlayerPosition(int num_of_player)
 	{
 		if (player[num_of_player].last_order_x == LEFT)
 		{
-			player[num_of_player].pos_x -= player[num_of_player].speed_x;
+			if ((player[num_of_player].pos_x + BOX_LEFT_OFFSET) > blocked_left_coord[num_of_player])
+			{
+				player[num_of_player].pos_x -= player[num_of_player].speed_x;
+			}
 		}
 		else if (player[num_of_player].last_order_x == RIGHT)
 		{
-			player[num_of_player].pos_x += player[num_of_player].speed_x;
+			if ((player[num_of_player].pos_x - BOX_RIGHT_OFFSET) < blocked_right_coord[num_of_player])
+			{
+				player[num_of_player].pos_x += player[num_of_player].speed_x;
+			}
 		}
 	}
 	if (player[num_of_player].speed_y > 0)
 	{
 		if (player[num_of_player].order_y == UP)
 		{
-			player[num_of_player].pos_y -= player[num_of_player].speed_y;
+			if ((player[num_of_player].pos_y + BOX_TOP_OFFSET) > blocked_top_coord[num_of_player])
+			{
+				player[num_of_player].pos_y -= player[num_of_player].speed_y;
+			}
 		}
 		else if (player[num_of_player].order_y == DOWN)
 		{
-			player[num_of_player].pos_y += player[num_of_player].speed_y;
+			if ((player[num_of_player].pos_y + player[num_of_player].height) < blocked_botton_coord[num_of_player])
+			{
+				player[num_of_player].pos_y += player[num_of_player].speed_y;
+			}
 		}
 	}
 }
@@ -1471,22 +1386,22 @@ static void controlIdleTimer(int num_of_player)
 
 static void controlMapBoundaries(int num_of_player)
 {
-	if (player[num_of_player].pos_x < MIN_POS_X)
+	if ((player[num_of_player].pos_x + BOX_LEFT_OFFSET) < MIN_POS_X)
 	{
-		player[num_of_player].pos_x = MIN_POS_X;
+		player[num_of_player].pos_x = MIN_POS_X - BOX_LEFT_OFFSET;
 	}
-	else if (player[num_of_player].pos_x > MAX_POS_X)
+	else if ((player[num_of_player].pos_x + player[num_of_player].width - BOX_RIGHT_OFFSET) > MAX_POS_X)
 	{
-		player[num_of_player].pos_x = MAX_POS_X;
+		player[num_of_player].pos_x = (MAX_POS_X - player[num_of_player].width) + BOX_RIGHT_OFFSET;
 	}
 
 	if (player[num_of_player].pos_y < MIN_POS_Y)
 	{
 		player[num_of_player].pos_y = MIN_POS_Y;
 	}
-	else if (player[num_of_player].pos_y > MAX_POS_Y)
+	else if ((player[num_of_player].pos_y + player[num_of_player].height) > MAX_POS_Y)
 	{
-		player[num_of_player].pos_y = MAX_POS_Y;
+		player[num_of_player].pos_y = (MAX_POS_Y - player[num_of_player].height);
 	}
 }
 
@@ -1558,12 +1473,12 @@ static void controlPlayerMapCollision(int num_of_player)
 	//	#define MAX_POS_Y MAP_HEIGTH - PLAYER_1_HEIGTH + BOX_BOTTON_OFFSET
 	// define a caixa de colisão do personagem
 	int left_edge = player[num_of_player].pos_x + BOX_LEFT_OFFSET;
-	int right_edge = player[num_of_player].pos_x + (player[num_of_player].width - BOX_RIGHT_OFFSET);
-	int top_edge = player[num_of_player].pos_y + BOX_TOP_OFFSET;
+	int right_edge = (player[num_of_player].pos_x + player[num_of_player].width) - BOX_RIGHT_OFFSET;
+	int top_edge = player[num_of_player].pos_y - BOX_TOP_OFFSET;
 	int botton_edge = player[num_of_player].pos_y + player[num_of_player].height;
 
 	// arestas:
-	// verifica em qual indice da matriz cada aresta da caixa de colisão está colidindo
+	// verifica em qual indice da matriz cada aresta está colidindo
 	int left_edge_column_index = (left_edge / TILE_IN_PIXELS);
 	int right_edge_column_index = (right_edge / TILE_IN_PIXELS);
 	int top_edge_line_index = (top_edge / TILE_IN_PIXELS);
@@ -1577,53 +1492,64 @@ static void controlPlayerMapCollision(int num_of_player)
 	{
 		botton_edge_line_index = MATRIX_MAX_LIN_INDEX;
 	}
-	// vértices: cruzamentos de linas e colunas
+	// vértices: cruzamentos de linhas com colunas
 	int top_left_tile_collision_type = BGA_COLLISION_MATRIX[top_edge_line_index][left_edge_column_index];
 	int top_right_tile_collision_type = BGA_COLLISION_MATRIX[top_edge_line_index][right_edge_column_index];
 	int botton_left_tile_collision_type = BGA_COLLISION_MATRIX[botton_edge_line_index][left_edge_column_index];
 	int botton_right_tile_collision_type = BGA_COLLISION_MATRIX[botton_edge_line_index][right_edge_column_index];
 
-	/* collision_from[num_of_player].top_left = top_left_tile_collision_type == SOLID_TILE ? TRUE : FALSE;
-	if (collision_from[num_of_player].top_left)
+	if (player[num_of_player].order_y == UP)
 	{
-		blocked_top_coord[num_of_player] = (top_edge_line_index * TILE_IN_PIXELS);	   // ou 'top_edge'
-		blocked_left_coord[num_of_player] = (left_edge_column_index * TILE_IN_PIXELS); // ou 'left_edge'
+		if (top_left_tile_collision_type == SOLID_TILE || top_right_tile_collision_type == SOLID_TILE)
+		{
+			blocked_top_coord[num_of_player] = top_edge;
+		}
+		else
+		{
+			blocked_top_coord[num_of_player] = MIN_POS_Y;
+		}
 	}
-	else
-	{
-		blocked_top_coord[num_of_player] = MIN_POS_Y;
-		blocked_left_coord[num_of_player] = MIN_POS_X;
-	} */
 
-	/* collision_from[num_of_player].top_right = top_right_tile_collision_type == SOLID_TILE ? TRUE : FALSE;
-	if (collision_from[num_of_player].top_right)
+	if (player[num_of_player].order_y == DOWN || player[num_of_player].order_y == NEUTRAL)
 	{
-		blocked_top_coord[num_of_player] = (top_edge_line_index * TILE_IN_PIXELS);		 // ou 'top_edge'
-		blocked_right_coord[num_of_player] = (right_edge_column_index * TILE_IN_PIXELS); // ou 'right_edge'
+		if (botton_left_tile_collision_type == SOLID_TILE || botton_right_tile_collision_type == SOLID_TILE)
+		{
+			blocked_botton_coord[num_of_player] = botton_edge;
+		}
+		else
+		{
+			blocked_botton_coord[num_of_player] = MAX_POS_Y;
+		}
 	}
-	else
-	{
-		blocked_top_coord[num_of_player] = MIN_POS_Y;
-		blocked_right_coord[num_of_player] = MAX_POS_X;
-	} */
 
-	collision_from[num_of_player].botton_left = botton_left_tile_collision_type == SOLID_TILE ? TRUE : FALSE;
-	collision_from[num_of_player].botton_right = botton_right_tile_collision_type == SOLID_TILE ? TRUE : FALSE;
-	if (collision_from[num_of_player].botton_left || collision_from[num_of_player].botton_right)
+	if (player[num_of_player].last_order_x == LEFT)
 	{
-		blocked_botton_coord[num_of_player] = (botton_edge_line_index * TILE_IN_PIXELS);
-		ground_position[num_of_player] = blocked_botton_coord[num_of_player] - player[num_of_player].height;
+		if (top_left_tile_collision_type == SOLID_TILE || botton_left_tile_collision_type == SOLID_TILE)
+		{
+			blocked_left_coord[num_of_player] = left_edge;
+		}
+		else
+		{
+			blocked_left_coord[num_of_player] = MIN_POS_X;
+		}
 	}
-	else
+
+	if (player[num_of_player].last_order_x == RIGHT)
 	{
-		blocked_botton_coord[num_of_player] = MAX_POS_Y;
-		ground_position[num_of_player] = blocked_botton_coord[num_of_player];
+		if (top_right_tile_collision_type == SOLID_TILE || botton_right_tile_collision_type == SOLID_TILE)
+		{
+			blocked_right_coord[num_of_player] = right_edge;
+		}
+		else
+		{
+			blocked_right_coord[num_of_player] = MAX_POS_X;
+		}
 	}
 
 	// sprintf(top_buffer, "B.L:%d", blocked_left_coord[num_of_player] /* blocked_top_coord[num_of_player] */);
 	// sprintf(botton_buffer, "B.R:%d", blocked_right_coord[num_of_player] /* blocked_botton_coord[num_of_player] */);
-	// sprintf(left_buffer, "B.T:%d", blocked_top_coord[num_of_player] /* blocked_left_coord[num_of_player] */);
-	sprintf(right_buffer, "GROUND:%d", blocked_botton_coord[num_of_player] /* blocked_right_coord[num_of_player] */);
+	sprintf(left_buffer, "B.L.C.T:%d", botton_left_tile_collision_type/* blocked_left_coord[num_of_player] */);
+	sprintf(right_buffer, "B.R.C.T:%d", botton_right_tile_collision_type /* blocked_right_coord[num_of_player] */);
 	// sprintf(top_buffer, "L.E.:%d", left_edge_column_index /* blocked_top_coord[num_of_player] */);
 	// sprintf(botton_buffer, "R.E.:%d", right_edge_column_index /* blocked_botton_coord[num_of_player] */);
 	// sprintf(left_buffer, "T.E.:%d", top_edge_line_index /* blocked_left_coord[num_of_player] */);
@@ -1631,12 +1557,12 @@ static void controlPlayerMapCollision(int num_of_player)
 
 	// VDP_clearTextBG(BG_A, 28, 5, 10);
 	// VDP_clearTextBG(BG_A, 28, 6, 10);
-	// VDP_clearTextBG(BG_A, 28, 7, 10);
+	VDP_clearTextBG(BG_A, 28, 7, 10);
 	VDP_clearTextBG(BG_A, 28, 8, 10);
 
 	// VDP_drawTextBG(BG_A, top_buffer, 28, 5);
 	// VDP_drawTextBG(BG_A, botton_buffer, 28, 6);
-	// VDP_drawTextBG(BG_A, left_buffer, 28, 7);
+	VDP_drawTextBG(BG_A, left_buffer, 28, 7);
 	VDP_drawTextBG(BG_A, right_buffer, 28, 8);
 }
 
