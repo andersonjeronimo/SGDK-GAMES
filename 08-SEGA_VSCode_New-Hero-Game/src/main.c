@@ -66,9 +66,9 @@ typedef struct
 
 CollisionBox collision_from[2];
 
-int blocked_left_coord[2] = {MIN_POS_X, MIN_POS_X};
+int blocked_left_coord[2] = {(MIN_POS_X - BOX_LEFT_OFFSET), (MIN_POS_X - BOX_LEFT_OFFSET)};
 int blocked_right_coord[2] = {MAX_POS_X, MAX_POS_X};
-int blocked_top_coord[2] = {MIN_POS_Y, MIN_POS_Y};
+int blocked_top_coord[2] = {(MIN_POS_Y - BOX_TOP_OFFSET), (MIN_POS_Y - BOX_TOP_OFFSET)};
 int blocked_botton_coord[2] = {MAX_POS_Y, MAX_POS_Y};
 // para imprimir coordenadas
 char top_buffer[100];
@@ -495,7 +495,7 @@ static void processMainGame()
 	player[ONE].last_order_x = RIGHT;
 	player[ONE].last_order_y = NEUTRAL;
 	player[ONE].pos_x = HOW_FAR_TO_LEFT;
-	player[ONE].pos_y = HOW_FAR_TO_BOTTON;
+	player[ONE].pos_y = 133;
 	player[ONE].speed_x = 0;
 	player[ONE].speed_y = 0;
 	player[ONE].is_attacking = FALSE;
@@ -519,13 +519,13 @@ static void processMainGame()
 		updateCamera(ONE);
 		updatePlayerPosition(ONE);
 		controlMapBoundaries(ONE);
+		controlPlayerMapCollision(ONE);
 		// controlEffects(ONE);
 		controlHorizontalFlip(ONE);
 		// controlVerticalFlip(ONE);
 		controlXAcceleration(ONE);
 		controlYAcceleration(ONE);
 		controlAttackTimer(ONE);
-		controlPlayerMapCollision(ONE);
 
 		if (player[ONE].is_full_anim)
 		{
@@ -1287,14 +1287,14 @@ static void updatePlayerPosition(int num_of_player)
 	{
 		if (player[num_of_player].last_order_x == LEFT)
 		{
-			if ((player[num_of_player].pos_x + BOX_LEFT_OFFSET) > blocked_left_coord[num_of_player])
+			if (player[num_of_player].pos_x > blocked_left_coord[num_of_player])
 			{
 				player[num_of_player].pos_x -= player[num_of_player].speed_x;
 			}
 		}
 		else if (player[num_of_player].last_order_x == RIGHT)
 		{
-			if ((player[num_of_player].pos_x - BOX_RIGHT_OFFSET) < blocked_right_coord[num_of_player])
+			if (player[num_of_player].pos_x < blocked_right_coord[num_of_player])
 			{
 				player[num_of_player].pos_x += player[num_of_player].speed_x;
 			}
@@ -1304,14 +1304,14 @@ static void updatePlayerPosition(int num_of_player)
 	{
 		if (player[num_of_player].order_y == UP)
 		{
-			if ((player[num_of_player].pos_y + BOX_TOP_OFFSET) > blocked_top_coord[num_of_player])
+			if (player[num_of_player].pos_y > blocked_top_coord[num_of_player])
 			{
 				player[num_of_player].pos_y -= player[num_of_player].speed_y;
 			}
 		}
 		else if (player[num_of_player].order_y == DOWN)
 		{
-			if ((player[num_of_player].pos_y + player[num_of_player].height) < blocked_botton_coord[num_of_player])
+			if (player[num_of_player].pos_y < blocked_botton_coord[num_of_player])
 			{
 				player[num_of_player].pos_y += player[num_of_player].speed_y;
 			}
@@ -1388,16 +1388,16 @@ static void controlMapBoundaries(int num_of_player)
 {
 	if ((player[num_of_player].pos_x + BOX_LEFT_OFFSET) < MIN_POS_X)
 	{
-		player[num_of_player].pos_x = MIN_POS_X - BOX_LEFT_OFFSET;
+		player[num_of_player].pos_x = (MIN_POS_X - BOX_LEFT_OFFSET);
 	}
-	else if ((player[num_of_player].pos_x + player[num_of_player].width - BOX_RIGHT_OFFSET) > MAX_POS_X)
+	else if (((player[num_of_player].pos_x + player[num_of_player].width) - BOX_RIGHT_OFFSET) > MAX_POS_X)
 	{
 		player[num_of_player].pos_x = (MAX_POS_X - player[num_of_player].width) + BOX_RIGHT_OFFSET;
 	}
 
-	if (player[num_of_player].pos_y < MIN_POS_Y)
+	if ((player[num_of_player].pos_y + BOX_TOP_OFFSET) < MIN_POS_Y)
 	{
-		player[num_of_player].pos_y = MIN_POS_Y;
+		player[num_of_player].pos_y = (MIN_POS_Y - BOX_TOP_OFFSET);
 	}
 	else if ((player[num_of_player].pos_y + player[num_of_player].height) > MAX_POS_Y)
 	{
@@ -1474,7 +1474,7 @@ static void controlPlayerMapCollision(int num_of_player)
 	// define a caixa de colisão do personagem
 	int left_edge = player[num_of_player].pos_x + BOX_LEFT_OFFSET;
 	int right_edge = (player[num_of_player].pos_x + player[num_of_player].width) - BOX_RIGHT_OFFSET;
-	int top_edge = player[num_of_player].pos_y - BOX_TOP_OFFSET;
+	int top_edge = player[num_of_player].pos_y + BOX_TOP_OFFSET;
 	int botton_edge = player[num_of_player].pos_y + player[num_of_player].height;
 
 	// arestas:
@@ -1502,11 +1502,11 @@ static void controlPlayerMapCollision(int num_of_player)
 	{
 		if (top_left_tile_collision_type == SOLID_TILE || top_right_tile_collision_type == SOLID_TILE)
 		{
-			blocked_top_coord[num_of_player] = top_edge;
+			blocked_top_coord[num_of_player] = (top_edge - BOX_TOP_OFFSET);
 		}
 		else
 		{
-			blocked_top_coord[num_of_player] = MIN_POS_Y;
+			blocked_top_coord[num_of_player] = (MIN_POS_Y - BOX_TOP_OFFSET);
 		}
 	}
 
@@ -1514,11 +1514,11 @@ static void controlPlayerMapCollision(int num_of_player)
 	{
 		if (botton_left_tile_collision_type == SOLID_TILE || botton_right_tile_collision_type == SOLID_TILE)
 		{
-			blocked_botton_coord[num_of_player] = botton_edge;
+			blocked_botton_coord[num_of_player] = (botton_edge - player[num_of_player].height);
 		}
 		else
 		{
-			blocked_botton_coord[num_of_player] = MAX_POS_Y;
+			blocked_botton_coord[num_of_player] = (MAX_POS_Y - player[num_of_player].height);
 		}
 	}
 
@@ -1526,11 +1526,11 @@ static void controlPlayerMapCollision(int num_of_player)
 	{
 		if (top_left_tile_collision_type == SOLID_TILE || botton_left_tile_collision_type == SOLID_TILE)
 		{
-			blocked_left_coord[num_of_player] = left_edge;
+			blocked_left_coord[num_of_player] = (left_edge - BOX_LEFT_OFFSET);
 		}
 		else
 		{
-			blocked_left_coord[num_of_player] = MIN_POS_X;
+			blocked_left_coord[num_of_player] = (MIN_POS_X - BOX_LEFT_OFFSET);
 		}
 	}
 
@@ -1538,30 +1538,30 @@ static void controlPlayerMapCollision(int num_of_player)
 	{
 		if (top_right_tile_collision_type == SOLID_TILE || botton_right_tile_collision_type == SOLID_TILE)
 		{
-			blocked_right_coord[num_of_player] = right_edge;
+			blocked_right_coord[num_of_player] = (right_edge - player[num_of_player].width) + BOX_RIGHT_OFFSET;
 		}
 		else
 		{
-			blocked_right_coord[num_of_player] = MAX_POS_X;
+			blocked_right_coord[num_of_player] = (MAX_POS_X - player[num_of_player].width) + BOX_RIGHT_OFFSET;
 		}
 	}
 
-	// sprintf(top_buffer, "B.L:%d", blocked_left_coord[num_of_player] /* blocked_top_coord[num_of_player] */);
-	// sprintf(botton_buffer, "B.R:%d", blocked_right_coord[num_of_player] /* blocked_botton_coord[num_of_player] */);
-	sprintf(left_buffer, "B.L.C.T:%d", botton_left_tile_collision_type/* blocked_left_coord[num_of_player] */);
+	sprintf(top_buffer, "P.X:%d", player[num_of_player].pos_x /* blocked_top_coord[num_of_player] */);
+	sprintf(botton_buffer, "B.R:%d", blocked_right_coord[num_of_player] /* blocked_botton_coord[num_of_player] */);
+	sprintf(left_buffer, "T.R.C.T:%d", top_right_tile_collision_type /* blocked_left_coord[num_of_player] */);
 	sprintf(right_buffer, "B.R.C.T:%d", botton_right_tile_collision_type /* blocked_right_coord[num_of_player] */);
 	// sprintf(top_buffer, "L.E.:%d", left_edge_column_index /* blocked_top_coord[num_of_player] */);
 	// sprintf(botton_buffer, "R.E.:%d", right_edge_column_index /* blocked_botton_coord[num_of_player] */);
 	// sprintf(left_buffer, "T.E.:%d", top_edge_line_index /* blocked_left_coord[num_of_player] */);
 	// sprintf(right_buffer, "B.E.:%d", botton_edge_line_index /* blocked_right_coord[num_of_player] */);
 
-	// VDP_clearTextBG(BG_A, 28, 5, 10);
-	// VDP_clearTextBG(BG_A, 28, 6, 10);
+	VDP_clearTextBG(BG_A, 28, 5, 10);
+	VDP_clearTextBG(BG_A, 28, 6, 10);
 	VDP_clearTextBG(BG_A, 28, 7, 10);
 	VDP_clearTextBG(BG_A, 28, 8, 10);
 
-	// VDP_drawTextBG(BG_A, top_buffer, 28, 5);
-	// VDP_drawTextBG(BG_A, botton_buffer, 28, 6);
+	VDP_drawTextBG(BG_A, top_buffer, 28, 5);
+	VDP_drawTextBG(BG_A, botton_buffer, 28, 6);
 	VDP_drawTextBG(BG_A, left_buffer, 28, 7);
 	VDP_drawTextBG(BG_A, right_buffer, 28, 8);
 }
