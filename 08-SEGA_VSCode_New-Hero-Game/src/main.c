@@ -66,10 +66,10 @@ typedef struct
 
 CollisionBox collision_from[2];
 
-int blocked_left_coord[2] = {(MIN_POS_X - BOX_LEFT_OFFSET), (MIN_POS_X - BOX_LEFT_OFFSET)};
-int blocked_right_coord[2] = {MAX_POS_X, MAX_POS_X};
-int blocked_top_coord[2] = {(MIN_POS_Y - BOX_TOP_OFFSET), (MIN_POS_Y - BOX_TOP_OFFSET)};
-int blocked_botton_coord[2] = {MAX_POS_Y, MAX_POS_Y};
+int min_x_coord[2] = {(MIN_POS_X - BOX_LEFT_OFFSET), (MIN_POS_X - BOX_LEFT_OFFSET)};
+int max_x_coord[2] = {MAX_POS_X, MAX_POS_X};
+int min_y_coord[2] = {(MIN_POS_Y - BOX_TOP_OFFSET), (MIN_POS_Y - BOX_TOP_OFFSET)};
+int max_y_coord[2] = {(MAX_POS_Y - PLAYER_1_HEIGTH), MAX_POS_Y};
 // para imprimir coordenadas
 char top_buffer[100];
 char botton_buffer[100];
@@ -87,8 +87,8 @@ const int BGA_COLLISION_MATRIX[14][20] =
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -100,8 +100,8 @@ const int BGA_COLLISION_MATRIX[14][20] =
 
 typedef struct
 {
-	s16 h_scroll_offset_bg;
-	s16 v_scroll_offset_bg;
+	fix16 h_scroll_offset_bg;
+	fix16 v_scroll_offset_bg;
 	u16 pos_x;
 	u16 pos_y;
 } Background;
@@ -173,7 +173,7 @@ enum timeOfAnimation
 	TIME_SLIDE = 80
 };
 
-// player sprite array num_of_player
+// player sprite array player_id
 #define ONE 0
 #define TWO 1
 
@@ -187,26 +187,26 @@ typedef struct
 {
 	Sprite *sprite;
 	enum PlayerState state;
-	s16 width;
-	s16 height;
+	fix16 width;
+	fix16 height;
 	bool flip_h;
 	bool flip_v;
-	s16 anim;
-	s16 *ptr_anim;
-	s16 frame;
+	fix16 anim;
+	fix16 *ptr_anim;
+	fix16 frame;
 	bool is_full_anim;
-	s16 pos_x;
-	s16 pos_y;
-	s16 order_x;
-	s16 order_y;
-	s16 last_order_x;
-	s16 last_order_y;
-	s16 impulse_x;
-	s16 impulse_y;
-	s16 speed_x;
-	s16 speed_y;
-	s16 max_speed_x;
-	s16 max_speed_y;
+	fix16 pos_x;
+	fix16 pos_y;
+	fix16 order_x;
+	fix16 order_y;
+	fix16 last_order_x;
+	fix16 last_order_y;
+	fix16 impulse_x;
+	fix16 impulse_y;
+	fix16 speed_x;
+	fix16 speed_y;
+	fix16 max_speed_x;
+	fix16 max_speed_y;
 	bool is_attacking;
 	bool has_stamina;
 } Player;
@@ -214,14 +214,14 @@ typedef struct
 typedef struct
 {
 	Sprite *sprite;
-	s16 offset_x;
-	s16 offset_y;
-	s16 pos_x;
-	s16 pos_y;
+	fix16 offset_x;
+	fix16 offset_y;
+	fix16 pos_x;
+	fix16 pos_y;
 } SpriteElement;
 
-s16 counter_x[2] = {0, 0};
-s16 counter_y[2] = {0, 0};
+fix16 counter_x[2] = {0, 0};
+fix16 counter_y[2] = {0, 0};
 
 u16 attack_timer[2] = {0, 0};
 u16 effect_timer[2] = {0, 0};
@@ -256,26 +256,27 @@ Joystick joystick[2];
 // static void menuInputHandler(u16 joy, u16 changed, u16 state);
 static void gameInputHandler(u16 joy, u16 changed, u16 state);
 
-static void finiteStateMachine(int num_of_player);
-static void updatePlayerPosition(int num_of_player);
-static void controlEffects(int num_of_player);
+static void finiteStateMachine(int player_id);
+static void updatePlayerPosition(int player_id);
+static void controlEffects(int player_id);
 
 /*Perform full animation, blocking other animation starts until timer ends*/
-static void controlAttackTimer(int num_of_player);
+static void controlAttackTimer(int player_id);
 
-static void controlXAcceleration(int num_of_player);
-static void controlYAcceleration(int num_of_player);
+static void controlXAcceleration(int player_id);
+static void controlYAcceleration(int player_id);
 
 // FLIP
-static void controlHorizontalFlip(int num_of_player);
-static void controlVerticalFlip(int num_of_player);
+static void controlHorizontalFlip(int player_id);
+static void controlVerticalFlip(int player_id);
 
 // COLLISION
-static void controlPlayerMapCollision(int num_of_player);
+static void controlPlayerMapCollision(int player_id);
+static void checkGroundCollision(int player_id);
 
 // BOUNDARIES
-static void controlMapBoundaries(int num_of_player);
-static void updateCamera(int num_of_player);
+static void controlMapBoundaries(int player_id);
+static void updateCamera(int player_id);
 
 static void processGameTitle();
 static void processMainGame();
@@ -495,7 +496,7 @@ static void processMainGame()
 	player[ONE].last_order_x = RIGHT;
 	player[ONE].last_order_y = NEUTRAL;
 	player[ONE].pos_x = HOW_FAR_TO_LEFT;
-	player[ONE].pos_y = 133;
+	player[ONE].pos_y = (MAX_POS_Y - PLAYER_1_HEIGTH - TILE_IN_PIXELS);
 	player[ONE].speed_x = 0;
 	player[ONE].speed_y = 0;
 	player[ONE].is_attacking = FALSE;
@@ -520,6 +521,7 @@ static void processMainGame()
 		updatePlayerPosition(ONE);
 		controlMapBoundaries(ONE);
 		controlPlayerMapCollision(ONE);
+		checkGroundCollision(ONE);
 		// controlEffects(ONE);
 		controlHorizontalFlip(ONE);
 		// controlVerticalFlip(ONE);
@@ -728,476 +730,476 @@ static void gameInputHandler(u16 joy, u16 changed, u16 state)
 	}
 }
 
-static void finiteStateMachine(int num_of_player)
+static void finiteStateMachine(int player_id)
 {
-	switch (player[num_of_player].state)
+	switch (player[player_id].state)
 	{
 	case STATE_STANDING:
-		if (player[num_of_player].order_y == DOWN)
+		if (player[player_id].order_y == DOWN)
 		{
-			player[num_of_player].state = STATE_FALL;
-			player[num_of_player].anim = ANIM_FALL;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_FALL;
+			player[player_id].anim = ANIM_FALL;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
-		if (joystick[num_of_player].btn_left)
+		if (joystick[player_id].btn_left)
 		{
-			if (player[num_of_player].last_order_x == LEFT)
+			if (player[player_id].last_order_x == LEFT)
 			{
-				player[num_of_player].order_x = LEFT;
-				player[num_of_player].last_order_x = LEFT;
-				player[num_of_player].state = STATE_WALK;
-				player[num_of_player].anim = ANIM_WALK;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+				player[player_id].order_x = LEFT;
+				player[player_id].last_order_x = LEFT;
+				player[player_id].state = STATE_WALK;
+				player[player_id].anim = ANIM_WALK;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 			}
-			else if (player[num_of_player].last_order_x == RIGHT)
+			else if (player[player_id].last_order_x == RIGHT)
 			{
-				player[num_of_player].order_x = LEFT;
-				player[num_of_player].last_order_x = LEFT;
-				player[num_of_player].state = STATE_WALK_TURN;
-				player[num_of_player].anim = ANIM_WALK_TURN;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-			}
-		}
-		else if (joystick[num_of_player].btn_right)
-		{
-			if (player[num_of_player].last_order_x == RIGHT)
-			{
-				player[num_of_player].order_x = RIGHT;
-				player[num_of_player].last_order_x = RIGHT;
-				player[num_of_player].state = STATE_WALK;
-				player[num_of_player].anim = ANIM_WALK;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-			}
-			else if (player[num_of_player].last_order_x == LEFT)
-			{
-				player[num_of_player].order_x = RIGHT;
-				player[num_of_player].last_order_x = RIGHT;
-				player[num_of_player].state = STATE_WALK_TURN;
-				player[num_of_player].anim = ANIM_WALK_TURN;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+				player[player_id].order_x = LEFT;
+				player[player_id].last_order_x = LEFT;
+				player[player_id].state = STATE_WALK_TURN;
+				player[player_id].anim = ANIM_WALK_TURN;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 			}
 		}
-		if (joystick[num_of_player].btn_z /*  && player[num_of_player].has_stamina */)
+		else if (joystick[player_id].btn_right)
 		{
-			// player[num_of_player].has_stamina = FALSE;
-			player[num_of_player].state = STATE_JUMP;
-			player[num_of_player].anim = ANIM_JUMP;
-			player[num_of_player].order_y = UP;
-			if (player[num_of_player].speed_y == 0)
+			if (player[player_id].last_order_x == RIGHT)
 			{
-				player[num_of_player].speed_y += player[num_of_player].impulse_y;
+				player[player_id].order_x = RIGHT;
+				player[player_id].last_order_x = RIGHT;
+				player[player_id].state = STATE_WALK;
+				player[player_id].anim = ANIM_WALK;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 			}
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, FALSE);
+			else if (player[player_id].last_order_x == LEFT)
+			{
+				player[player_id].order_x = RIGHT;
+				player[player_id].last_order_x = RIGHT;
+				player[player_id].state = STATE_WALK_TURN;
+				player[player_id].anim = ANIM_WALK_TURN;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
+			}
+		}
+		if (joystick[player_id].btn_z /*  && player[player_id].has_stamina */)
+		{
+			// player[player_id].has_stamina = FALSE;
+			player[player_id].state = STATE_JUMP;
+			player[player_id].anim = ANIM_JUMP;
+			player[player_id].order_y = UP;
+			if (player[player_id].speed_y == 0)
+			{
+				player[player_id].speed_y += player[player_id].impulse_y;
+			}
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, FALSE);
 		}
 
-		if (joystick[num_of_player].btn_b /*  && player[num_of_player].has_stamina */)
+		if (joystick[player_id].btn_b /*  && player[player_id].has_stamina */)
 		{
-			player[num_of_player].order_x = NEUTRAL;
-			player[num_of_player].is_attacking = TRUE;
-			// player[num_of_player].has_stamina = FALSE;
-			anim_duration[num_of_player] = TIME_ATTACK_1;
-			player[num_of_player].state = STATE_ATTACK_1;
-			player[num_of_player].anim = ANIM_ATTACK_1;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].order_x = NEUTRAL;
+			player[player_id].is_attacking = TRUE;
+			// player[player_id].has_stamina = FALSE;
+			anim_duration[player_id] = TIME_ATTACK_1;
+			player[player_id].state = STATE_ATTACK_1;
+			player[player_id].anim = ANIM_ATTACK_1;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 		break;
 
 	case STATE_WALK_TURN:
-		if (player[num_of_player].order_y == DOWN)
+		if (player[player_id].order_y == DOWN)
 		{
-			player[num_of_player].state = STATE_FALL;
-			player[num_of_player].anim = ANIM_FALL;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_FALL;
+			player[player_id].anim = ANIM_FALL;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
-		if (joystick[num_of_player].btn_left)
+		if (joystick[player_id].btn_left)
 		{
-			if (player[num_of_player].last_order_x == LEFT)
+			if (player[player_id].last_order_x == LEFT)
 			{
-				player[num_of_player].order_x = LEFT;
-				player[num_of_player].last_order_x = LEFT;
-				player[num_of_player].state = STATE_WALK;
-				player[num_of_player].anim = ANIM_WALK;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+				player[player_id].order_x = LEFT;
+				player[player_id].last_order_x = LEFT;
+				player[player_id].state = STATE_WALK;
+				player[player_id].anim = ANIM_WALK;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 			}
-			else if (player[num_of_player].last_order_x == RIGHT)
+			else if (player[player_id].last_order_x == RIGHT)
 			{
-				player[num_of_player].order_x = LEFT;
-				player[num_of_player].last_order_x = LEFT;
-				player[num_of_player].state = STATE_WALK_TURN;
-				player[num_of_player].anim = ANIM_WALK_TURN;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-			}
-		}
-		else if (joystick[num_of_player].btn_right)
-		{
-			if (player[num_of_player].last_order_x == RIGHT)
-			{
-				player[num_of_player].order_x = RIGHT;
-				player[num_of_player].last_order_x = RIGHT;
-				player[num_of_player].state = STATE_WALK;
-				player[num_of_player].anim = ANIM_WALK;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-			}
-			else if (player[num_of_player].last_order_x == LEFT)
-			{
-				player[num_of_player].order_x = RIGHT;
-				player[num_of_player].last_order_x = RIGHT;
-				player[num_of_player].state = STATE_WALK_TURN;
-				player[num_of_player].anim = ANIM_WALK_TURN;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+				player[player_id].order_x = LEFT;
+				player[player_id].last_order_x = LEFT;
+				player[player_id].state = STATE_WALK_TURN;
+				player[player_id].anim = ANIM_WALK_TURN;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 			}
 		}
-		if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
+		else if (joystick[player_id].btn_right)
 		{
-			player[num_of_player].order_x = NEUTRAL;
-			player[num_of_player].state = STATE_STANDING;
-			player[num_of_player].anim = ANIM_STANDING;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			if (player[player_id].last_order_x == RIGHT)
+			{
+				player[player_id].order_x = RIGHT;
+				player[player_id].last_order_x = RIGHT;
+				player[player_id].state = STATE_WALK;
+				player[player_id].anim = ANIM_WALK;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
+			}
+			else if (player[player_id].last_order_x == LEFT)
+			{
+				player[player_id].order_x = RIGHT;
+				player[player_id].last_order_x = RIGHT;
+				player[player_id].state = STATE_WALK_TURN;
+				player[player_id].anim = ANIM_WALK_TURN;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
+			}
+		}
+		if (!(joystick[player_id].btn_left) && !(joystick[player_id].btn_right))
+		{
+			player[player_id].order_x = NEUTRAL;
+			player[player_id].state = STATE_STANDING;
+			player[player_id].anim = ANIM_STANDING;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 		break;
 
 	case STATE_WALK:
-		if (player[num_of_player].order_y == DOWN)
+		if (player[player_id].order_y == DOWN)
 		{
-			player[num_of_player].state = STATE_FALL;
-			player[num_of_player].anim = ANIM_FALL;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_FALL;
+			player[player_id].anim = ANIM_FALL;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
-		if (joystick[num_of_player].btn_z /* && player[num_of_player].has_stamina */)
+		if (joystick[player_id].btn_z /* && player[player_id].has_stamina */)
 		{
-			// player[num_of_player].has_stamina = FALSE;
-			player[num_of_player].state = STATE_JUMP;
-			player[num_of_player].anim = ANIM_JUMP;
-			player[num_of_player].order_y = UP;
-			if (player[num_of_player].speed_y == 0)
+			// player[player_id].has_stamina = FALSE;
+			player[player_id].state = STATE_JUMP;
+			player[player_id].anim = ANIM_JUMP;
+			player[player_id].order_y = UP;
+			if (player[player_id].speed_y == 0)
 			{
-				player[num_of_player].speed_y += player[num_of_player].impulse_y;
+				player[player_id].speed_y += player[player_id].impulse_y;
 			}
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
-		if (joystick[num_of_player].btn_c)
+		if (joystick[player_id].btn_c)
 		{
-			player[num_of_player].max_speed_x = 4;
-			player[num_of_player].state = STATE_RUN;
-			player[num_of_player].anim = ANIM_RUN;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].max_speed_x = 4;
+			player[player_id].state = STATE_RUN;
+			player[player_id].anim = ANIM_RUN;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
-		if (joystick[num_of_player].btn_b /*  && player[num_of_player].has_stamina */)
+		if (joystick[player_id].btn_b /*  && player[player_id].has_stamina */)
 		{
-			player[num_of_player].order_x = NEUTRAL;
-			player[num_of_player].is_attacking = TRUE;
-			// player[num_of_player].has_stamina = FALSE;
-			anim_duration[num_of_player] = TIME_ATTACK_1;
-			player[num_of_player].state = STATE_ATTACK_1;
-			player[num_of_player].anim = ANIM_ATTACK_1;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].order_x = NEUTRAL;
+			player[player_id].is_attacking = TRUE;
+			// player[player_id].has_stamina = FALSE;
+			anim_duration[player_id] = TIME_ATTACK_1;
+			player[player_id].state = STATE_ATTACK_1;
+			player[player_id].anim = ANIM_ATTACK_1;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 
-		if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
+		if (!(joystick[player_id].btn_left) && !(joystick[player_id].btn_right))
 		{
-			player[num_of_player].order_x = NEUTRAL;
-			player[num_of_player].state = STATE_STANDING;
-			player[num_of_player].anim = ANIM_STANDING;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].order_x = NEUTRAL;
+			player[player_id].state = STATE_STANDING;
+			player[player_id].anim = ANIM_STANDING;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 		break;
 
 	case STATE_RUN:
-		if (player[num_of_player].order_y == DOWN)
+		if (player[player_id].order_y == DOWN)
 		{
-			player[num_of_player].state = STATE_FALL;
-			player[num_of_player].anim = ANIM_FALL;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_FALL;
+			player[player_id].anim = ANIM_FALL;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
-		if (joystick[num_of_player].btn_z /* && player[num_of_player].has_stamina */)
+		if (joystick[player_id].btn_z /* && player[player_id].has_stamina */)
 		{
-			// player[num_of_player].has_stamina = FALSE;
-			player[num_of_player].state = STATE_JUMP;
-			player[num_of_player].anim = ANIM_JUMP;
-			player[num_of_player].order_y = UP;
-			if (player[num_of_player].speed_y == 0)
+			// player[player_id].has_stamina = FALSE;
+			player[player_id].state = STATE_JUMP;
+			player[player_id].anim = ANIM_JUMP;
+			player[player_id].order_y = UP;
+			if (player[player_id].speed_y == 0)
 			{
-				player[num_of_player].speed_y += player[num_of_player].impulse_y;
+				player[player_id].speed_y += player[player_id].impulse_y;
 			}
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
-		if (joystick[num_of_player].btn_b /*  && player[num_of_player].has_stamina */)
+		if (joystick[player_id].btn_b /*  && player[player_id].has_stamina */)
 		{
-			player[num_of_player].order_x = NEUTRAL;
-			player[num_of_player].is_attacking = TRUE;
-			// player[num_of_player].has_stamina = FALSE;
-			anim_duration[num_of_player] = TIME_ATTACK_1;
-			player[num_of_player].state = STATE_ATTACK_1;
-			player[num_of_player].anim = ANIM_ATTACK_1;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
-		}
-
-		if (joystick[num_of_player].btn_a /*  && player[num_of_player].has_stamina */)
-		{
-			player[num_of_player].is_attacking = TRUE;
-			// player[num_of_player].has_stamina = FALSE;
-			anim_duration[num_of_player] = TIME_SLIDE;
-			player[num_of_player].state = STATE_SLIDE;
-			player[num_of_player].anim = ANIM_SLIDE;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, FALSE);
+			player[player_id].order_x = NEUTRAL;
+			player[player_id].is_attacking = TRUE;
+			// player[player_id].has_stamina = FALSE;
+			anim_duration[player_id] = TIME_ATTACK_1;
+			player[player_id].state = STATE_ATTACK_1;
+			player[player_id].anim = ANIM_ATTACK_1;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 
-		if (!joystick[num_of_player].btn_c)
+		if (joystick[player_id].btn_a /*  && player[player_id].has_stamina */)
 		{
-			player[num_of_player].max_speed_x = 2;
-			player[num_of_player].state = STATE_WALK;
-			player[num_of_player].anim = ANIM_WALK;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].is_attacking = TRUE;
+			// player[player_id].has_stamina = FALSE;
+			anim_duration[player_id] = TIME_SLIDE;
+			player[player_id].state = STATE_SLIDE;
+			player[player_id].anim = ANIM_SLIDE;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, FALSE);
 		}
 
-		if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
+		if (!joystick[player_id].btn_c)
 		{
-			player[num_of_player].anim = ANIM_RUN_TO_IDLE;
-			player[num_of_player].state = STATE_RUN_TO_IDLE;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].max_speed_x = 2;
+			player[player_id].state = STATE_WALK;
+			player[player_id].anim = ANIM_WALK;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
+		}
+
+		if (!(joystick[player_id].btn_left) && !(joystick[player_id].btn_right))
+		{
+			player[player_id].anim = ANIM_RUN_TO_IDLE;
+			player[player_id].state = STATE_RUN_TO_IDLE;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 		break;
 
 	case STATE_RUN_TO_IDLE:
-		player[num_of_player].order_x = NEUTRAL;
-		if (player[num_of_player].order_y == DOWN)
+		player[player_id].order_x = NEUTRAL;
+		if (player[player_id].order_y == DOWN)
 		{
-			player[num_of_player].state = STATE_FALL;
-			player[num_of_player].anim = ANIM_FALL;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_FALL;
+			player[player_id].anim = ANIM_FALL;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
-		if (player[num_of_player].speed_x <= 0)
+		if (player[player_id].speed_x <= 0)
 		{
-			player[num_of_player].state = STATE_STANDING;
-			player[num_of_player].anim = ANIM_STANDING;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_STANDING;
+			player[player_id].anim = ANIM_STANDING;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 		break;
 
 	case STATE_JUMP:
-		if (player[num_of_player].order_y == UP)
+		if (player[player_id].order_y == UP)
 		{
-			if (joystick[num_of_player].btn_left)
+			if (joystick[player_id].btn_left)
 			{
-				player[num_of_player].order_x = LEFT;
-				player[num_of_player].last_order_x = LEFT;
+				player[player_id].order_x = LEFT;
+				player[player_id].last_order_x = LEFT;
 			}
-			else if (joystick[num_of_player].btn_right)
+			else if (joystick[player_id].btn_right)
 			{
-				player[num_of_player].order_x = RIGHT;
-				player[num_of_player].last_order_x = RIGHT;
+				player[player_id].order_x = RIGHT;
+				player[player_id].last_order_x = RIGHT;
 			}
-			else if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
+			else if (!(joystick[player_id].btn_left) && !(joystick[player_id].btn_right))
 			{
-				player[num_of_player].order_x = NEUTRAL;
+				player[player_id].order_x = NEUTRAL;
 			}
 		}
-		else if (player[num_of_player].order_y == DOWN)
+		else if (player[player_id].order_y == DOWN)
 		{
-			player[num_of_player].state = STATE_FALL;
-			player[num_of_player].anim = ANIM_FALL;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_FALL;
+			player[player_id].anim = ANIM_FALL;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 		break;
 
 	case STATE_SLIDE:
-		if (player[num_of_player].order_y == DOWN)
+		if (player[player_id].order_y == DOWN)
 		{
-			player[num_of_player].state = STATE_FALL;
-			player[num_of_player].anim = ANIM_FALL;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_FALL;
+			player[player_id].anim = ANIM_FALL;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
-		if (!joystick[num_of_player].btn_a)
+		if (!joystick[player_id].btn_a)
 		{
-			player[num_of_player].state = STATE_SLIDE_END;
-			player[num_of_player].anim = ANIM_SLIDE;
-			player[num_of_player].is_full_anim = FALSE;
-			player[num_of_player].frame = 5;
-			player[num_of_player].is_attacking = TRUE;
-			anim_duration[num_of_player] = 20;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_SLIDE_END;
+			player[player_id].anim = ANIM_SLIDE;
+			player[player_id].is_full_anim = FALSE;
+			player[player_id].frame = 5;
+			player[player_id].is_attacking = TRUE;
+			anim_duration[player_id] = 20;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
-		else if (!player[num_of_player].is_attacking)
+		else if (!player[player_id].is_attacking)
 		{
-			player[num_of_player].state = STATE_RUN;
-			player[num_of_player].anim = ANIM_RUN;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_RUN;
+			player[player_id].anim = ANIM_RUN;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 		break;
 
 	case STATE_SLIDE_END:
-		if (player[num_of_player].order_y == DOWN)
+		if (player[player_id].order_y == DOWN)
 		{
-			player[num_of_player].state = STATE_FALL;
-			player[num_of_player].anim = ANIM_FALL;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_FALL;
+			player[player_id].anim = ANIM_FALL;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
-		if (!player[num_of_player].is_attacking)
+		if (!player[player_id].is_attacking)
 		{
-			player[num_of_player].state = STATE_RUN;
-			player[num_of_player].anim = ANIM_RUN;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_RUN;
+			player[player_id].anim = ANIM_RUN;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 		break;
 
 	case STATE_FALL:
-		if (player[num_of_player].order_y == DOWN)
+		if (player[player_id].order_y == DOWN)
 		{
-			if (joystick[num_of_player].btn_left)
+			if (joystick[player_id].btn_left)
 			{
-				player[num_of_player].order_x = LEFT;
-				player[num_of_player].last_order_x = LEFT;
+				player[player_id].order_x = LEFT;
+				player[player_id].last_order_x = LEFT;
 			}
-			else if (joystick[num_of_player].btn_right)
+			else if (joystick[player_id].btn_right)
 			{
-				player[num_of_player].order_x = RIGHT;
-				player[num_of_player].last_order_x = RIGHT;
+				player[player_id].order_x = RIGHT;
+				player[player_id].last_order_x = RIGHT;
 			}
-			else if (!(joystick[num_of_player].btn_left) && !(joystick[num_of_player].btn_right))
+			else if (!(joystick[player_id].btn_left) && !(joystick[player_id].btn_right))
 			{
-				player[num_of_player].order_x = NEUTRAL;
+				player[player_id].order_x = NEUTRAL;
 			}
 		}
-		else if (player[num_of_player].order_y == NEUTRAL)
+		else if (player[player_id].order_y == NEUTRAL)
 		{
-			player[num_of_player].order_x = NEUTRAL;
-			player[num_of_player].state = STATE_STANDING;
-			player[num_of_player].anim = ANIM_STANDING;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].order_x = NEUTRAL;
+			player[player_id].state = STATE_STANDING;
+			player[player_id].anim = ANIM_STANDING;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 		break;
 
 	case STATE_ATTACK_1:
-		if (!joystick[num_of_player].btn_b)
+		if (!joystick[player_id].btn_b)
 		{
-			if (!player[num_of_player].is_attacking)
+			if (!player[player_id].is_attacking)
 			{
-				if (joystick[num_of_player].btn_x)
+				if (joystick[player_id].btn_x)
 				{
-					player[num_of_player].order_x = NEUTRAL;
-					player[num_of_player].is_attacking = TRUE;
-					// player[num_of_player].has_stamina = FALSE;
-					anim_duration[num_of_player] = TIME_ATTACK_2;
-					player[num_of_player].state = STATE_ATTACK_2;
-					player[num_of_player].anim = ANIM_ATTACK_2;
-					player[num_of_player].is_full_anim = TRUE;
-					SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+					player[player_id].order_x = NEUTRAL;
+					player[player_id].is_attacking = TRUE;
+					// player[player_id].has_stamina = FALSE;
+					anim_duration[player_id] = TIME_ATTACK_2;
+					player[player_id].state = STATE_ATTACK_2;
+					player[player_id].anim = ANIM_ATTACK_2;
+					player[player_id].is_full_anim = TRUE;
+					SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 				}
 				else
 				{
-					player[num_of_player].is_attacking = TRUE;
-					anim_duration[num_of_player] = TIME_ATTACK_1_END;
-					player[num_of_player].state = STATE_ATTACK_1_END;
-					player[num_of_player].anim = ANIM_ATTACK_1_END;
-					player[num_of_player].is_full_anim = TRUE;
-					SPR_setAnimationLoop(player[num_of_player].sprite, FALSE);
+					player[player_id].is_attacking = TRUE;
+					anim_duration[player_id] = TIME_ATTACK_1_END;
+					player[player_id].state = STATE_ATTACK_1_END;
+					player[player_id].anim = ANIM_ATTACK_1_END;
+					player[player_id].is_full_anim = TRUE;
+					SPR_setAnimationLoop(player[player_id].sprite, FALSE);
 				}
 			}
 		}
 		break;
 
 	case STATE_ATTACK_2:
-		if (!joystick[num_of_player].btn_x)
+		if (!joystick[player_id].btn_x)
 		{
-			if (!player[num_of_player].is_attacking)
+			if (!player[player_id].is_attacking)
 			{
-				if (joystick[num_of_player].btn_y)
+				if (joystick[player_id].btn_y)
 				{
-					player[num_of_player].order_x = NEUTRAL;
-					player[num_of_player].is_attacking = TRUE;
-					// player[num_of_player].has_stamina = FALSE;
-					anim_duration[num_of_player] = TIME_ATTACK_3;
-					player[num_of_player].state = STATE_ATTACK_3;
-					player[num_of_player].anim = ANIM_ATTACK_3;
-					player[num_of_player].is_full_anim = TRUE;
-					SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+					player[player_id].order_x = NEUTRAL;
+					player[player_id].is_attacking = TRUE;
+					// player[player_id].has_stamina = FALSE;
+					anim_duration[player_id] = TIME_ATTACK_3;
+					player[player_id].state = STATE_ATTACK_3;
+					player[player_id].anim = ANIM_ATTACK_3;
+					player[player_id].is_full_anim = TRUE;
+					SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 				}
 				else
 				{
-					player[num_of_player].is_attacking = TRUE;
-					anim_duration[num_of_player] = TIME_ATTACK_2_END;
-					player[num_of_player].state = STATE_ATTACK_2_END;
-					player[num_of_player].anim = ANIM_ATTACK_2_END;
-					player[num_of_player].is_full_anim = TRUE;
-					SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+					player[player_id].is_attacking = TRUE;
+					anim_duration[player_id] = TIME_ATTACK_2_END;
+					player[player_id].state = STATE_ATTACK_2_END;
+					player[player_id].anim = ANIM_ATTACK_2_END;
+					player[player_id].is_full_anim = TRUE;
+					SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 				}
 			}
 		}
 		break;
 	case STATE_ATTACK_3:
-		if (!joystick[num_of_player].btn_y)
+		if (!joystick[player_id].btn_y)
 		{
-			if (!player[num_of_player].is_attacking)
+			if (!player[player_id].is_attacking)
 			{
-				player[num_of_player].is_attacking = TRUE;
-				anim_duration[num_of_player] = TIME_ATTACK_3_END;
-				player[num_of_player].state = STATE_ATTACK_3_END;
-				player[num_of_player].anim = ANIM_ATTACK_3_END;
-				player[num_of_player].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+				player[player_id].is_attacking = TRUE;
+				anim_duration[player_id] = TIME_ATTACK_3_END;
+				player[player_id].state = STATE_ATTACK_3_END;
+				player[player_id].anim = ANIM_ATTACK_3_END;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 			}
 		}
 		break;
 
 	case STATE_ATTACK_1_END:
-		if (!player[num_of_player].is_attacking)
+		if (!player[player_id].is_attacking)
 		{
-			player[num_of_player].state = STATE_STANDING;
-			player[num_of_player].anim = ANIM_STANDING;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_STANDING;
+			player[player_id].anim = ANIM_STANDING;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 		break;
 
 	case STATE_ATTACK_2_END:
-		if (!player[num_of_player].is_attacking)
+		if (!player[player_id].is_attacking)
 		{
-			player[num_of_player].state = STATE_STANDING;
-			player[num_of_player].anim = ANIM_STANDING;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_STANDING;
+			player[player_id].anim = ANIM_STANDING;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 		break;
 
 	case STATE_ATTACK_3_END:
-		if (!player[num_of_player].is_attacking)
+		if (!player[player_id].is_attacking)
 		{
-			player[num_of_player].state = STATE_STANDING;
-			player[num_of_player].anim = ANIM_STANDING;
-			player[num_of_player].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[num_of_player].sprite, TRUE);
+			player[player_id].state = STATE_STANDING;
+			player[player_id].anim = ANIM_STANDING;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 		break;
 
@@ -1206,166 +1208,166 @@ static void finiteStateMachine(int num_of_player)
 	}
 }
 
-static void controlXAcceleration(int num_of_player)
+static void controlXAcceleration(int player_id)
 {
-	if (player[num_of_player].order_x != NEUTRAL)
+	if (player[player_id].order_x != NEUTRAL)
 	{
-		if (player[num_of_player].speed_x < player[num_of_player].max_speed_x)
+		if (player[player_id].speed_x < player[player_id].max_speed_x)
 		{
-			counter_x[num_of_player] += 1;
-			if (counter_x[num_of_player] == COUNTER_LIMIT)
+			counter_x[player_id] += 1;
+			if (counter_x[player_id] == COUNTER_LIMIT)
 			{
-				counter_x[num_of_player] = 0;
-				player[num_of_player].speed_x += 1;
+				counter_x[player_id] = 0;
+				player[player_id].speed_x += 1;
 			}
 		}
-		else if (player[num_of_player].speed_x > player[num_of_player].max_speed_x)
+		else if (player[player_id].speed_x > player[player_id].max_speed_x)
 		{
-			counter_x[num_of_player] += 1;
-			if (counter_x[num_of_player] == COUNTER_LIMIT)
+			counter_x[player_id] += 1;
+			if (counter_x[player_id] == COUNTER_LIMIT)
 			{
-				counter_x[num_of_player] = 0;
-				player[num_of_player].speed_x -= 1;
+				counter_x[player_id] = 0;
+				player[player_id].speed_x -= 1;
 			}
 		}
 	}
-	else if (player[num_of_player].order_x == NEUTRAL)
+	else if (player[player_id].order_x == NEUTRAL)
 	{
-		if (player[num_of_player].speed_x > 0)
+		if (player[player_id].speed_x > 0)
 		{
-			counter_x[num_of_player] += 1;
-			if (counter_x[num_of_player] == COUNTER_LIMIT)
+			counter_x[player_id] += 1;
+			if (counter_x[player_id] == COUNTER_LIMIT)
 			{
-				counter_x[num_of_player] = 0;
-				player[num_of_player].speed_x -= 1;
+				counter_x[player_id] = 0;
+				player[player_id].speed_x -= 1;
 			}
 		}
 	}
 }
 
-static void controlYAcceleration(int num_of_player)
+static void controlYAcceleration(int player_id)
 {
-	if (player[num_of_player].order_y == UP)
+	if (player[player_id].order_y == UP)
 	{
-		if (player[num_of_player].speed_y > 0)
+		if (player[player_id].speed_y > 0)
 		{
-			counter_y[num_of_player] += 1;
-			if (counter_y[num_of_player] == COUNTER_LIMIT)
+			counter_y[player_id] += 1;
+			if (counter_y[player_id] == COUNTER_LIMIT)
 			{
-				counter_y[num_of_player] = 0;
-				player[num_of_player].speed_y -= 1;
+				counter_y[player_id] = 0;
+				player[player_id].speed_y -= 1;
 			}
 		}
-		else if (player[num_of_player].speed_y <= 0)
+		else if (player[player_id].speed_y == 0)
 		{
-			player[num_of_player].order_y = DOWN;
-			player[num_of_player].speed_y = 0;
+			player[player_id].order_y = DOWN;
+			player[player_id].speed_y = 0;
 		}
 	}
-	else if (player[num_of_player].order_y == DOWN)
+	else if (player[player_id].order_y == DOWN)
 	{
-		counter_y[num_of_player] += 1;
-		if (counter_y[num_of_player] == COUNTER_LIMIT)
+		counter_y[player_id] += 1;
+		if (counter_y[player_id] == COUNTER_LIMIT)
 		{
-			counter_y[num_of_player] = 0;
-			if (player[num_of_player].speed_y < player[num_of_player].max_speed_y)
+			counter_y[player_id] = 0;
+			if (player[player_id].speed_y < player[player_id].max_speed_y)
 			{
-				player[num_of_player].speed_y += 1;
+				player[player_id].speed_y += 1;
 			}
 		}
 	}
-	else if (player[num_of_player].order_y == NEUTRAL)
+	else if (player[player_id].order_y == NEUTRAL)
 	{
-		counter_y[num_of_player] = 0;
-		player[num_of_player].speed_y = 0;
+		counter_y[player_id] = 0;
+		player[player_id].speed_y = 0;
 	}
 }
 
-static void updatePlayerPosition(int num_of_player)
+static void updatePlayerPosition(int player_id)
 {
-	if (player[num_of_player].speed_x > 0)
+	if (player[player_id].speed_x > 0)
 	{
-		if (player[num_of_player].last_order_x == LEFT)
+		if (player[player_id].last_order_x == LEFT)
 		{
-			if (player[num_of_player].pos_x > blocked_left_coord[num_of_player])
+			if (player[player_id].pos_x > min_x_coord[player_id])
 			{
-				player[num_of_player].pos_x -= player[num_of_player].speed_x;
+				player[player_id].pos_x -= player[player_id].speed_x;
 			}
 		}
-		else if (player[num_of_player].last_order_x == RIGHT)
+		else if (player[player_id].last_order_x == RIGHT)
 		{
-			if (player[num_of_player].pos_x < blocked_right_coord[num_of_player])
+			if (player[player_id].pos_x < max_x_coord[player_id])
 			{
-				player[num_of_player].pos_x += player[num_of_player].speed_x;
+				player[player_id].pos_x += player[player_id].speed_x;
 			}
 		}
 	}
-	if (player[num_of_player].speed_y > 0)
+	if (player[player_id].speed_y > 0)
 	{
-		if (player[num_of_player].order_y == UP)
+		if (player[player_id].order_y == UP)
 		{
-			if (player[num_of_player].pos_y > blocked_top_coord[num_of_player])
+			if (player[player_id].pos_y > min_y_coord[player_id])
 			{
-				player[num_of_player].pos_y -= player[num_of_player].speed_y;
+				player[player_id].pos_y -= player[player_id].speed_y;
 			}
 		}
-		else if (player[num_of_player].order_y == DOWN)
+		else if (player[player_id].order_y == DOWN)
 		{
-			if (player[num_of_player].pos_y < blocked_botton_coord[num_of_player])
+			if (player[player_id].pos_y < max_y_coord[player_id])
 			{
-				player[num_of_player].pos_y += player[num_of_player].speed_y;
+				player[player_id].pos_y += player[player_id].speed_y;
 			}
 		}
 	}
 }
 
-static void controlHorizontalFlip(int num_of_player)
+static void controlHorizontalFlip(int player_id)
 {
-	if (player[num_of_player].order_x == RIGHT)
+	if (player[player_id].order_x == RIGHT)
 	{
-		player[num_of_player].flip_h = FALSE;
+		player[player_id].flip_h = FALSE;
 	}
-	else if (player[num_of_player].order_x == LEFT)
+	else if (player[player_id].order_x == LEFT)
 	{
-		player[num_of_player].flip_h = TRUE;
+		player[player_id].flip_h = TRUE;
 	}
 }
 
-static void controlVerticalFlip(int num_of_player)
+static void controlVerticalFlip(int player_id)
 {
-	if (player[num_of_player].order_y == UP)
+	if (player[player_id].order_y == UP)
 	{
-		player[num_of_player].flip_v = FALSE;
+		player[player_id].flip_v = FALSE;
 	}
-	else if (player[num_of_player].order_y == DOWN)
+	else if (player[player_id].order_y == DOWN)
 	{
-		player[num_of_player].flip_v = TRUE;
+		player[player_id].flip_v = TRUE;
 	}
 	else
 	{
-		player[num_of_player].flip_v = player[num_of_player].flip_v;
+		player[player_id].flip_v = player[player_id].flip_v;
 	}
 }
 
-static void controlEffects(int num_of_player)
+static void controlEffects(int player_id)
 {
 }
 
-static void controlAttackTimer(int num_of_player)
+static void controlAttackTimer(int player_id)
 {
-	if (player[num_of_player].is_attacking)
+	if (player[player_id].is_attacking)
 	{
-		if (attack_timer[num_of_player] < anim_duration[num_of_player])
-			attack_timer[num_of_player]++;
+		if (attack_timer[player_id] < anim_duration[player_id])
+			attack_timer[player_id]++;
 		else
 		{
-			attack_timer[num_of_player] = 0;
-			player[num_of_player].is_attacking = FALSE;
+			attack_timer[player_id] = 0;
+			player[player_id].is_attacking = FALSE;
 		}
 	}
 }
 
-static void controlIdleTimer(int num_of_player)
+static void controlIdleTimer(int player_id)
 {
 	/* if (player[player] == STATE_STANDING || player[player] == STATE_BORED || player[player] == STATE_GO)
 	{
@@ -1384,31 +1386,31 @@ static void controlIdleTimer(int num_of_player)
 	} */
 }
 
-static void controlMapBoundaries(int num_of_player)
+static void controlMapBoundaries(int player_id)
 {
-	if ((player[num_of_player].pos_x + BOX_LEFT_OFFSET) < MIN_POS_X)
+	if ((player[player_id].pos_x + BOX_LEFT_OFFSET) < MIN_POS_X)
 	{
-		player[num_of_player].pos_x = (MIN_POS_X - BOX_LEFT_OFFSET);
+		player[player_id].pos_x = (MIN_POS_X - BOX_LEFT_OFFSET);
 	}
-	else if (((player[num_of_player].pos_x + player[num_of_player].width) - BOX_RIGHT_OFFSET) > MAX_POS_X)
+	else if (((player[player_id].pos_x + player[player_id].width) - BOX_RIGHT_OFFSET) > MAX_POS_X)
 	{
-		player[num_of_player].pos_x = (MAX_POS_X - player[num_of_player].width) + BOX_RIGHT_OFFSET;
+		player[player_id].pos_x = (MAX_POS_X - player[player_id].width) + BOX_RIGHT_OFFSET;
 	}
 
-	if ((player[num_of_player].pos_y + BOX_TOP_OFFSET) < MIN_POS_Y)
+	if ((player[player_id].pos_y + BOX_TOP_OFFSET) < MIN_POS_Y)
 	{
-		player[num_of_player].pos_y = (MIN_POS_Y - BOX_TOP_OFFSET);
+		player[player_id].pos_y = (MIN_POS_Y - BOX_TOP_OFFSET);
 	}
-	else if ((player[num_of_player].pos_y + player[num_of_player].height) > MAX_POS_Y)
+	else if ((player[player_id].pos_y + player[player_id].height) > MAX_POS_Y)
 	{
-		player[num_of_player].pos_y = (MAX_POS_Y - player[num_of_player].height);
+		player[player_id].pos_y = (MAX_POS_Y - player[player_id].height);
 	}
 }
 
-static void updateCamera(int num_of_player)
+static void updateCamera(int player_id)
 {
-	player_x_on_map = player[num_of_player].pos_x;
-	player_y_on_map = player[num_of_player].pos_y;
+	player_x_on_map = player[player_id].pos_x;
+	player_y_on_map = player[player_id].pos_y;
 	player_x_on_screen = (player_x_on_map - camera.cur_pos_x);
 	player_y_on_screen = (player_y_on_map - camera.cur_pos_y);
 
@@ -1465,17 +1467,17 @@ static void updateCamera(int num_of_player)
 	}
 };
 
-static void controlPlayerMapCollision(int num_of_player)
+static void controlPlayerMapCollision(int player_id)
 {
 	//	#define MIN_POS_X 0 - BOX_LEFT_OFFSET
 	//	#define MAX_POS_X MAP_WIDTH - PLAYER_1_WIDTH + BOX_RIGHT_OFFSET
 	//	#define MIN_POS_Y 0 - BOX_TOP_OFFSET
 	//	#define MAX_POS_Y MAP_HEIGTH - PLAYER_1_HEIGTH + BOX_BOTTON_OFFSET
 	// define a caixa de colisão do personagem
-	int left_edge = player[num_of_player].pos_x + BOX_LEFT_OFFSET;
-	int right_edge = (player[num_of_player].pos_x + player[num_of_player].width) - BOX_RIGHT_OFFSET;
-	int top_edge = player[num_of_player].pos_y + BOX_TOP_OFFSET;
-	int botton_edge = player[num_of_player].pos_y + player[num_of_player].height;
+	int left_edge = (player[player_id].pos_x + BOX_LEFT_OFFSET);
+	int right_edge = (player[player_id].pos_x + player[player_id].width) - BOX_RIGHT_OFFSET;
+	int top_edge = (player[player_id].pos_y + BOX_TOP_OFFSET);
+	int botton_edge = (player[player_id].pos_y + player[player_id].height);
 
 	// arestas:
 	// verifica em qual indice da matriz cada aresta está colidindo
@@ -1498,62 +1500,62 @@ static void controlPlayerMapCollision(int num_of_player)
 	int botton_left_tile_collision_type = BGA_COLLISION_MATRIX[botton_edge_line_index][left_edge_column_index];
 	int botton_right_tile_collision_type = BGA_COLLISION_MATRIX[botton_edge_line_index][right_edge_column_index];
 
-	if (player[num_of_player].order_y == UP)
+	if (player[player_id].order_y == UP)
 	{
 		if (top_left_tile_collision_type == SOLID_TILE || top_right_tile_collision_type == SOLID_TILE)
 		{
-			blocked_top_coord[num_of_player] = (top_edge - BOX_TOP_OFFSET);
+			min_y_coord[player_id] = (top_edge_line_index * TILE_IN_PIXELS) + TILE_IN_PIXELS - BOX_TOP_OFFSET;
 		}
 		else
 		{
-			blocked_top_coord[num_of_player] = (MIN_POS_Y - BOX_TOP_OFFSET);
+			min_y_coord[player_id] = (MIN_POS_Y - BOX_TOP_OFFSET);
 		}
 	}
 
-	if (player[num_of_player].order_y == DOWN || player[num_of_player].order_y == NEUTRAL)
+	if (player[player_id].order_y == DOWN || player[player_id].order_y == NEUTRAL)
 	{
 		if (botton_left_tile_collision_type == SOLID_TILE || botton_right_tile_collision_type == SOLID_TILE)
 		{
-			blocked_botton_coord[num_of_player] = (botton_edge - player[num_of_player].height);
+			max_y_coord[player_id] = (botton_edge_line_index * TILE_IN_PIXELS) - player[player_id].height;
 		}
 		else
 		{
-			blocked_botton_coord[num_of_player] = (MAX_POS_Y - player[num_of_player].height);
+			max_y_coord[player_id] = (MAX_POS_Y - player[player_id].height);
 		}
 	}
 
-	if (player[num_of_player].last_order_x == LEFT)
+	if (player[player_id].last_order_x == LEFT)
 	{
-		if (top_left_tile_collision_type == SOLID_TILE || botton_left_tile_collision_type == SOLID_TILE)
+		if (top_left_tile_collision_type == SOLID_TILE && botton_left_tile_collision_type == SOLID_TILE)
 		{
-			blocked_left_coord[num_of_player] = (left_edge - BOX_LEFT_OFFSET);
+			min_x_coord[player_id] = (left_edge_column_index * TILE_IN_PIXELS) + TILE_IN_PIXELS - BOX_LEFT_OFFSET;
 		}
 		else
 		{
-			blocked_left_coord[num_of_player] = (MIN_POS_X - BOX_LEFT_OFFSET);
+			min_x_coord[player_id] = (MIN_POS_X - BOX_LEFT_OFFSET);
 		}
 	}
 
-	if (player[num_of_player].last_order_x == RIGHT)
+	if (player[player_id].last_order_x == RIGHT)
 	{
-		if (top_right_tile_collision_type == SOLID_TILE || botton_right_tile_collision_type == SOLID_TILE)
+		if (top_right_tile_collision_type == SOLID_TILE && botton_right_tile_collision_type == SOLID_TILE)
 		{
-			blocked_right_coord[num_of_player] = (right_edge - player[num_of_player].width) + BOX_RIGHT_OFFSET;
+			max_x_coord[player_id] = ((right_edge_column_index * TILE_IN_PIXELS) - player[player_id].width) + BOX_RIGHT_OFFSET;
 		}
 		else
 		{
-			blocked_right_coord[num_of_player] = (MAX_POS_X - player[num_of_player].width) + BOX_RIGHT_OFFSET;
+			max_x_coord[player_id] = (MAX_POS_X - player[player_id].width) + BOX_RIGHT_OFFSET;
 		}
 	}
 
-	sprintf(top_buffer, "P.X:%d", player[num_of_player].pos_x /* blocked_top_coord[num_of_player] */);
-	sprintf(botton_buffer, "B.R:%d", blocked_right_coord[num_of_player] /* blocked_botton_coord[num_of_player] */);
-	sprintf(left_buffer, "T.R.C.T:%d", top_right_tile_collision_type /* blocked_left_coord[num_of_player] */);
-	sprintf(right_buffer, "B.R.C.T:%d", botton_right_tile_collision_type /* blocked_right_coord[num_of_player] */);
-	// sprintf(top_buffer, "L.E.:%d", left_edge_column_index /* blocked_top_coord[num_of_player] */);
-	// sprintf(botton_buffer, "R.E.:%d", right_edge_column_index /* blocked_botton_coord[num_of_player] */);
-	// sprintf(left_buffer, "T.E.:%d", top_edge_line_index /* blocked_left_coord[num_of_player] */);
-	// sprintf(right_buffer, "B.E.:%d", botton_edge_line_index /* blocked_right_coord[num_of_player] */);
+	sprintf(top_buffer, "Py:%d", player[player_id].pos_y /* min_y_coord[player_id] */);
+	sprintf(botton_buffer, "MaxY:%d", max_y_coord[player_id] /* max_y_coord[player_id] */);
+	sprintf(left_buffer, "B.L.C.T:%d", botton_left_tile_collision_type /* min_x_coord[player_id] */);
+	sprintf(right_buffer, "B.R.C.T:%d", botton_right_tile_collision_type /* max_x_coord[player_id] */);
+	// sprintf(top_buffer, "L.E.:%d", left_edge_column_index /* min_y_coord[player_id] */);
+	// sprintf(botton_buffer, "R.E.:%d", right_edge_column_index /* max_y_coord[player_id] */);
+	// sprintf(left_buffer, "T.E.:%d", top_edge_line_index /* min_x_coord[player_id] */);
+	// sprintf(right_buffer, "B.E.:%d", botton_edge_line_index /* max_x_coord[player_id] */);
 
 	VDP_clearTextBG(BG_A, 28, 5, 10);
 	VDP_clearTextBG(BG_A, 28, 6, 10);
@@ -1564,6 +1566,19 @@ static void controlPlayerMapCollision(int num_of_player)
 	VDP_drawTextBG(BG_A, botton_buffer, 28, 6);
 	VDP_drawTextBG(BG_A, left_buffer, 28, 7);
 	VDP_drawTextBG(BG_A, right_buffer, 28, 8);
+}
+
+static void checkGroundCollision(int player_id)
+{
+	if (player[player_id].order_y == NEUTRAL && (player[player_id].pos_y < max_y_coord[player_id]))
+	{
+		player[player_id].order_y = DOWN;
+	}
+	else if (player[player_id].pos_y >= max_y_coord[player_id])
+	{
+		player[player_id].order_y = NEUTRAL;
+		player[player_id].pos_y = max_y_coord[player_id];
+	}
 }
 
 // SGDK provides specific functions to control animation looping for sprites
@@ -1578,7 +1593,7 @@ static void controlPlayerMapCollision(int num_of_player)
 //		// Assuming 'playerSprite' is a pointer to your Sprite structure
 //// and you have already initialized and added the sprite to the VDP.
 //
-//// Set the current animation (e.g., animation num_of_player 0)
+//// Set the current animation (e.g., animation player_id 0)
 //	 SPR_setAnim(playerSprite, 0);
 //
 //// Enable looping for the current animation (it will loop indefinitely)
