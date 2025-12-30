@@ -460,11 +460,11 @@ static void processMainGame()
 	// BGA (MAP)
 	camera.cur_pos_x = 0;
 	camera.cur_pos_y = 0;
-	/* VDP_loadTileSet(&level_tileset, ind, DMA);
+	VDP_loadTileSet(&level_tileset, ind, DMA);
 	PAL_setPalette(PAL1, bga_palette.data, DMA);
 	bga = MAP_create(&bga_map, BG_A, TILE_ATTR_FULL(PAL1, FALSE, FALSE, FALSE, ind));
 	MAP_scrollTo(bga, camera.cur_pos_x, camera.cur_pos_y);
-	ind += level_tileset.numTile; */
+	ind += level_tileset.numTile;
 
 	// BGB
 	bg[B].h_scroll_offset_bg = 0;
