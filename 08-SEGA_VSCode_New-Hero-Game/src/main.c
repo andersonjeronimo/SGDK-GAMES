@@ -164,13 +164,13 @@ enum PlayerState
 
 enum timeOfAnimation
 {
-	TIME_ATTACK_1 = 30,
-	TIME_ATTACK_1_END = 40,
-	TIME_ATTACK_2 = 60,
-	TIME_ATTACK_2_END = 40,
-	TIME_ATTACK_3 = 120,
-	TIME_ATTACK_3_END = 60,
-	TIME_SLIDE = 80
+	TIME_ATTACK_1 = 24,
+	TIME_ATTACK_1_END = 32,
+	TIME_ATTACK_2 = 48,
+	TIME_ATTACK_2_END = 32,
+	TIME_ATTACK_3 = 96,
+	TIME_ATTACK_3_END = 24,
+	TIME_SLIDE = 64
 };
 
 // player sprite array player_id
@@ -272,7 +272,8 @@ static void controlVerticalFlip(int player_id);
 
 // COLLISION
 static void controlPlayerMapCollision(int player_id);
-static void checkGroundCollision(int player_id);
+static void checkBottonCollision(int player_id);
+static void checkTopCollision(int player_id);
 
 // BOUNDARIES
 static void controlMapBoundaries(int player_id);
@@ -521,7 +522,8 @@ static void processMainGame()
 		updatePlayerPosition(ONE);
 		controlMapBoundaries(ONE);
 		controlPlayerMapCollision(ONE);
-		checkGroundCollision(ONE);
+		checkBottonCollision(ONE);
+		checkTopCollision(ONE);
 		// controlEffects(ONE);
 		controlHorizontalFlip(ONE);
 		// controlVerticalFlip(ONE);
@@ -1076,6 +1078,44 @@ static void finiteStateMachine(int player_id)
 	case STATE_FALL:
 		if (player[player_id].order_y == DOWN)
 		{
+			if (player[player_id].speed_y < player[player_id].max_speed_y)
+			{
+				if (joystick[player_id].btn_left)
+				{
+					player[player_id].order_x = LEFT;
+					player[player_id].last_order_x = LEFT;
+				}
+				else if (joystick[player_id].btn_right)
+				{
+					player[player_id].order_x = RIGHT;
+					player[player_id].last_order_x = RIGHT;
+				}
+				else if (!(joystick[player_id].btn_left) && !(joystick[player_id].btn_right))
+				{
+					player[player_id].order_x = NEUTRAL;
+				}
+			}
+			else if (player[player_id].speed_y == player[player_id].max_speed_y)
+			{
+				player[player_id].state = STATE_FALL_LOOP;
+				player[player_id].anim = ANIM_FALL_LOOP;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
+			}
+		}
+		else if (player[player_id].order_y == NEUTRAL)
+		{
+			player[player_id].order_x = NEUTRAL;
+			player[player_id].state = STATE_STANDING;
+			player[player_id].anim = ANIM_STANDING;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
+		}
+		break;
+
+	case STATE_FALL_LOOP:
+		if (player[player_id].order_y == DOWN)
+		{
 			if (joystick[player_id].btn_left)
 			{
 				player[player_id].order_x = LEFT;
@@ -1260,8 +1300,8 @@ static void controlYAcceleration(int player_id)
 		}
 		else if (player[player_id].speed_y == 0)
 		{
-			player[player_id].order_y = DOWN;
-			player[player_id].speed_y = 0;
+			player[player_id].order_y = NEUTRAL;
+			counter_y[player_id] = 0;
 		}
 	}
 	else if (player[player_id].order_y == DOWN)
@@ -1280,7 +1320,7 @@ static void controlYAcceleration(int player_id)
 	{
 		counter_y[player_id] = 0;
 		player[player_id].speed_y = 0;
-	}
+	}	
 }
 
 static void updatePlayerPosition(int player_id)
@@ -1293,12 +1333,20 @@ static void updatePlayerPosition(int player_id)
 			{
 				player[player_id].pos_x -= player[player_id].speed_x;
 			}
+			else if (player[player_id].pos_x <= min_x_coord[player_id])
+			{
+				player[player_id].pos_x += player[player_id].speed_x;
+			}
 		}
 		else if (player[player_id].last_order_x == RIGHT)
 		{
 			if (player[player_id].pos_x < max_x_coord[player_id])
 			{
 				player[player_id].pos_x += player[player_id].speed_x;
+			}
+			else if (player[player_id].pos_x >= max_x_coord[player_id])
+			{
+				player[player_id].pos_x -= player[player_id].speed_x;
 			}
 		}
 	}
@@ -1310,6 +1358,10 @@ static void updatePlayerPosition(int player_id)
 			{
 				player[player_id].pos_y -= player[player_id].speed_y;
 			}
+			/* else if (player[player_id].pos_y <= min_y_coord[player_id])
+			{
+				player[player_id].pos_y += player[player_id].speed_y;
+			} */
 		}
 		else if (player[player_id].order_y == DOWN)
 		{
@@ -1317,6 +1369,10 @@ static void updatePlayerPosition(int player_id)
 			{
 				player[player_id].pos_y += player[player_id].speed_y;
 			}
+			/* else if (player[player_id].pos_y < max_y_coord[player_id])
+			{
+				player[player_id].pos_y -= player[player_id].speed_y;
+			} */
 		}
 	}
 }
@@ -1487,13 +1543,11 @@ static void controlPlayerMapCollision(int player_id)
 	int botton_edge_line_index = (botton_edge / TILE_IN_PIXELS);
 
 	if (right_edge_column_index > MATRIX_MAX_COL_INDEX)
-	{
 		right_edge_column_index = MATRIX_MAX_COL_INDEX;
-	}
+
 	if (botton_edge_line_index > MATRIX_MAX_LIN_INDEX)
-	{
 		botton_edge_line_index = MATRIX_MAX_LIN_INDEX;
-	}
+
 	// vértices: cruzamentos de linhas com colunas
 	int top_left_tile_collision_type = BGA_COLLISION_MATRIX[top_edge_line_index][left_edge_column_index];
 	int top_right_tile_collision_type = BGA_COLLISION_MATRIX[top_edge_line_index][right_edge_column_index];
@@ -1504,7 +1558,7 @@ static void controlPlayerMapCollision(int player_id)
 	{
 		if (top_left_tile_collision_type == SOLID_TILE || top_right_tile_collision_type == SOLID_TILE)
 		{
-			min_y_coord[player_id] = (top_edge_line_index * TILE_IN_PIXELS) + TILE_IN_PIXELS - BOX_TOP_OFFSET;
+			min_y_coord[player_id] = (top_edge_line_index * TILE_IN_PIXELS) + (TILE_IN_PIXELS - BOX_TOP_OFFSET);
 		}
 		else
 		{
@@ -1548,8 +1602,8 @@ static void controlPlayerMapCollision(int player_id)
 		}
 	}
 
-	sprintf(top_buffer, "Py:%d", player[player_id].pos_y /* min_y_coord[player_id] */);
-	sprintf(botton_buffer, "MaxY:%d", max_y_coord[player_id] /* max_y_coord[player_id] */);
+	sprintf(top_buffer, "Pordy:%d", player[player_id].order_y /* min_y_coord[player_id] */);
+	sprintf(botton_buffer, "Pstt:%d", player[player_id].state /* max_y_coord[player_id] */);
 	sprintf(left_buffer, "B.L.C.T:%d", botton_left_tile_collision_type /* min_x_coord[player_id] */);
 	sprintf(right_buffer, "B.R.C.T:%d", botton_right_tile_collision_type /* max_x_coord[player_id] */);
 	// sprintf(top_buffer, "L.E.:%d", left_edge_column_index /* min_y_coord[player_id] */);
@@ -1568,17 +1622,25 @@ static void controlPlayerMapCollision(int player_id)
 	VDP_drawTextBG(BG_A, right_buffer, 28, 8);
 }
 
-static void checkGroundCollision(int player_id)
+static void checkBottonCollision(int player_id)
 {
-	if (player[player_id].order_y == NEUTRAL && (player[player_id].pos_y < max_y_coord[player_id]))
+	if ((player[player_id].order_y == NEUTRAL) && (player[player_id].pos_y < max_y_coord[player_id]))
 	{
 		player[player_id].order_y = DOWN;
 	}
-	else if (player[player_id].pos_y >= max_y_coord[player_id])
+	else if ((player[player_id].order_y == DOWN) && (player[player_id].pos_y >= max_y_coord[player_id]))
 	{
 		player[player_id].order_y = NEUTRAL;
 		player[player_id].pos_y = max_y_coord[player_id];
 	}
+}
+
+static void checkTopCollision(int player_id)
+{
+	if ((player[player_id].order_y == UP) && (player[player_id].pos_y <= min_y_coord[player_id]))
+	{
+		player[player_id].order_y = NEUTRAL;
+	}	
 }
 
 // SGDK provides specific functions to control animation looping for sprites
