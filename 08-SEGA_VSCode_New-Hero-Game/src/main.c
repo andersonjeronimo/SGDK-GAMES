@@ -14,7 +14,7 @@
 #define VERTICAL_RESOLUTION 224
 
 // map
-#define MAP_WIDTH 320
+#define MAP_WIDTH 640
 #define MAP_HEIGTH 224
 // screen
 #define LEFT_SCREEN_LIMIT 0
@@ -24,16 +24,16 @@
 
 typedef struct
 {
-	u32 cur_pos_x;
-	u32 cur_pos_y;
+	fix16 cur_pos_x;
+	fix16 cur_pos_y;
 } Camera;
 
-u32 update_camera_x;
-u32 update_camera_y;
-u32 player_x_on_map;
-u32 player_y_on_map;
-u32 player_x_on_screen;
-u32 player_y_on_screen;
+fix16 update_camera_x;
+fix16 update_camera_y;
+fix16 player_x_on_map;
+fix16 player_y_on_map;
+fix16 player_x_on_screen;
+fix16 player_y_on_screen;
 
 // Hero
 #define PLAYER_1_WIDTH 128
@@ -79,24 +79,24 @@ char right_buffer[100];
 #define SOLID_TILE 1
 #define TILE_IN_PIXELS 16
 #define MATRIX_MAX_LIN_INDEX 13
-#define MATRIX_MAX_COL_INDEX 19
+#define MATRIX_MAX_COL_INDEX 39
 
-const int BGA_COLLISION_MATRIX[14][20] =
+const int BGA_COLLISION_MATRIX[14][40] =
 	{
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
 
 typedef struct
 {
@@ -311,7 +311,7 @@ Sprite *prt_cursor;
 
 void updateCursorPosition()
 {
-	SPR_setPosition(prt_cursor, options[currentIndex].x * 8 - 40, options[currentIndex].y * 8 - 12);
+	SPR_setPosition(prt_cursor, options[currentIndex].x * 8 - 50, options[currentIndex].y * 8 - 20);
 }
 
 void moveUp()
@@ -437,7 +437,7 @@ static void processGameTitle()
 
 	// Draw options
 	VDP_setTextPriority(TRUE);
-	PAL_setColor(15, RGB24_TO_VDPCOLOR(0xff0000));
+	PAL_setColor(15, RGB24_TO_VDPCOLOR(0xffff00));
 	VDP_drawTextBG(BG_A, options[0].label, options[0].x, options[0].y);
 	VDP_drawTextBG(BG_A, options[1].label, options[0].x, options[1].y);
 	VDP_drawTextBG(BG_A, options[2].label, options[0].x, options[2].y);
@@ -459,7 +459,7 @@ static void processMainGame()
 	// init
 	// BGA (MAP)
 	camera.cur_pos_x = 0;
-	camera.cur_pos_y = 0;
+	camera.cur_pos_y = 44;
 	VDP_loadTileSet(&level_tileset, ind, DMA);
 	PAL_setPalette(PAL1, bga_palette.data, DMA);
 	bga = MAP_create(&bga_map, BG_A, TILE_ATTR_FULL(PAL1, FALSE, FALSE, FALSE, ind));
@@ -497,7 +497,7 @@ static void processMainGame()
 	player[ONE].last_order_x = RIGHT;
 	player[ONE].last_order_y = NEUTRAL;
 	player[ONE].pos_x = HOW_FAR_TO_LEFT;
-	player[ONE].pos_y = (MAX_POS_Y - PLAYER_1_HEIGTH - TILE_IN_PIXELS);
+	player[ONE].pos_y = ((MAX_POS_Y - 44) - PLAYER_1_HEIGTH);
 	player[ONE].speed_x = 0;
 	player[ONE].speed_y = 0;
 	player[ONE].is_attacking = FALSE;
@@ -505,16 +505,7 @@ static void processMainGame()
 	player[ONE].sprite = SPR_addSprite(&hero, player[ONE].pos_x, player[ONE].pos_y, TILE_ATTR(PAL2, FALSE, player[ONE].flip_v, player[ONE].flip_h));
 	PAL_setPalette(PAL2, hero.palette->data, DMA);
 	SPR_setAnim(player[ONE].sprite, player[ONE].anim);
-
-	// spr_element[ONE].offset_x = 32;
-	// PAL_setPalette(PAL3, dagger.palette->data, DMA);
-	// spr_element[ONE].pos_x = player[ONE].flip_h ? (player[ONE].pos_x + PLAYER_1_WIDTH) : (player[ONE].pos_x - spr_element[ONE].offset_x);
-	// spr_element[ONE].pos_y = player[ONE].pos_y;
-	// spr_element[ONE].sprite = SPR_addSprite(&dagger, spr_element[ONE].pos_x, player[ONE].pos_y, TILE_ATTR(PAL3, TRUE, player[ONE].flip_v, player[ONE].flip_h));
-	// SPR_setAnim(spr_element[ONE].sprite, 0);
-	// SPR_setVisibility(spr_element[ONE].sprite, HIDDEN);
-
-	// PAL_fadeIn(0, 63, bga_palette.data, 20, FALSE);
+	
 	while (current_game_state == GAME)
 	{
 		finiteStateMachine(ONE);
@@ -542,20 +533,11 @@ static void processMainGame()
 			// SPR_setFrame(player[ONE].sprite, player[ONE].frame);
 		}
 
-		SPR_setHFlip(player[ONE].sprite, player[ONE].flip_h);
-
-		// SPR_setPosition(player[ONE].sprite, (player[ONE].pos_x - update_camera_x), player[ONE].pos_y);
-		// MAP_scrollTo(bga, update_camera_x, update_camera_y);
+		SPR_setHFlip(player[ONE].sprite, player[ONE].flip_h);		
 		SPR_setPosition(player[ONE].sprite, (player[ONE].pos_x - camera.cur_pos_x), (player[ONE].pos_y - camera.cur_pos_y));
-		// MAP_scrollTo(bga, camera.cur_pos_x, camera.cur_pos_y);
-
-		// spr_element[ONE].offset_x = 32;
-		// spr_element[ONE].pos_x = player[ONE].flip_h ? (player[ONE].pos_x + PLAYER_1_WIDTH) : (player[ONE].pos_x - spr_element[ONE].offset_x);
-		// spr_element[ONE].pos_y = player[ONE].pos_y;
-		// SPR_setAnim(spr_element[ONE].sprite, 0);
-		// SPR_setHFlip(spr_element[ONE].sprite, player[ONE].flip_h);
-		// SPR_setPosition(spr_element[ONE].sprite, spr_element[ONE].pos_x, spr_element[ONE].pos_y);
-		// SPR_setVisibility(spr_element[ONE].sprite, HIDDEN);
+		MAP_scrollTo(bga, camera.cur_pos_x, camera.cur_pos_y);
+		
+		
 		SPR_update();
 		SYS_doVBlankProcessEx(ON_VBLANK_START);
 	}
@@ -1022,6 +1004,23 @@ static void finiteStateMachine(int player_id)
 				player[player_id].order_x = NEUTRAL;
 			}
 		}
+		else if (player[player_id].order_y == NEUTRAL)
+		{
+			if (joystick[player_id].btn_left)
+			{
+				player[player_id].order_x = LEFT;
+				player[player_id].last_order_x = LEFT;
+			}
+			else if (joystick[player_id].btn_right)
+			{
+				player[player_id].order_x = RIGHT;
+				player[player_id].last_order_x = RIGHT;
+			}
+			else if (!(joystick[player_id].btn_left) && !(joystick[player_id].btn_right))
+			{
+				player[player_id].order_x = NEUTRAL;
+			}
+		}
 		else if (player[player_id].order_y == DOWN)
 		{
 			player[player_id].state = STATE_FALL;
@@ -1320,7 +1319,7 @@ static void controlYAcceleration(int player_id)
 	{
 		counter_y[player_id] = 0;
 		player[player_id].speed_y = 0;
-	}	
+	}
 }
 
 static void updatePlayerPosition(int player_id)
@@ -1333,10 +1332,10 @@ static void updatePlayerPosition(int player_id)
 			{
 				player[player_id].pos_x -= player[player_id].speed_x;
 			}
-			else if (player[player_id].pos_x <= min_x_coord[player_id])
+			/* else if (player[player_id].pos_x <= min_x_coord[player_id])
 			{
 				player[player_id].pos_x += player[player_id].speed_x;
-			}
+			} */
 		}
 		else if (player[player_id].last_order_x == RIGHT)
 		{
@@ -1344,10 +1343,10 @@ static void updatePlayerPosition(int player_id)
 			{
 				player[player_id].pos_x += player[player_id].speed_x;
 			}
-			else if (player[player_id].pos_x >= max_x_coord[player_id])
+			/* else if (player[player_id].pos_x >= max_x_coord[player_id])
 			{
 				player[player_id].pos_x -= player[player_id].speed_x;
-			}
+			} */
 		}
 	}
 	if (player[player_id].speed_y > 0)
@@ -1444,7 +1443,7 @@ static void controlIdleTimer(int player_id)
 
 static void controlMapBoundaries(int player_id)
 {
-	if ((player[player_id].pos_x + BOX_LEFT_OFFSET) < MIN_POS_X)
+	if ((player[player_id].pos_x + BOX_LEFT_OFFSET) == MIN_POS_X)
 	{
 		player[player_id].pos_x = (MIN_POS_X - BOX_LEFT_OFFSET);
 	}
@@ -1453,7 +1452,7 @@ static void controlMapBoundaries(int player_id)
 		player[player_id].pos_x = (MAX_POS_X - player[player_id].width) + BOX_RIGHT_OFFSET;
 	}
 
-	if ((player[player_id].pos_y + BOX_TOP_OFFSET) < MIN_POS_Y)
+	if ((player[player_id].pos_y + BOX_TOP_OFFSET) == MIN_POS_Y)
 	{
 		player[player_id].pos_y = (MIN_POS_Y - BOX_TOP_OFFSET);
 	}
@@ -1472,11 +1471,11 @@ static void updateCamera(int player_id)
 
 	if (player_x_on_screen > HOW_FAR_TO_RIGHT)
 	{
-		update_camera_x = player_x_on_map - HOW_FAR_TO_RIGHT;
+		update_camera_x = (player_x_on_map - HOW_FAR_TO_RIGHT);
 	}
 	else if (player_x_on_screen < HOW_FAR_TO_LEFT)
 	{
-		update_camera_x = player_x_on_map - HOW_FAR_TO_LEFT;
+		update_camera_x = (player_x_on_map - HOW_FAR_TO_LEFT);
 	}
 	else
 	{
@@ -1485,11 +1484,11 @@ static void updateCamera(int player_id)
 
 	if (player_y_on_screen > HOW_FAR_TO_BOTTON)
 	{
-		update_camera_y = player_y_on_map - HOW_FAR_TO_BOTTON;
+		update_camera_y = (player_y_on_map - HOW_FAR_TO_BOTTON);
 	}
 	else if (player_y_on_screen < HOW_FAR_TO_TOP)
 	{
-		update_camera_y = player_y_on_map - HOW_FAR_TO_TOP;
+		update_camera_y = (player_y_on_map - HOW_FAR_TO_TOP);
 	}
 	else
 	{
@@ -1550,9 +1549,16 @@ static void controlPlayerMapCollision(int player_id)
 
 	// vértices: cruzamentos de linhas com colunas
 	int top_left_tile_collision_type = BGA_COLLISION_MATRIX[top_edge_line_index][left_edge_column_index];
+	int left_top_tile_collision_type = BGA_COLLISION_MATRIX[top_edge_line_index + 1][left_edge_column_index];
+
 	int top_right_tile_collision_type = BGA_COLLISION_MATRIX[top_edge_line_index][right_edge_column_index];
+	int right_top_tile_collision_type = BGA_COLLISION_MATRIX[top_edge_line_index + 1][right_edge_column_index];
+
 	int botton_left_tile_collision_type = BGA_COLLISION_MATRIX[botton_edge_line_index][left_edge_column_index];
+	int left_botton_tile_collision_type = BGA_COLLISION_MATRIX[botton_edge_line_index - 1][left_edge_column_index];
+
 	int botton_right_tile_collision_type = BGA_COLLISION_MATRIX[botton_edge_line_index][right_edge_column_index];
+	int right_botton_tile_collision_type = BGA_COLLISION_MATRIX[botton_edge_line_index - 1][right_edge_column_index];
 
 	if (player[player_id].order_y == UP)
 	{
@@ -1580,7 +1586,7 @@ static void controlPlayerMapCollision(int player_id)
 
 	if (player[player_id].last_order_x == LEFT)
 	{
-		if (top_left_tile_collision_type == SOLID_TILE && botton_left_tile_collision_type == SOLID_TILE)
+		if (left_top_tile_collision_type == SOLID_TILE || left_botton_tile_collision_type == SOLID_TILE)
 		{
 			min_x_coord[player_id] = (left_edge_column_index * TILE_IN_PIXELS) + TILE_IN_PIXELS - BOX_LEFT_OFFSET;
 		}
@@ -1592,7 +1598,7 @@ static void controlPlayerMapCollision(int player_id)
 
 	if (player[player_id].last_order_x == RIGHT)
 	{
-		if (top_right_tile_collision_type == SOLID_TILE && botton_right_tile_collision_type == SOLID_TILE)
+		if (right_top_tile_collision_type == SOLID_TILE || right_botton_tile_collision_type == SOLID_TILE)
 		{
 			max_x_coord[player_id] = ((right_edge_column_index * TILE_IN_PIXELS) - player[player_id].width) + BOX_RIGHT_OFFSET;
 		}
@@ -1602,24 +1608,18 @@ static void controlPlayerMapCollision(int player_id)
 		}
 	}
 
-	sprintf(top_buffer, "Pordy:%d", player[player_id].order_y /* min_y_coord[player_id] */);
-	sprintf(botton_buffer, "Pstt:%d", player[player_id].state /* max_y_coord[player_id] */);
-	sprintf(left_buffer, "B.L.C.T:%d", botton_left_tile_collision_type /* min_x_coord[player_id] */);
-	sprintf(right_buffer, "B.R.C.T:%d", botton_right_tile_collision_type /* max_x_coord[player_id] */);
-	// sprintf(top_buffer, "L.E.:%d", left_edge_column_index /* min_y_coord[player_id] */);
-	// sprintf(botton_buffer, "R.E.:%d", right_edge_column_index /* max_y_coord[player_id] */);
-	// sprintf(left_buffer, "T.E.:%d", top_edge_line_index /* min_x_coord[player_id] */);
-	// sprintf(right_buffer, "B.E.:%d", botton_edge_line_index /* max_x_coord[player_id] */);
-
-	VDP_clearTextBG(BG_A, 28, 5, 10);
-	VDP_clearTextBG(BG_A, 28, 6, 10);
-	VDP_clearTextBG(BG_A, 28, 7, 10);
-	VDP_clearTextBG(BG_A, 28, 8, 10);
-
-	VDP_drawTextBG(BG_A, top_buffer, 28, 5);
-	VDP_drawTextBG(BG_A, botton_buffer, 28, 6);
-	VDP_drawTextBG(BG_A, left_buffer, 28, 7);
-	VDP_drawTextBG(BG_A, right_buffer, 28, 8);
+	//sprintf(top_buffer, "Px:%d", player[player_id].pos_x /* min_y_coord[player_id] */);
+	//sprintf(botton_buffer, "Pstt:%d", player[player_id].state /* max_y_coord[player_id] */);
+	//sprintf(left_buffer, "B.L.C.T:%d", botton_left_tile_collision_type /* min_x_coord[player_id] */);
+	//sprintf(right_buffer, "B.R.C.T:%d", botton_right_tile_collision_type /* max_x_coord[player_id] */);		
+	//VDP_clearTextBG(BG_A, 28, 5, 10);
+	//VDP_clearTextBG(BG_A, 28, 6, 10);
+	//VDP_clearTextBG(BG_A, 28, 7, 10);
+	//VDP_clearTextBG(BG_A, 28, 8, 10);	
+	//VDP_drawTextBG(BG_A, top_buffer, 28, 5);
+	//VDP_drawTextBG(BG_A, botton_buffer, 28, 6);
+	//VDP_drawTextBG(BG_A, left_buffer, 28, 7);
+	//VDP_drawTextBG(BG_A, right_buffer, 28, 8);
 }
 
 static void checkBottonCollision(int player_id)
@@ -1640,44 +1640,5 @@ static void checkTopCollision(int player_id)
 	if ((player[player_id].order_y == UP) && (player[player_id].pos_y <= min_y_coord[player_id]))
 	{
 		player[player_id].order_y = NEUTRAL;
-	}	
+	}
 }
-
-// SGDK provides specific functions to control animation looping for sprites
-//. You can use the built-in functions to manage this, or handle the animation manually if needed.
-// Controlling Animation Loop
-// The primary function to control if a sprite animation loops is SPR_setAnimationLoop().
-//
-//     SPR_setAnimationLoop(Sprite* sprite, bool loop): This function enables or disables the automatic looping for a specific sprite's current animation.
-//         To make an animation loop continuously, set loop to TRUE.
-//         To make an animation play only once and stop on the last frame, set loop to FALSE.
-//
-//		// Assuming 'playerSprite' is a pointer to your Sprite structure
-//// and you have already initialized and added the sprite to the VDP.
-//
-//// Set the current animation (e.g., animation player_id 0)
-//	 SPR_setAnim(playerSprite, 0);
-//
-//// Enable looping for the current animation (it will loop indefinitely)
-//   SPR_setAnimationLoop(playerSprite, TRUE);
-//
-//// ... in your main game loop ...
-// while (1)
-//{
-//	// Update sprite animations (handles the actual frame updates and looping based on the flag)
-//	SPR_update();
-//
-//	// ... other game logic ...
-//
-//	SYS_doVBlankProcess();
-// }
-//
-// Manual Control(Alternative Method)
-//	If you need more granular control(e.g., looping only a specific range of frames, or triggering a different event after a non - looping animation finishes),
-//	you can disable the automatic system and manage the frames yourself within your game loop.
-//
-//	Disable automatic animation : Set the sprite's timer to 0 to stop SGDK from automatically advancing frames. Manually update : In your main game loop,
-//	you can use functions like SPR_setFrame() and SPR_nextFrame() within a conditional check(e.g., after a certain amount of time has passed or in the V - blank process) to manage the animation sequence and looping logic manually.
-//
-//	For most standard use cases,
-//	SPR_setAnimationLoop() is the recommended and simplest method.
