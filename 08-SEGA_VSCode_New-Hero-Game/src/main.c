@@ -790,7 +790,7 @@ static void finiteStateMachine(int player_id)
 			player[player_id].state = STATE_ATTACK_1;
 			player[player_id].anim = ANIM_ATTACK_1;
 			player[player_id].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
+			SPR_setAnimationLoop(player[player_id].sprite, FALSE);
 		}
 		break;
 
@@ -896,7 +896,7 @@ static void finiteStateMachine(int player_id)
 			player[player_id].state = STATE_ATTACK_1;
 			player[player_id].anim = ANIM_ATTACK_1;
 			player[player_id].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
+			SPR_setAnimationLoop(player[player_id].sprite, FALSE);
 		}
 
 		if (!(joystick[player_id].btn_left) && !(joystick[player_id].btn_right))
@@ -939,7 +939,7 @@ static void finiteStateMachine(int player_id)
 			player[player_id].state = STATE_ATTACK_1;
 			player[player_id].anim = ANIM_ATTACK_1;
 			player[player_id].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
+			SPR_setAnimationLoop(player[player_id].sprite, FALSE);
 		}
 
 		if (joystick[player_id].btn_a /*  && player[player_id].has_stamina */)
@@ -1106,13 +1106,13 @@ static void finiteStateMachine(int player_id)
 			}
 		}
 		else if (player[player_id].order_y == NEUTRAL)
-		{			
-			player[player_id].anim = ANIM_RUN_TO_IDLE;
-			player[player_id].state = STATE_RUN_TO_IDLE;
-			player[player_id].is_full_anim = TRUE;
-			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
-			/* if (player[player_id].speed_x > 0)
+		{
+			if (player[player_id].speed_x > 0)
 			{
+				player[player_id].anim = ANIM_RUN_TO_IDLE;
+				player[player_id].state = STATE_RUN_TO_IDLE;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 			}
 			else
 			{
@@ -1120,7 +1120,7 @@ static void finiteStateMachine(int player_id)
 				player[player_id].anim = ANIM_STANDING;
 				player[player_id].is_full_anim = TRUE;
 				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
-			} */
+			}
 		}
 		break;
 
@@ -1153,74 +1153,65 @@ static void finiteStateMachine(int player_id)
 		break;
 
 	case STATE_ATTACK_1:
-		if (!joystick[player_id].btn_b)
+		if (!player[player_id].is_attacking)
 		{
-			if (!player[player_id].is_attacking)
+			if (joystick[player_id].btn_x)
 			{
-				if (joystick[player_id].btn_x)
-				{
-					player[player_id].order_x = NEUTRAL;
-					player[player_id].is_attacking = TRUE;
-					// player[player_id].has_stamina = FALSE;
-					anim_duration[player_id] = TIME_ATTACK_2;
-					player[player_id].state = STATE_ATTACK_2;
-					player[player_id].anim = ANIM_ATTACK_2;
-					player[player_id].is_full_anim = TRUE;
-					SPR_setAnimationLoop(player[player_id].sprite, TRUE);
-				}
-				else
-				{
-					player[player_id].is_attacking = TRUE;
-					anim_duration[player_id] = TIME_ATTACK_1_END;
-					player[player_id].state = STATE_ATTACK_1_END;
-					player[player_id].anim = ANIM_ATTACK_1_END;
-					player[player_id].is_full_anim = TRUE;
-					SPR_setAnimationLoop(player[player_id].sprite, FALSE);
-				}
+				player[player_id].order_x = NEUTRAL;
+				player[player_id].is_attacking = TRUE;
+				// player[player_id].has_stamina = FALSE;
+				anim_duration[player_id] = TIME_ATTACK_2;
+				player[player_id].state = STATE_ATTACK_2;
+				player[player_id].anim = ANIM_ATTACK_2;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, FALSE);
+			}
+			else
+			{
+				player[player_id].is_attacking = TRUE;
+				anim_duration[player_id] = TIME_ATTACK_1_END;
+				player[player_id].state = STATE_ATTACK_1_END;
+				player[player_id].anim = ANIM_ATTACK_1_END;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, FALSE);
 			}
 		}
 		break;
 
 	case STATE_ATTACK_2:
-		if (!joystick[player_id].btn_x)
+		if (!player[player_id].is_attacking)
 		{
-			if (!player[player_id].is_attacking)
+			if (joystick[player_id].btn_y)
 			{
-				if (joystick[player_id].btn_y)
-				{
-					player[player_id].order_x = NEUTRAL;
-					player[player_id].is_attacking = TRUE;
-					// player[player_id].has_stamina = FALSE;
-					anim_duration[player_id] = TIME_ATTACK_3;
-					player[player_id].state = STATE_ATTACK_3;
-					player[player_id].anim = ANIM_ATTACK_3;
-					player[player_id].is_full_anim = TRUE;
-					SPR_setAnimationLoop(player[player_id].sprite, TRUE);
-				}
-				else
-				{
-					player[player_id].is_attacking = TRUE;
-					anim_duration[player_id] = TIME_ATTACK_2_END;
-					player[player_id].state = STATE_ATTACK_2_END;
-					player[player_id].anim = ANIM_ATTACK_2_END;
-					player[player_id].is_full_anim = TRUE;
-					SPR_setAnimationLoop(player[player_id].sprite, TRUE);
-				}
+				player[player_id].order_x = NEUTRAL;
+				player[player_id].is_attacking = TRUE;
+				// player[player_id].has_stamina = FALSE;
+				anim_duration[player_id] = TIME_ATTACK_3;
+				player[player_id].state = STATE_ATTACK_3;
+				player[player_id].anim = ANIM_ATTACK_3;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, FALSE);
+			}
+			else
+			{
+				player[player_id].is_attacking = TRUE;
+				anim_duration[player_id] = TIME_ATTACK_2_END;
+				player[player_id].state = STATE_ATTACK_2_END;
+				player[player_id].anim = ANIM_ATTACK_2_END;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 			}
 		}
 		break;
 	case STATE_ATTACK_3:
-		if (!joystick[player_id].btn_y)
+		if (!player[player_id].is_attacking)
 		{
-			if (!player[player_id].is_attacking)
-			{
-				player[player_id].is_attacking = TRUE;
-				anim_duration[player_id] = TIME_ATTACK_3_END;
-				player[player_id].state = STATE_ATTACK_3_END;
-				player[player_id].anim = ANIM_ATTACK_3_END;
-				player[player_id].is_full_anim = TRUE;
-				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
-			}
+			player[player_id].is_attacking = TRUE;
+			anim_duration[player_id] = TIME_ATTACK_3_END;
+			player[player_id].state = STATE_ATTACK_3_END;
+			player[player_id].anim = ANIM_ATTACK_3_END;
+			player[player_id].is_full_anim = TRUE;
+			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
 		break;
 
@@ -1643,20 +1634,20 @@ static void controlPlayerMapCollision(int player_id)
 		}
 	}
 
-	sprintf(top_buffer, "SPX:%d", player[player_id].speed_x /* min_y_coord[player_id] */);
-	sprintf(botton_buffer, "Max:%d", player[player_id].max_speed_x /* max_y_coord[player_id] */);
-	// sprintf(left_buffer, "B.L.C.T:%d", botton_left_tile_collision_type /* min_x_coord[player_id] */);
-	// sprintf(right_buffer, "B.R.C.T:%d", botton_right_tile_collision_type /* max_x_coord[player_id] */);
+	//sprintf(top_buffer, "isATK?:%d", player[player_id].is_attacking /* min_y_coord[player_id] */);
+	// sprintf(botton_buffer, "Max:%d", player[player_id].max_speed_x /* max_y_coord[player_id] */);
+	//  sprintf(left_buffer, "B.L.C.T:%d", botton_left_tile_collision_type /* min_x_coord[player_id] */);
+	//  sprintf(right_buffer, "B.R.C.T:%d", botton_right_tile_collision_type /* max_x_coord[player_id] */);
 
-	VDP_clearTextBG(BG_A, 28, 5, 10);
-	VDP_clearTextBG(BG_A, 28, 6, 10);
-	// VDP_clearTextBG(BG_A, 28, 7, 10);
-	// VDP_clearTextBG(BG_A, 28, 8, 10);
+	//VDP_clearTextBG(BG_A, 28, 5, 10);
+	// VDP_clearTextBG(BG_A, 28, 6, 10);
+	//  VDP_clearTextBG(BG_A, 28, 7, 10);
+	//  VDP_clearTextBG(BG_A, 28, 8, 10);
 
-	VDP_drawTextBG(BG_A, top_buffer, 28, 5);
-	VDP_drawTextBG(BG_A, botton_buffer, 28, 6);
-	// VDP_drawTextBG(BG_A, left_buffer, 28, 7);
-	// VDP_drawTextBG(BG_A, right_buffer, 28, 8);
+	//VDP_drawTextBG(BG_A, top_buffer, 28, 5);
+	// VDP_drawTextBG(BG_A, botton_buffer, 28, 6);
+	//  VDP_drawTextBG(BG_A, left_buffer, 28, 7);
+	//  VDP_drawTextBG(BG_A, right_buffer, 28, 8);
 }
 
 static void checkBottonCollision(int player_id)
