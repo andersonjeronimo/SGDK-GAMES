@@ -488,10 +488,10 @@ static void processMainGame()
 	player[ONE].is_full_anim = TRUE;
 	player[ONE].flip_h = FALSE;
 	player[ONE].flip_v = FALSE;
-	player[ONE].impulse_x = 2;
-	player[ONE].impulse_y = 5;
+	player[ONE].impulse_x = 4;
+	player[ONE].impulse_y = 4;
 	player[ONE].max_speed_x = 2;
-	player[ONE].max_speed_y = 5;
+	player[ONE].max_speed_y = 4;
 	player[ONE].order_x = NEUTRAL;
 	player[ONE].order_y = NEUTRAL;
 	player[ONE].last_order_x = RIGHT;
@@ -505,7 +505,7 @@ static void processMainGame()
 	player[ONE].sprite = SPR_addSprite(&hero, player[ONE].pos_x, player[ONE].pos_y, TILE_ATTR(PAL2, FALSE, player[ONE].flip_v, player[ONE].flip_h));
 	PAL_setPalette(PAL2, hero.palette->data, DMA);
 	SPR_setAnim(player[ONE].sprite, player[ONE].anim);
-	
+
 	while (current_game_state == GAME)
 	{
 		finiteStateMachine(ONE);
@@ -533,11 +533,10 @@ static void processMainGame()
 			// SPR_setFrame(player[ONE].sprite, player[ONE].frame);
 		}
 
-		SPR_setHFlip(player[ONE].sprite, player[ONE].flip_h);		
+		SPR_setHFlip(player[ONE].sprite, player[ONE].flip_h);
 		SPR_setPosition(player[ONE].sprite, (player[ONE].pos_x - camera.cur_pos_x), (player[ONE].pos_y - camera.cur_pos_y));
 		MAP_scrollTo(bga, camera.cur_pos_x, camera.cur_pos_y);
-		
-		
+
 		SPR_update();
 		SYS_doVBlankProcessEx(ON_VBLANK_START);
 	}
@@ -878,11 +877,15 @@ static void finiteStateMachine(int player_id)
 		}
 		if (joystick[player_id].btn_c)
 		{
-			player[player_id].max_speed_x = 4;
+			player[player_id].max_speed_x = player[player_id].impulse_x;
 			player[player_id].state = STATE_RUN;
 			player[player_id].anim = ANIM_RUN;
 			player[player_id].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
+		}
+		if (!joystick[player_id].btn_c)
+		{
+			player[player_id].max_speed_x = (player[player_id].impulse_x / 2);
 		}
 		if (joystick[player_id].btn_b /*  && player[player_id].has_stamina */)
 		{
@@ -952,9 +955,9 @@ static void finiteStateMachine(int player_id)
 
 		if (!joystick[player_id].btn_c)
 		{
-			player[player_id].max_speed_x = 2;
-			player[player_id].state = STATE_WALK;
-			player[player_id].anim = ANIM_WALK;
+			// player[player_id].speed_x = (player[player_id].impulse_x / 2);
+			player[player_id].anim = ANIM_RUN_TO_IDLE;
+			player[player_id].state = STATE_RUN_TO_IDLE;
 			player[player_id].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
 		}
@@ -1103,12 +1106,21 @@ static void finiteStateMachine(int player_id)
 			}
 		}
 		else if (player[player_id].order_y == NEUTRAL)
-		{
-			player[player_id].order_x = NEUTRAL;
-			player[player_id].state = STATE_STANDING;
-			player[player_id].anim = ANIM_STANDING;
+		{			
+			player[player_id].anim = ANIM_RUN_TO_IDLE;
+			player[player_id].state = STATE_RUN_TO_IDLE;
 			player[player_id].is_full_anim = TRUE;
 			SPR_setAnimationLoop(player[player_id].sprite, TRUE);
+			/* if (player[player_id].speed_x > 0)
+			{
+			}
+			else
+			{
+				player[player_id].state = STATE_STANDING;
+				player[player_id].anim = ANIM_STANDING;
+				player[player_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop(player[player_id].sprite, TRUE);
+			} */
 		}
 		break;
 
@@ -1284,6 +1296,45 @@ static void controlXAcceleration(int player_id)
 	}
 }
 
+/* static void controlYAcceleration(int player_id)
+{
+	if (player[player_id].order_y == UP)
+	{
+		if (player[player_id].speed_y > 0)
+		{
+			counter_y[player_id] += 1;
+			if (counter_y[player_id] == COUNTER_LIMIT)
+			{
+				counter_y[player_id] = 0;
+				player[player_id].speed_y -= 1;
+			}
+		}
+		else if (player[player_id].speed_y == 0)
+		{
+			player[player_id].order_y = NEUTRAL;
+			counter_y[player_id] = 0;
+		}
+	}
+	else if (player[player_id].order_y == DOWN)
+	{
+		counter_y[player_id] += 1;
+		if (counter_y[player_id] == COUNTER_LIMIT)
+		{
+			counter_y[player_id] = 0;
+			if (player[player_id].speed_y < player[player_id].max_speed_y)
+			{
+				player[player_id].speed_y += 1;
+			}
+		}
+	}
+	else if (player[player_id].order_y == NEUTRAL)
+	{
+		counter_y[player_id] = 0;
+		player[player_id].speed_y = 0;
+	}
+}
+ */
+
 static void controlYAcceleration(int player_id)
 {
 	if (player[player_id].order_y == UP)
@@ -1332,10 +1383,6 @@ static void updatePlayerPosition(int player_id)
 			{
 				player[player_id].pos_x -= player[player_id].speed_x;
 			}
-			/* else if (player[player_id].pos_x <= min_x_coord[player_id])
-			{
-				player[player_id].pos_x += player[player_id].speed_x;
-			} */
 		}
 		else if (player[player_id].last_order_x == RIGHT)
 		{
@@ -1343,10 +1390,6 @@ static void updatePlayerPosition(int player_id)
 			{
 				player[player_id].pos_x += player[player_id].speed_x;
 			}
-			/* else if (player[player_id].pos_x >= max_x_coord[player_id])
-			{
-				player[player_id].pos_x -= player[player_id].speed_x;
-			} */
 		}
 	}
 	if (player[player_id].speed_y > 0)
@@ -1357,10 +1400,6 @@ static void updatePlayerPosition(int player_id)
 			{
 				player[player_id].pos_y -= player[player_id].speed_y;
 			}
-			/* else if (player[player_id].pos_y <= min_y_coord[player_id])
-			{
-				player[player_id].pos_y += player[player_id].speed_y;
-			} */
 		}
 		else if (player[player_id].order_y == DOWN)
 		{
@@ -1368,10 +1407,6 @@ static void updatePlayerPosition(int player_id)
 			{
 				player[player_id].pos_y += player[player_id].speed_y;
 			}
-			/* else if (player[player_id].pos_y < max_y_coord[player_id])
-			{
-				player[player_id].pos_y -= player[player_id].speed_y;
-			} */
 		}
 	}
 }
@@ -1608,18 +1643,20 @@ static void controlPlayerMapCollision(int player_id)
 		}
 	}
 
-	//sprintf(top_buffer, "Px:%d", player[player_id].pos_x /* min_y_coord[player_id] */);
-	//sprintf(botton_buffer, "Pstt:%d", player[player_id].state /* max_y_coord[player_id] */);
-	//sprintf(left_buffer, "B.L.C.T:%d", botton_left_tile_collision_type /* min_x_coord[player_id] */);
-	//sprintf(right_buffer, "B.R.C.T:%d", botton_right_tile_collision_type /* max_x_coord[player_id] */);		
-	//VDP_clearTextBG(BG_A, 28, 5, 10);
-	//VDP_clearTextBG(BG_A, 28, 6, 10);
-	//VDP_clearTextBG(BG_A, 28, 7, 10);
-	//VDP_clearTextBG(BG_A, 28, 8, 10);	
-	//VDP_drawTextBG(BG_A, top_buffer, 28, 5);
-	//VDP_drawTextBG(BG_A, botton_buffer, 28, 6);
-	//VDP_drawTextBG(BG_A, left_buffer, 28, 7);
-	//VDP_drawTextBG(BG_A, right_buffer, 28, 8);
+	sprintf(top_buffer, "SPX:%d", player[player_id].speed_x /* min_y_coord[player_id] */);
+	sprintf(botton_buffer, "Max:%d", player[player_id].max_speed_x /* max_y_coord[player_id] */);
+	// sprintf(left_buffer, "B.L.C.T:%d", botton_left_tile_collision_type /* min_x_coord[player_id] */);
+	// sprintf(right_buffer, "B.R.C.T:%d", botton_right_tile_collision_type /* max_x_coord[player_id] */);
+
+	VDP_clearTextBG(BG_A, 28, 5, 10);
+	VDP_clearTextBG(BG_A, 28, 6, 10);
+	// VDP_clearTextBG(BG_A, 28, 7, 10);
+	// VDP_clearTextBG(BG_A, 28, 8, 10);
+
+	VDP_drawTextBG(BG_A, top_buffer, 28, 5);
+	VDP_drawTextBG(BG_A, botton_buffer, 28, 6);
+	// VDP_drawTextBG(BG_A, left_buffer, 28, 7);
+	// VDP_drawTextBG(BG_A, right_buffer, 28, 8);
 }
 
 static void checkBottonCollision(int player_id)
