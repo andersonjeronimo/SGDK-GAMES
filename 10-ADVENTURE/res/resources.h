@@ -1,0 +1,18 @@
+#include <genesis.h>
+
+#ifndef _RES_RESOURCES_H_
+#define _RES_RESOURCES_H_
+
+extern const TileSet bga_tileset;
+extern const MapDefinition bga_map;
+extern const Palette bga_palette;
+extern const TileSet bgb_tileset;
+extern const MapDefinition bgb_map;
+extern const Palette bgb_palette;
+extern const TileSet title_tileset;
+extern const MapDefinition title_map;
+extern const Palette title_palette;
+extern const SpriteDefinition cursor;
+extern const SpriteDefinition knight;
+
+#endif // _RES_RESOURCES_H_
