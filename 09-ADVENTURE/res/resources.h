@@ -13,6 +13,9 @@ extern const TileSet title_tileset;
 extern const MapDefinition title_map;
 extern const Palette title_palette;
 extern const SpriteDefinition cursor;
+extern const SpriteDefinition key;
+extern const SpriteDefinition ball;
+extern const SpriteDefinition brick;
 extern const SpriteDefinition knight;
 
 #endif // _RES_RESOURCES_H_

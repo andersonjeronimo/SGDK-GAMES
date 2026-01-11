@@ -11,6 +11,11 @@
 // PIGSY Retro Game Sega Genesis Tutotials
 // https://www.youtube.com/watch?v=BnGqc5OTTY4&list=PL1xqkpO_SvY2_rSwHTBIBxXMqmek--GAb
 
+// VDP_setTileMapXY() and VDP_fillTileMapRect(): You can dynamically draw or change individual tiles or sections
+// of a plane's tilemap in real time using these functions.
+// This is how new map data is loaded into the VDP as the player moves through large levels
+//(often combined with an understanding of how planes wrap around at their boundaries).
+
 #define COUNTER_LIMIT 5
 // 320 X 224
 #define HORIZONTAL_RESOLUTION 320
@@ -59,25 +64,15 @@ fix16 player_y_on_screen;
 #define HOW_FAR_TO_TOP 10
 #define HOW_FAR_TO_BOTTON 116
 
-typedef struct
-{
-	bool top_left;
-	bool top_right;
-	bool botton_left;
-	bool botton_right;
-} CollisionBox;
-
-CollisionBox collision_from[2];
-
 int min_x_coord[2] = {(MIN_POS_X - BOX_LEFT_OFFSET), (MIN_POS_X - BOX_LEFT_OFFSET)};
 int max_x_coord[2] = {MAX_POS_X, MAX_POS_X};
 int min_y_coord[2] = {(MIN_POS_Y - BOX_TOP_OFFSET), (MIN_POS_Y - BOX_TOP_OFFSET)};
 int max_y_coord[2] = {(MAX_POS_Y - PLAYER_1_HEIGTH) + BOX_BOTTON_OFFSET, MAX_POS_Y};
 // para imprimir coordenadas
-char top_buffer[100];
-char botton_buffer[100];
-char left_buffer[100];
-char right_buffer[100];
+char buffer_a[100];
+char buffer_b[100];
+char buffer_c[100];
+char buffer_d[100];
 
 #define SOLID_TILE 1
 #define TILE_IN_PIXELS 16
@@ -110,7 +105,7 @@ const int BGA_COLLISION_MATRIX[28][40] =
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1},
+		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -119,16 +114,6 @@ const int BGA_COLLISION_MATRIX[28][40] =
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
-
-// typedef struct
-//{
-//	fix16 h_scroll_offset_bg;
-//	fix16 v_scroll_offset_bg;
-//	u16 pos_x;
-//	u16 pos_y;
-// } Background;
-// #define A 0
-// #define B 1
 
 #define ANIM_STANDING 0
 #define ANIM_WALK 1
@@ -205,11 +190,33 @@ typedef struct
 typedef struct
 {
 	Sprite *sprite;
-	fix16 offset_x;
-	fix16 offset_y;
 	fix16 pos_x;
 	fix16 pos_y;
+	bool is_visible;
+	bool is_active;
+	fix16 width;
+	fix16 height;
+	bool flip_h;
+	bool flip_v;
+	fix16 order_x;
+	fix16 order_y;
+	fix16 impulse_x;
+	fix16 impulse_y;
+	fix16 speed_x;
+	fix16 speed_y;
+	fix16 max_speed_x;
+	fix16 max_speed_y;
+	int trap_switch_id;
 } SpriteElement;
+
+typedef struct
+{
+	Sprite *sprite;
+	fix16 pos_x;
+	fix16 pos_y;
+	bool is_active;
+	int spr_element_id;
+} TrapSwitch;
 
 fix16 counter_x[2] = {0, 0};
 fix16 counter_y[2] = {0, 0};
@@ -235,13 +242,15 @@ typedef struct
 } Joystick;
 
 u16 ind;
+u16 base_tile_index[3]; // BGA, BGB, WINDOW
 Map *bga;
 Map *bgb;
 Map *title;
 // Background bg[2]; // BGA & BGB
 Camera camera;
 Player player[2];
-SpriteElement spr_element[10];
+SpriteElement spr_element[10]; // max sprites
+TrapSwitch trap_switch[10];
 Joystick joystick[2];
 
 static void gameInputHandler(u16 joy, u16 changed, u16 state);
@@ -264,9 +273,13 @@ static void controlPlayerMapCollision(int player_id);
 static void checkBottonCollision(int player_id);
 static void checkTopCollision(int player_id);
 
-// BOUNDARIES
-static void controlMapBoundaries(int player_id);
+// CAMERA
+// static void controlMapBoundaries(int player_id);
 static void updateCamera(int player_id);
+
+// SPRITES
+static void controlTrap(int trap_switch_id);
+static void controlProjectile(int sprite_id);
 
 static void processGameTitle();
 static void processMainGame();
@@ -296,7 +309,7 @@ Option options[NUM_OPTIONS] = {
 };
 
 u8 currentIndex = 0;
-Sprite *prt_cursor;
+Sprite *ptr_cursor;
 static void updateCursorPosition();
 static void moveUp();
 static void moveDown();
@@ -317,6 +330,7 @@ int main(bool resetType)
 	SPR_init();
 	JOY_init();
 	JOY_setEventHandler(&gameInputHandler);
+
 	current_game_state = TITLE;
 	// DMA_setBufferSize(9000);
 
@@ -345,7 +359,7 @@ int main(bool resetType)
 
 static void updateCursorPosition()
 {
-	SPR_setPosition(prt_cursor, options[currentIndex].x * 8 - 50, options[currentIndex].y * 8 - 20);
+	SPR_setPosition(ptr_cursor, options[currentIndex].x * 8 - TILE_IN_PIXELS, options[currentIndex].y * 8);
 }
 
 static void moveUp()
@@ -417,34 +431,37 @@ static void releaseMemory()
 
 static void processGameTitle()
 {
-	u16 palette[64];
-	PAL_setColors(0, (u16 *)palette_black, 64, CPU);
-	// prepare palettes
-	memcpy(&palette[0], title_palette.data, 16 * 2); // PAL0 index
-	// memcpy(&palette[16], cursor.palette->data, 16 * 2); //PAL1 index
-	// memcpy(&palette[32], hero.palette->data, 16 * 2); //PAL2 index
-	memcpy(&palette[48], cursor.palette->data, 16 * 2); // PAL3 index
-
-	// fade in
-	PAL_fadeIn(0, (4 * 16) - 1, palette, 20, TRUE);
+	// u16 palette[64];
+	// PAL_setColors(0, (u16 *)palette_black, 64, CPU);
+	//// prepare palettes
+	// memcpy(&palette[0], title_palette.data, 16 * 2); // PAL0 index
+	//// memcpy(&palette[16], cursor.palette->data, 16 * 2); //PAL1 index
+	//// memcpy(&palette[32], hero.palette->data, 16 * 2); //PAL2 index
+	// memcpy(&palette[48], key.palette->data, 16 * 2); // PAL3 index
+	//
+	//// fade in
+	// PAL_fadeIn(0, (4 * 16) - 1, palette, 20, TRUE);
 
 	ind = TILE_USER_INDEX;
-	VDP_loadTileSet(&title_tileset, ind, DMA);
+	base_tile_index[BG_B] = ind;
+	VDP_loadTileSet(&title_tileset, base_tile_index[BG_B], DMA);
 	PAL_setPalette(PAL0, title_palette.data, DMA);
 	title = MAP_create(&title_map, BG_B, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, ind));
 	MAP_scrollTo(title, 0, 0);
-	ind += title_tileset.numTile;
+
+	// ind += title_tileset.numTile;
+	// base_tile_index[BG_A] = ind;
 
 	// MENU
-	prt_cursor = SPR_addSprite(&cursor, 0, 0, TILE_ATTR(PAL3, FALSE, FALSE, FALSE));
-	PAL_setPalette(PAL3, cursor.palette->data, DMA);
+	ptr_cursor = SPR_addSprite(&key, 0, 0, TILE_ATTR(PAL3, FALSE, FALSE, FALSE));
+	PAL_setPalette(PAL3, key.palette->data, DMA);
 
 	// Draw options
 	VDP_setTextPriority(TRUE);
 	PAL_setColor(15, RGB24_TO_VDPCOLOR(0xffff00));
 	VDP_drawTextBG(BG_A, options[0].label, options[0].x, options[0].y);
-	VDP_drawTextBG(BG_A, options[1].label, options[0].x, options[1].y);
-	VDP_drawTextBG(BG_A, options[2].label, options[0].x, options[2].y);
+	VDP_drawTextBG(BG_A, options[1].label, options[1].x, options[1].y);
+	VDP_drawTextBG(BG_A, options[2].label, options[2].x, options[2].y);
 
 	while (current_game_state == TITLE)
 	{
@@ -452,7 +469,11 @@ static void processGameTitle()
 		SPR_update();
 		SYS_doVBlankProcessEx(ON_VBLANK_START);
 	}
+	VDP_clearTextBG(BG_A, options[0].x, options[0].y, 20);
+	VDP_clearTextBG(BG_A, options[1].x, options[1].y, 20);
+	VDP_clearTextBG(BG_A, options[2].x, options[2].y, 20);
 	MEM_free(title);
+	MEM_free(ptr_cursor);
 	releaseMemory();
 }
 
@@ -460,16 +481,16 @@ static void processMainGame()
 {
 	ind = TILE_USER_INDEX;
 
-	u16 palette[64];
-	PAL_setColors(0, (u16 *)palette_black, 64, CPU);
-	// prepare palettes
-	memcpy(&palette[0], bgb_palette.data, 16 * 2);		// PAL0 index
-	memcpy(&palette[16], bga_palette.data, 16 * 2);		// PAL1 index
-	memcpy(&palette[32], knight.palette->data, 16 * 2); // PAL2 index
-	// memcpy(&palette[48], enemies_sprite.palette->data, 16 * 2);//PAL3 index
-
-	// fade in
-	PAL_fadeIn(0, (4 * 16) - 1, palette, 20, TRUE);
+	// u16 palette[64];
+	// PAL_setColors(0, (u16 *)palette_black, 64, CPU);
+	//// prepare palettes
+	// memcpy(&palette[0], bgb_palette.data, 16 * 2);		// PAL0 index
+	// memcpy(&palette[16], bga_palette.data, 16 * 2);		// PAL1 index
+	// memcpy(&palette[32], knight.palette->data, 16 * 2); // PAL2 index
+	// memcpy(&palette[48], ball.palette->data, 16 * 2);	// PAL3 index
+	//
+	//// fade in
+	// PAL_fadeIn(0, (4 * 16) - 1, palette, 20, TRUE);
 
 	VDP_setScrollingMode(HSCROLL_PLANE, VSCROLL_PLANE);
 	// init
@@ -477,40 +498,32 @@ static void processMainGame()
 	camera.cur_pos_x = 0;
 	camera.cur_pos_y = 0;
 
-	VDP_loadTileSet(&bga_tileset, ind, DMA);
+	base_tile_index[BG_A] = ind;
+
+	VDP_loadTileSet(&bga_tileset, base_tile_index[BG_A], DMA);
 	PAL_setPalette(PAL1, bga_palette.data, DMA);
-	bga = MAP_create(&bga_map, BG_A, TILE_ATTR_FULL(PAL1, FALSE, FALSE, FALSE, ind));
+	bga = MAP_create(&bga_map, BG_A, TILE_ATTR_FULL(PAL1, FALSE, FALSE, FALSE, base_tile_index[BG_A]));
 	MAP_scrollTo(bga, camera.cur_pos_x, camera.cur_pos_y);
+
+	// update index
 	ind += bga_tileset.numTile;
+	base_tile_index[BG_B] = ind;
 
-	VDP_loadTileSet(&bgb_tileset, ind, DMA);
+	VDP_loadTileSet(&bgb_tileset, base_tile_index[BG_B], DMA);
 	PAL_setPalette(PAL0, bgb_palette.data, DMA);
-	bgb = MAP_create(&bgb_map, BG_B, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, ind));
+	bgb = MAP_create(&bgb_map, BG_B, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, base_tile_index[BG_B]));
 	MAP_scrollTo(bgb, camera.cur_pos_x, camera.cur_pos_y);
-	ind += bgb_tileset.numTile;
 
-	// BGB
-	// bg[B].h_scroll_offset_bg = 0;
-	// bg[B].v_scroll_offset_bg = 0;
-	// bg[B].pos_x = 0;
-	// bg[B].pos_y = 0;
-	// VDP_drawImageEx(BG_B, &background, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, ind), bg[B].pos_x, bg[B].pos_y, FALSE, TRUE);
-	// PAL_setPalette(PAL0, background.palette->data, DMA);
-	// ind += background.tileset->numTile;
-
-	// Player I
-	collision_from[ONE].top_left = FALSE;
-	collision_from[ONE].top_right = FALSE;
-	collision_from[ONE].botton_left = FALSE;
-	collision_from[ONE].botton_right = FALSE;
+	// ind += bgb_tileset.numTile;
+	// base_tile_index[WINDOW] = ind;
 
 	player[ONE].state = STATE_STANDING;
 	player[ONE].width = PLAYER_1_WIDTH;
 	player[ONE].height = PLAYER_1_HEIGTH;
 	player[ONE].anim = ANIM_STANDING;
 	player[ONE].is_full_anim = TRUE;
-	player[ONE].flip_h = FALSE;
 	player[ONE].flip_v = FALSE;
+	player[ONE].flip_h = FALSE;
 	player[ONE].impulse_x = 4;
 	player[ONE].impulse_y = 4;
 	player[ONE].max_speed_x = 2;
@@ -526,15 +539,56 @@ static void processMainGame()
 	player[ONE].is_attacking = FALSE;
 	player[ONE].has_stamina = TRUE;
 	player[ONE].sprite = SPR_addSprite(&knight, player[ONE].pos_x, player[ONE].pos_y, TILE_ATTR(PAL2, FALSE, player[ONE].flip_v, player[ONE].flip_h));
-	PAL_setPalette(PAL2, knight.palette->data, DMA);
+	PAL_setPalette(PAL2, knight.palette->data, DMA_QUEUE);
 	SPR_setAnim(player[ONE].sprite, player[ONE].anim);
+
+	// ponteiro para array
+	// considerando uma struct (SpriteElement) e um array (spr_elements[10])
+	// SpriteElement spr_elements[10]; // 10 max sprites
+
+	// forma 1: apontar para 1º elemento
+	// SpriteElement* ptr_elements = spr_elements;
+	// Modificar o 1º elemento
+	// ptr_elements->flip_h = TRUE;
+	// então alterar o índice:
+	// ptr_element++
+	// ptr_elements->flip_h = TRUE; <--esse é o 2º elemento do array
+
+	// forma 2: apontar para todo array
+	// SpriteElement (*ptr_elements)[10] = &spr_elements;
+	// acessando os índices (*ptr_elements)[5].flip_h = TRUE;
+
+	// Other sprites...
+	spr_element[0].is_active = FALSE;
+	spr_element[0].is_visible = FALSE;
+	spr_element[0].pos_x = MAX_POS_X - 16;
+	spr_element[0].pos_y = 16;
+	spr_element[0].width = 16;
+	spr_element[0].height = 16;
+	spr_element[0].flip_v = FALSE;
+	spr_element[0].flip_h = TRUE;
+	spr_element[0].sprite = SPR_addSprite(&ball, spr_element[0].pos_x, spr_element[0].pos_y, TILE_ATTR(PAL3, FALSE, spr_element[0].flip_v, spr_element[0].flip_h));
+	spr_element[0].order_x = LEFT;
+	spr_element[0].order_y = NEUTRAL;
+	spr_element[0].speed_x = 1;
+	spr_element[0].speed_y = 1;
+	spr_element[0].trap_switch_id = 0;
+	PAL_setPalette(PAL3, ball.palette->data, DMA_QUEUE);	
+	SPR_setVisibility(spr_element[0].sprite, HIDDEN);
+
+	trap_switch[0].is_active = FALSE;
+	trap_switch[0].pos_x = 160;
+	trap_switch[0].pos_y = 48;
+	trap_switch[0].sprite = SPR_addSprite(&brick, trap_switch[0].pos_x, trap_switch[0].pos_y, TILE_ATTR(PAL1, FALSE, FALSE, FALSE));
+	// PAL_setPalette(PAL3, key.palette->data, DMA);
+	trap_switch[0].spr_element_id = 0;
 
 	while (current_game_state == GAME)
 	{
 		finiteStateMachine(ONE);
 		updateCamera(ONE);
 		updatePlayerPosition(ONE);
-		controlMapBoundaries(ONE);
+		// controlMapBoundaries(ONE);
 		controlPlayerMapCollision(ONE);
 		checkBottonCollision(ONE);
 		checkTopCollision(ONE);
@@ -543,6 +597,9 @@ static void processMainGame()
 		controlXAcceleration(ONE);
 		controlYAcceleration(ONE);
 		controlAttackTimer(ONE);
+
+		controlTrap(0);
+		controlProjectile(0);
 
 		if (player[ONE].is_full_anim)
 		{
@@ -557,6 +614,22 @@ static void processMainGame()
 
 		SPR_setHFlip(player[ONE].sprite, player[ONE].flip_h);
 		SPR_setPosition(player[ONE].sprite, (player[ONE].pos_x - camera.cur_pos_x), (player[ONE].pos_y - camera.cur_pos_y));
+		SPR_setPosition(trap_switch[0].sprite, (trap_switch[0].pos_x - camera.cur_pos_x), (trap_switch[0].pos_y - camera.cur_pos_y));
+
+		if (player[ONE].pos_x > trap_switch[0].pos_x && player[ONE].pos_y < trap_switch[0].pos_y)
+		{
+			trap_switch[0].is_active = TRUE;
+		}
+		else if (player[ONE].pos_x < trap_switch[0].pos_x && player[ONE].pos_y < trap_switch[0].pos_y)
+		{
+			trap_switch[0].is_active = FALSE;
+		}
+
+		if (spr_element[0].is_active)
+		{
+			SPR_setPosition(spr_element[0].sprite, (spr_element[0].pos_x - camera.cur_pos_x), (spr_element[0].pos_y - camera.cur_pos_y));
+		}
+
 		MAP_scrollTo(bga, camera.cur_pos_x, camera.cur_pos_y);
 		MAP_scrollTo(bgb, camera.cur_pos_x, camera.cur_pos_y);
 
@@ -565,7 +638,51 @@ static void processMainGame()
 	}
 	MEM_free(bga);
 	MEM_free(bgb);
+	MEM_free(player[ONE].sprite);
+	MEM_free(spr_element[0].sprite);
+	MEM_free(trap_switch[0].sprite);
 	releaseMemory();
+}
+
+static void controlTrap(int trap_switch_id)
+{
+	if (trap_switch[trap_switch_id].is_active)
+	{
+		int id = trap_switch[trap_switch_id].spr_element_id;
+		spr_element[id].is_active = TRUE;
+		spr_element[id].is_visible = TRUE;
+		SPR_setVisibility(spr_element[id].sprite, VISIBLE);
+	}
+	else if (!trap_switch[trap_switch_id].is_active)
+	{
+		int id = trap_switch[trap_switch_id].spr_element_id;
+		spr_element[id].is_active = FALSE;
+		spr_element[id].is_visible = FALSE;
+		SPR_setVisibility(spr_element[id].sprite, HIDDEN);
+	}
+}
+
+static void controlProjectile(int sprite_id)
+{
+	if (spr_element[sprite_id].is_active)
+	{
+		if (spr_element[sprite_id].order_x == LEFT)
+		{
+			spr_element[sprite_id].pos_x -= spr_element[sprite_id].speed_x;
+			if (spr_element[sprite_id].pos_x <= MIN_POS_X)
+			{
+				spr_element[sprite_id].pos_x = MAX_POS_X - 16;
+			}
+		}
+		else if (spr_element[sprite_id].order_x == RIGHT)
+		{
+			spr_element[sprite_id].pos_x += spr_element[sprite_id].speed_x;
+			if ((spr_element[sprite_id].pos_x + spr_element[sprite_id].width) >= MAX_POS_X)
+			{
+				spr_element[sprite_id].pos_x = MIN_POS_X;
+			}
+		}
+	}
 }
 
 static void gameInputHandler(u16 joy, u16 changed, u16 state)
@@ -1259,26 +1376,26 @@ static void controlAttackTimer(int player_id)
 	}
 }
 
-static void controlMapBoundaries(int player_id)
-{
-	if ((player[player_id].pos_x + BOX_LEFT_OFFSET) == MIN_POS_X)
-	{
-		player[player_id].pos_x = (MIN_POS_X - BOX_LEFT_OFFSET);
-	}
-	else if (((player[player_id].pos_x + player[player_id].width) - BOX_RIGHT_OFFSET) > MAX_POS_X)
-	{
-		player[player_id].pos_x = (MAX_POS_X - player[player_id].width) + BOX_RIGHT_OFFSET;
-	}
-
-	if ((player[player_id].pos_y + BOX_TOP_OFFSET) == MIN_POS_Y)
-	{
-		player[player_id].pos_y = (MIN_POS_Y - BOX_TOP_OFFSET);
-	}
-	else if (((player[player_id].pos_y + player[player_id].height) - BOX_BOTTON_OFFSET) > MAX_POS_Y)
-	{
-		player[player_id].pos_y = (MAX_POS_Y - player[player_id].height) + BOX_BOTTON_OFFSET;
-	}
-}
+// static void controlMapBoundaries(int player_id)
+//{
+//	if ((player[player_id].pos_x + BOX_LEFT_OFFSET) == MIN_POS_X)
+//	{
+//		player[player_id].pos_x = (MIN_POS_X - BOX_LEFT_OFFSET);
+//	}
+//	else if (((player[player_id].pos_x + player[player_id].width) - BOX_RIGHT_OFFSET) > MAX_POS_X)
+//	{
+//		player[player_id].pos_x = (MAX_POS_X - player[player_id].width) + BOX_RIGHT_OFFSET;
+//	}
+//
+//	if ((player[player_id].pos_y + BOX_TOP_OFFSET) == MIN_POS_Y)
+//	{
+//		player[player_id].pos_y = (MIN_POS_Y - BOX_TOP_OFFSET);
+//	}
+//	else if (((player[player_id].pos_y + player[player_id].height) - BOX_BOTTON_OFFSET) > MAX_POS_Y)
+//	{
+//		player[player_id].pos_y = (MAX_POS_Y - player[player_id].height) + BOX_BOTTON_OFFSET;
+//	}
+// }
 
 static void updateCamera(int player_id)
 {
@@ -1342,6 +1459,9 @@ static void updateCamera(int player_id)
 
 static void controlPlayerMapCollision(int player_id)
 {
+	// https://cse442--17f-github-io.translate.goog/Gilbert-Johnson-Keerthi-Distance-Algorithm/?_x_tr_sl=en&_x_tr_tl=pt&_x_tr_hl=pt&_x_tr_pto=tc
+	// https://www.jeffreythompson.org/collision-detection/table_of_contents.php
+
 	// define a caixa de colisão do personagem
 	int left_edge = (player[player_id].pos_x + BOX_LEFT_OFFSET);
 	int right_edge = (player[player_id].pos_x + player[player_id].width) - BOX_RIGHT_OFFSET;
@@ -1349,81 +1469,118 @@ static void controlPlayerMapCollision(int player_id)
 	int botton_edge = (player[player_id].pos_y + player[player_id].height) - BOX_BOTTON_OFFSET;
 
 	// arestas:
-	// verifica em qual indice da matriz cada aresta está colidindo
-	int left_edge_column_index = (left_edge / TILE_IN_PIXELS);
-	int right_edge_column_index = (right_edge / TILE_IN_PIXELS);
-	int top_edge_line_index = (top_edge / TILE_IN_PIXELS);
-	int botton_edge_line_index = (botton_edge / TILE_IN_PIXELS);
+	// verifica com qual indice da matriz cada aresta está colidindo
+	int left_edge_column = (left_edge / TILE_IN_PIXELS);
+	int right_edge_column = (right_edge / TILE_IN_PIXELS);
+	int top_edge_line = (top_edge / TILE_IN_PIXELS);
+	int botton_edge_line = (botton_edge / TILE_IN_PIXELS);
 
-	if (right_edge_column_index > MATRIX_MAX_COL_INDEX)
-		right_edge_column_index = MATRIX_MAX_COL_INDEX;
+	if (right_edge_column > MATRIX_MAX_COL_INDEX)
+		right_edge_column = MATRIX_MAX_COL_INDEX;
 
-	if (botton_edge_line_index > MATRIX_MAX_LIN_INDEX)
-		botton_edge_line_index = MATRIX_MAX_LIN_INDEX;
+	if (botton_edge_line > MATRIX_MAX_LIN_INDEX)
+		botton_edge_line = MATRIX_MAX_LIN_INDEX;
 
-	// vértices: cruzamentos de linhas com colunas
-	int top_left_tile_collision_type = BGA_COLLISION_MATRIX[top_edge_line_index][left_edge_column_index];
-	int left_top_tile_collision_type = BGA_COLLISION_MATRIX[top_edge_line_index + 1][left_edge_column_index];
+	// vértices: (A,B,C,D)
+	int A_vertex;
+	int B_vertex;
+	int C_vertex;
+	int D_vertex;
 
-	int top_right_tile_collision_type = BGA_COLLISION_MATRIX[top_edge_line_index][right_edge_column_index];
-	int right_top_tile_collision_type = BGA_COLLISION_MATRIX[top_edge_line_index + 1][right_edge_column_index];
-
-	int botton_left_tile_collision_type = BGA_COLLISION_MATRIX[botton_edge_line_index][left_edge_column_index];
-	int left_botton_tile_collision_type = BGA_COLLISION_MATRIX[botton_edge_line_index - 1][left_edge_column_index];
-
-	int botton_right_tile_collision_type = BGA_COLLISION_MATRIX[botton_edge_line_index][right_edge_column_index];
-	int right_botton_tile_collision_type = BGA_COLLISION_MATRIX[botton_edge_line_index - 1][right_edge_column_index];
-
-	if (top_left_tile_collision_type == SOLID_TILE || top_right_tile_collision_type == SOLID_TILE)
+	switch (player[player_id].last_order_x)
 	{
-		min_y_coord[player_id] = (top_edge_line_index * TILE_IN_PIXELS) + (TILE_IN_PIXELS - BOX_TOP_OFFSET);
-	}
-	else
-	{
-		min_y_coord[player_id] = (MIN_POS_Y - BOX_TOP_OFFSET);
-	}
+	case LEFT:
+		A_vertex = BGA_COLLISION_MATRIX[top_edge_line + 1][left_edge_column];
+		D_vertex = BGA_COLLISION_MATRIX[botton_edge_line - 1][left_edge_column];
+		if (A_vertex == SOLID_TILE || D_vertex == SOLID_TILE)
+		{
+			min_x_coord[player_id] = ((left_edge_column * TILE_IN_PIXELS) + TILE_IN_PIXELS) - BOX_LEFT_OFFSET;
+		}
+		else
+		{
+			min_x_coord[player_id] = (MIN_POS_X - BOX_LEFT_OFFSET);
+		}
+		break;
 
-	if (botton_left_tile_collision_type == SOLID_TILE || botton_right_tile_collision_type == SOLID_TILE)
-	{
-		max_y_coord[player_id] = (botton_edge_line_index * TILE_IN_PIXELS) - (player[player_id].height + BOX_BOTTON_OFFSET);
-	}
-	else
-	{
-		max_y_coord[player_id] = (MAX_POS_Y - player[player_id].height) + BOX_BOTTON_OFFSET;
-	}
+	case RIGHT:
+		B_vertex = BGA_COLLISION_MATRIX[top_edge_line + 1][right_edge_column];
+		C_vertex = BGA_COLLISION_MATRIX[botton_edge_line - 1][right_edge_column];
+		if (B_vertex == SOLID_TILE || C_vertex == SOLID_TILE)
+		{
+			max_x_coord[player_id] = ((right_edge_column * TILE_IN_PIXELS) - player[player_id].width) + BOX_RIGHT_OFFSET;
+		}
+		else
+		{
+			max_x_coord[player_id] = (MAX_POS_X - player[player_id].width) + BOX_RIGHT_OFFSET;
+		}
+		break;
 
-	if (left_top_tile_collision_type == SOLID_TILE || left_botton_tile_collision_type == SOLID_TILE)
-	{
-		min_x_coord[player_id] = (left_edge_column_index * TILE_IN_PIXELS) + (TILE_IN_PIXELS - BOX_LEFT_OFFSET);
-	}
-	else
-	{
-		min_x_coord[player_id] = (MIN_POS_X - BOX_LEFT_OFFSET);
+	default:
+		break;
 	}
 
-	if (right_top_tile_collision_type == SOLID_TILE || right_botton_tile_collision_type == SOLID_TILE)
+	switch (player[player_id].order_y)
 	{
-		max_x_coord[player_id] = (right_edge_column_index * TILE_IN_PIXELS) - (player[player_id].width + BOX_RIGHT_OFFSET);
-	}
-	else
-	{
-		max_x_coord[player_id] = (MAX_POS_X - player[player_id].width) + BOX_RIGHT_OFFSET;
+	case UP:
+		A_vertex = BGA_COLLISION_MATRIX[top_edge_line][left_edge_column];
+		B_vertex = BGA_COLLISION_MATRIX[top_edge_line][right_edge_column];
+		if (A_vertex == SOLID_TILE || B_vertex == SOLID_TILE)
+		{
+			min_y_coord[player_id] = ((top_edge_line * TILE_IN_PIXELS) + TILE_IN_PIXELS) - BOX_TOP_OFFSET;
+		}
+		else
+		{
+			min_y_coord[player_id] = (MIN_POS_Y - BOX_TOP_OFFSET);
+		}
+		break;
+
+	case DOWN:
+		C_vertex = BGA_COLLISION_MATRIX[botton_edge_line][right_edge_column];
+		D_vertex = BGA_COLLISION_MATRIX[botton_edge_line][left_edge_column];
+		if (C_vertex == SOLID_TILE || D_vertex == SOLID_TILE)
+		{
+			max_y_coord[player_id] = ((botton_edge_line * TILE_IN_PIXELS) - player[player_id].height) + BOX_BOTTON_OFFSET;
+		}
+		else
+		{
+			max_y_coord[player_id] = (MAX_POS_Y - player[player_id].height) + BOX_BOTTON_OFFSET;
+		}
+		break;
+
+	case NEUTRAL:
+		C_vertex = BGA_COLLISION_MATRIX[botton_edge_line][right_edge_column];
+		D_vertex = BGA_COLLISION_MATRIX[botton_edge_line][left_edge_column];
+		if (C_vertex == SOLID_TILE || D_vertex == SOLID_TILE)
+		{
+			max_y_coord[player_id] = ((botton_edge_line * TILE_IN_PIXELS) - player[player_id].height) + BOX_BOTTON_OFFSET;
+		}
+		else
+		{
+			max_y_coord[player_id] = (MAX_POS_Y - player[player_id].height) + BOX_BOTTON_OFFSET;
+		}
+		break;
+
+	default:
+		break;
 	}
 
-	// sprintf(top_buffer, "isATK?:%d", player[player_id].is_attacking /* min_y_coord[player_id] */);
-	//  sprintf(botton_buffer, "Max:%d", player[player_id].max_speed_x /* max_y_coord[player_id] */);
-	//   sprintf(left_buffer, "B.L.C.T:%d", botton_left_tile_collision_type /* min_x_coord[player_id] */);
-	//   sprintf(right_buffer, "B.R.C.T:%d", botton_right_tile_collision_type /* max_x_coord[player_id] */);
+	// sprintf(buffer_a, "posx:%d", spr_element[0].pos_x);
+	// sprintf(buffer_b, "posx:%d", player[0].pos_x);
+	//  sprintf(buffer_c, "posx:%d", player[0].pos_x);
+	//  sprintf(buffer_d, "posx:%d", player[0].pos_x);
 
 	// VDP_clearTextBG(BG_A, 28, 5, 10);
-	//  VDP_clearTextBG(BG_A, 28, 6, 10);
-	//   VDP_clearTextBG(BG_A, 28, 7, 10);
-	//   VDP_clearTextBG(BG_A, 28, 8, 10);
+	// VDP_clearTextBG(BG_A, 28, 6, 10);
+	//  VDP_clearTextBG(BG_A, 28, 7, 10);
+	//  VDP_clearTextBG(BG_A, 28, 8, 10);
 
-	// VDP_drawTextBG(BG_A, top_buffer, 28, 5);
-	//  VDP_drawTextBG(BG_A, botton_buffer, 28, 6);
-	//   VDP_drawTextBG(BG_A, left_buffer, 28, 7);
-	//   VDP_drawTextBG(BG_A, right_buffer, 28, 8);
+	// VDP_setTextPriority(TRUE);
+	// PAL_setColor(15, RGB24_TO_VDPCOLOR(0xffff00));
+
+	// VDP_drawTextBG(BG_A, buffer_a, 28, 5);
+	// VDP_drawTextBG(BG_A, buffer_b, 28, 6);
+	//  VDP_drawTextBG(BG_A, buffer_c, 28, 7);
+	//  VDP_drawTextBG(BG_A, buffer_d, 28, 8);
 }
 
 static void checkBottonCollision(int player_id)
