@@ -12,6 +12,6 @@ PALETTE title_palette "bgb/title.png"
 
 SPRITE cursor "sprites/cursor.png" 6 6 NONE 0
 SPRITE key "sprites/key.png" 2 2 NONE 0
-SPRITE ball "sprites/fire_ball.png" 2 2 FAST 0
+SPRITE ball "sprites/fire_ball.png" 5 2 BEST 10
 SPRITE brick "sprites/brick_tile.png" 2 2 NONE 0
 SPRITE knight "sprites/knight_12_8.png" 12 8 BEST 10

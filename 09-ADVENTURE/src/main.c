@@ -1,22 +1,6 @@
 #include <genesis.h>
 #include <resources.h>
 
-// make GDK=/path/to/sgdk -f /path/to/sgdk/makefile_wine.gen
-// make GDK=${HOME}/SGDK -f ${HOME}/SGDK/makefile_wine.gen
-
-// https://gameprogrammingpatterns.com/state.html
-// https://www.youtube.com/watch?v=xldCreKST3s
-// OHSAT Games Tutorials
-// https://www.ohsat.com/tutorial/mdmisc/sor-style-text-crawl/
-// PIGSY Retro Game Sega Genesis Tutotials
-// https://www.youtube.com/watch?v=BnGqc5OTTY4&list=PL1xqkpO_SvY2_rSwHTBIBxXMqmek--GAb
-
-// VDP_setTileMapXY() and VDP_fillTileMapRect(): You can dynamically draw or change individual tiles or sections
-// of a plane's tilemap in real time using these functions.
-// This is how new map data is loaded into the VDP as the player moves through large levels
-//(often combined with an understanding of how planes wrap around at their boundaries).
-
-#define COUNTER_LIMIT 5
 // 320 X 224
 #define HORIZONTAL_RESOLUTION 320
 #define VERTICAL_RESOLUTION 224
@@ -24,34 +8,12 @@
 // map
 #define MAP_WIDTH 640
 #define MAP_HEIGTH 448
+
 // screen
 #define LEFT_SCREEN_LIMIT 0
 #define RIGHT_SCREEN_LIMIT MAP_WIDTH - HORIZONTAL_RESOLUTION // VDP_getScreenWidth()
 #define TOP_SCREEN_LIMIT 0
 #define BOTTON_SCREEN_LIMIT MAP_HEIGTH - VERTICAL_RESOLUTION // VDP_getScreenHeight()
-
-typedef struct
-{
-	fix16 cur_pos_x;
-	fix16 cur_pos_y;
-} Camera;
-
-fix16 update_camera_x;
-fix16 update_camera_y;
-fix16 player_x_on_map;
-fix16 player_y_on_map;
-fix16 player_x_on_screen;
-fix16 player_y_on_screen;
-
-// Hero
-#define PLAYER_1_WIDTH 96
-#define PLAYER_1_HEIGTH 64
-
-// player collision box offset
-#define BOX_LEFT_OFFSET 40
-#define BOX_RIGHT_OFFSET 40
-#define BOX_TOP_OFFSET 28
-#define BOX_BOTTON_OFFSET 0
 
 #define MIN_POS_X 0
 #define MAX_POS_X MAP_WIDTH
@@ -59,30 +21,25 @@ fix16 player_y_on_screen;
 #define MAX_POS_Y MAP_HEIGTH
 
 //  How far to (left, right, up, down) before camera moves
-#define HOW_FAR_TO_LEFT 10
-#define HOW_FAR_TO_RIGHT 152
-#define HOW_FAR_TO_TOP 10
-#define HOW_FAR_TO_BOTTON 116
+#define HOW_FAR_TO_LEFT 64	  //(MAP_WIDTH / 2 - PLAYER_WIDTH)
+#define HOW_FAR_TO_RIGHT 160  //(MAP_WIDTH / 2)
+#define HOW_FAR_TO_TOP 48	  //(MAP_HEIGTH / 2 - PLAYER_HEIGTH)
+#define HOW_FAR_TO_BOTTON 112 //(MAP_HEIGTH / 2)
 
-int min_x_coord[2] = {(MIN_POS_X - BOX_LEFT_OFFSET), (MIN_POS_X - BOX_LEFT_OFFSET)};
-int max_x_coord[2] = {MAX_POS_X, MAX_POS_X};
-int min_y_coord[2] = {(MIN_POS_Y - BOX_TOP_OFFSET), (MIN_POS_Y - BOX_TOP_OFFSET)};
-int max_y_coord[2] = {(MAX_POS_Y - PLAYER_1_HEIGTH) + BOX_BOTTON_OFFSET, MAX_POS_Y};
-// para imprimir coordenadas
-char buffer_a[100];
-char buffer_b[100];
-char buffer_c[100];
-char buffer_d[100];
+// player collision box offset
+#define BOX_LEFT_OFFSET 40
+#define BOX_RIGHT_OFFSET 40
+#define BOX_TOP_OFFSET 28
+#define BOX_BOTTON_OFFSET 0
+
+// Hero
+#define PLAYER_1_WIDTH 96
+#define PLAYER_1_HEIGTH 64
 
 #define SOLID_TILE 1
 #define TILE_IN_PIXELS 16
 #define MATRIX_MAX_LIN_INDEX 27
 #define MATRIX_MAX_COL_INDEX 39
-
-// pilar = 32 x 64
-// cubo = 32 x 32
-// piso = 40 x 48
-// solo = 224 - 32
 
 const int BGA_COLLISION_MATRIX[28][40] =
 	{
@@ -115,6 +72,25 @@ const int BGA_COLLISION_MATRIX[28][40] =
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
 
+int min_x_coord[2] = {(MIN_POS_X - BOX_LEFT_OFFSET), (MIN_POS_X - BOX_LEFT_OFFSET)};
+int max_x_coord[2] = {MAX_POS_X, MAX_POS_X};
+int min_y_coord[2] = {(MIN_POS_Y - BOX_TOP_OFFSET), (MIN_POS_Y - BOX_TOP_OFFSET)};
+int max_y_coord[2] = {(MAX_POS_Y - PLAYER_1_HEIGTH) + BOX_BOTTON_OFFSET, MAX_POS_Y};
+
+typedef struct
+{
+	fix16 cur_pos_x;
+	fix16 cur_pos_y;
+	fix16 new_pos_x;
+	fix16 new_pos_y;
+	fix16 entity_x_on_map;
+	fix16 entity_y_on_map;
+	fix16 entity_x_on_screen;
+	fix16 entity_y_on_screen;
+} Camera;
+Camera camera;
+
+// players
 #define ANIM_STANDING 0
 #define ANIM_WALK 1
 #define ANIM_RUN 2
@@ -153,6 +129,7 @@ enum TimeOfAnimation
 #define ONE 0
 #define TWO 1
 
+// sprite order
 #define LEFT -1
 #define RIGHT 1
 #define UP -1
@@ -186,6 +163,7 @@ typedef struct
 	bool is_attacking;
 	bool has_stamina;
 } Player;
+Player player[2];
 
 typedef struct
 {
@@ -205,21 +183,10 @@ typedef struct
 	fix16 speed_x;
 	fix16 speed_y;
 	fix16 max_speed_x;
-	fix16 max_speed_y;
+	fix16 max_speed_y;	
 	int trap_switch_id;
 } SpriteElement;
-
-typedef struct
-{
-	Sprite *sprite;
-	fix16 pos_x;
-	fix16 pos_y;
-	bool is_active;
-	int spr_element_id;
-} TrapSwitch;
-
-fix16 counter_x[2] = {0, 0};
-fix16 counter_y[2] = {0, 0};
+SpriteElement spr_element[10]; // max sprites
 
 u16 attack_timer[2] = {0, 0};
 u16 effect_timer[2] = {0, 0};
@@ -240,18 +207,13 @@ typedef struct
 	bool btn_y;
 	bool btn_z;
 } Joystick;
+Joystick joystick[2];
 
+u32 frame_counter;
 u16 ind;
 u16 base_tile_index[3]; // BGA, BGB, WINDOW
 Map *bga;
 Map *bgb;
-Map *title;
-// Background bg[2]; // BGA & BGB
-Camera camera;
-Player player[2];
-SpriteElement spr_element[10]; // max sprites
-TrapSwitch trap_switch[10];
-Joystick joystick[2];
 
 static void gameInputHandler(u16 joy, u16 changed, u16 state);
 
@@ -274,16 +236,21 @@ static void checkBottonCollision(int player_id);
 static void checkTopCollision(int player_id);
 
 // CAMERA
-// static void controlMapBoundaries(int player_id);
 static void updateCamera(int player_id);
 
 // SPRITES
-static void controlTrap(int trap_switch_id);
 static void controlProjectile(int sprite_id);
 
 static void processGameTitle();
 static void processMainGame();
 static void releaseMemory();
+
+char buffer_a[100];
+char buffer_b[100];
+char buffer_c[100];
+char buffer_d[100];
+// para imprimir coordenadas durante o debug
+static void debug();
 
 // GAME STATE - https://www.ohsat.com/tutorial/mdmisc/simple-menu/
 enum GameState
@@ -355,6 +322,28 @@ int main(bool resetType)
 		}
 	}
 	return (0);
+}
+
+static void debug()
+{
+	VDP_setTextPriority(TRUE);
+	// PAL_setColor(15, RGB24_TO_VDPCOLOR(0xffff00));
+
+	// u32 tick = getTick() / 300;
+	sprintf(buffer_a, "pos_x:%d", frame_counter);
+	//   sprintf(buffer_b, "posx:%d", player[0].pos_x);
+	//    sprintf(buffer_c, "posx:%d", player[0].pos_x);
+	//    sprintf(buffer_d, "posx:%d", player[0].pos_x);
+
+	VDP_clearTextBG(BG_A, 28, 5, 10);
+	//   VDP_clearTextBG(BG_A, 28, 6, 10);
+	//    VDP_clearTextBG(BG_A, 28, 7, 10);
+	//    VDP_clearTextBG(BG_A, 28, 8, 10);
+
+	VDP_drawTextBG(BG_A, buffer_a, 28, 5);
+	//   VDP_drawTextBG(BG_A, buffer_b, 28, 6);
+	//    VDP_drawTextBG(BG_A, buffer_c, 28, 7);
+	//    VDP_drawTextBG(BG_A, buffer_d, 28, 8);
 }
 
 static void updateCursorPosition()
@@ -445,16 +434,16 @@ static void processGameTitle()
 	ind = TILE_USER_INDEX;
 	base_tile_index[BG_B] = ind;
 	VDP_loadTileSet(&title_tileset, base_tile_index[BG_B], DMA);
-	PAL_setPalette(PAL0, title_palette.data, DMA);
-	title = MAP_create(&title_map, BG_B, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, ind));
-	MAP_scrollTo(title, 0, 0);
+	PAL_setPalette(PAL0, title_palette.data, DMA_QUEUE);
+	bgb = MAP_create(&title_map, BG_B, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, ind));
+	MAP_scrollTo(bgb, 0, 0);
 
 	// ind += title_tileset.numTile;
 	// base_tile_index[BG_A] = ind;
 
 	// MENU
 	ptr_cursor = SPR_addSprite(&key, 0, 0, TILE_ATTR(PAL3, FALSE, FALSE, FALSE));
-	PAL_setPalette(PAL3, key.palette->data, DMA);
+	PAL_setPalette(PAL3, key.palette->data, DMA_QUEUE);
 
 	// Draw options
 	VDP_setTextPriority(TRUE);
@@ -472,7 +461,7 @@ static void processGameTitle()
 	VDP_clearTextBG(BG_A, options[0].x, options[0].y, 20);
 	VDP_clearTextBG(BG_A, options[1].x, options[1].y, 20);
 	VDP_clearTextBG(BG_A, options[2].x, options[2].y, 20);
-	MEM_free(title);
+	MEM_free(bgb);
 	MEM_free(ptr_cursor);
 	releaseMemory();
 }
@@ -539,7 +528,7 @@ static void processMainGame()
 	player[ONE].is_attacking = FALSE;
 	player[ONE].has_stamina = TRUE;
 	player[ONE].sprite = SPR_addSprite(&knight, player[ONE].pos_x, player[ONE].pos_y, TILE_ATTR(PAL2, FALSE, player[ONE].flip_v, player[ONE].flip_h));
-	PAL_setPalette(PAL2, knight.palette->data, DMA_QUEUE);
+	PAL_setPalette(PAL2, knight.palette->data, DMA);
 	SPR_setAnim(player[ONE].sprite, player[ONE].anim);
 
 	// ponteiro para array
@@ -559,36 +548,35 @@ static void processMainGame()
 	// acessando os índices (*ptr_elements)[5].flip_h = TRUE;
 
 	// Other sprites...
-	spr_element[0].is_active = FALSE;
-	spr_element[0].is_visible = FALSE;
-	spr_element[0].pos_x = MAX_POS_X - 16;
+	spr_element[0].is_active = TRUE;
+	spr_element[0].is_visible = TRUE;
+	spr_element[0].pos_x = RIGHT_SCREEN_LIMIT;
 	spr_element[0].pos_y = 16;
-	spr_element[0].width = 16;
+	spr_element[0].width = 40;
 	spr_element[0].height = 16;
 	spr_element[0].flip_v = FALSE;
 	spr_element[0].flip_h = TRUE;
 	spr_element[0].sprite = SPR_addSprite(&ball, spr_element[0].pos_x, spr_element[0].pos_y, TILE_ATTR(PAL3, FALSE, spr_element[0].flip_v, spr_element[0].flip_h));
 	spr_element[0].order_x = LEFT;
 	spr_element[0].order_y = NEUTRAL;
-	spr_element[0].speed_x = 1;
-	spr_element[0].speed_y = 1;
+	spr_element[0].speed_x = 3;
+	spr_element[0].speed_y = 1;	
 	spr_element[0].trap_switch_id = 0;
-	PAL_setPalette(PAL3, ball.palette->data, DMA_QUEUE);	
-	SPR_setVisibility(spr_element[0].sprite, HIDDEN);
-
-	trap_switch[0].is_active = FALSE;
-	trap_switch[0].pos_x = 160;
-	trap_switch[0].pos_y = 48;
-	trap_switch[0].sprite = SPR_addSprite(&brick, trap_switch[0].pos_x, trap_switch[0].pos_y, TILE_ATTR(PAL1, FALSE, FALSE, FALSE));
-	// PAL_setPalette(PAL3, key.palette->data, DMA);
-	trap_switch[0].spr_element_id = 0;
+	PAL_setPalette(PAL3, ball.palette->data, DMA);
+	// SPR_setVisibility(spr_element[0].sprite, HIDDEN);
 
 	while (current_game_state == GAME)
 	{
+
+		frame_counter++;
+		if (frame_counter >= 59)
+		{
+			frame_counter = 0;
+		}
+
 		finiteStateMachine(ONE);
 		updateCamera(ONE);
-		updatePlayerPosition(ONE);
-		// controlMapBoundaries(ONE);
+		updatePlayerPosition(ONE);		
 		controlPlayerMapCollision(ONE);
 		checkBottonCollision(ONE);
 		checkTopCollision(ONE);
@@ -597,8 +585,9 @@ static void processMainGame()
 		controlXAcceleration(ONE);
 		controlYAcceleration(ONE);
 		controlAttackTimer(ONE);
+		//debug();
 
-		controlTrap(0);
+		// controlTrap(0);
 		controlProjectile(0);
 
 		if (player[ONE].is_full_anim)
@@ -614,21 +603,8 @@ static void processMainGame()
 
 		SPR_setHFlip(player[ONE].sprite, player[ONE].flip_h);
 		SPR_setPosition(player[ONE].sprite, (player[ONE].pos_x - camera.cur_pos_x), (player[ONE].pos_y - camera.cur_pos_y));
-		SPR_setPosition(trap_switch[0].sprite, (trap_switch[0].pos_x - camera.cur_pos_x), (trap_switch[0].pos_y - camera.cur_pos_y));
 
-		if (player[ONE].pos_x > trap_switch[0].pos_x && player[ONE].pos_y < trap_switch[0].pos_y)
-		{
-			trap_switch[0].is_active = TRUE;
-		}
-		else if (player[ONE].pos_x < trap_switch[0].pos_x && player[ONE].pos_y < trap_switch[0].pos_y)
-		{
-			trap_switch[0].is_active = FALSE;
-		}
-
-		if (spr_element[0].is_active)
-		{
-			SPR_setPosition(spr_element[0].sprite, (spr_element[0].pos_x - camera.cur_pos_x), (spr_element[0].pos_y - camera.cur_pos_y));
-		}
+		SPR_setPosition(spr_element[0].sprite, (spr_element[0].pos_x - camera.cur_pos_x), (spr_element[0].pos_y - camera.cur_pos_y));
 
 		MAP_scrollTo(bga, camera.cur_pos_x, camera.cur_pos_y);
 		MAP_scrollTo(bgb, camera.cur_pos_x, camera.cur_pos_y);
@@ -640,26 +616,7 @@ static void processMainGame()
 	MEM_free(bgb);
 	MEM_free(player[ONE].sprite);
 	MEM_free(spr_element[0].sprite);
-	MEM_free(trap_switch[0].sprite);
 	releaseMemory();
-}
-
-static void controlTrap(int trap_switch_id)
-{
-	if (trap_switch[trap_switch_id].is_active)
-	{
-		int id = trap_switch[trap_switch_id].spr_element_id;
-		spr_element[id].is_active = TRUE;
-		spr_element[id].is_visible = TRUE;
-		SPR_setVisibility(spr_element[id].sprite, VISIBLE);
-	}
-	else if (!trap_switch[trap_switch_id].is_active)
-	{
-		int id = trap_switch[trap_switch_id].spr_element_id;
-		spr_element[id].is_active = FALSE;
-		spr_element[id].is_visible = FALSE;
-		SPR_setVisibility(spr_element[id].sprite, HIDDEN);
-	}
 }
 
 static void controlProjectile(int sprite_id)
@@ -668,18 +625,18 @@ static void controlProjectile(int sprite_id)
 	{
 		if (spr_element[sprite_id].order_x == LEFT)
 		{
-			spr_element[sprite_id].pos_x -= spr_element[sprite_id].speed_x;
-			if (spr_element[sprite_id].pos_x <= MIN_POS_X)
+			spr_element[sprite_id].pos_x -= spr_element[sprite_id].speed_x;			
+			if (spr_element[sprite_id].pos_x <= (camera.cur_pos_x - spr_element[sprite_id].width))
 			{
-				spr_element[sprite_id].pos_x = MAX_POS_X - 16;
+				spr_element[sprite_id].pos_x = (camera.cur_pos_x + HORIZONTAL_RESOLUTION);				
 			}
 		}
 		else if (spr_element[sprite_id].order_x == RIGHT)
 		{
-			spr_element[sprite_id].pos_x += spr_element[sprite_id].speed_x;
-			if ((spr_element[sprite_id].pos_x + spr_element[sprite_id].width) >= MAX_POS_X)
+			spr_element[sprite_id].pos_x += spr_element[sprite_id].speed_x;			
+			if (spr_element[sprite_id].pos_x >= (camera.cur_pos_x + HORIZONTAL_RESOLUTION))
 			{
-				spr_element[sprite_id].pos_x = MIN_POS_X;
+				spr_element[sprite_id].pos_x = (camera.cur_pos_x - spr_element[sprite_id].width);				
 			}
 		}
 	}
@@ -1227,19 +1184,15 @@ static void controlXAcceleration(int player_id)
 	{
 		if (player[player_id].speed_x < player[player_id].max_speed_x)
 		{
-			counter_x[player_id] += 1;
-			if (counter_x[player_id] == COUNTER_LIMIT)
+			if (frame_counter % 5 == 0)
 			{
-				counter_x[player_id] = 0;
 				player[player_id].speed_x += 1;
 			}
 		}
 		else if (player[player_id].speed_x > player[player_id].max_speed_x)
 		{
-			counter_x[player_id] += 1;
-			if (counter_x[player_id] == COUNTER_LIMIT)
+			if (frame_counter % 5 == 0)
 			{
-				counter_x[player_id] = 0;
 				player[player_id].speed_x -= 1;
 			}
 		}
@@ -1248,10 +1201,8 @@ static void controlXAcceleration(int player_id)
 	{
 		if (player[player_id].speed_x > 0)
 		{
-			counter_x[player_id] += 1;
-			if (counter_x[player_id] == COUNTER_LIMIT)
+			if (frame_counter % 3 == 0)
 			{
-				counter_x[player_id] = 0;
 				player[player_id].speed_x -= 1;
 			}
 		}
@@ -1264,26 +1215,21 @@ static void controlYAcceleration(int player_id)
 	{
 		if (player[player_id].speed_y > 0)
 		{
-			counter_y[player_id] += 1;
-			if (counter_y[player_id] == COUNTER_LIMIT)
+			if (frame_counter % 5 == 0)
 			{
-				counter_y[player_id] = 0;
 				player[player_id].speed_y -= 1;
 			}
 		}
 		else if (player[player_id].speed_y == 0)
 		{
 			player[player_id].order_y = NEUTRAL;
-			counter_y[player_id] = 0;
 		}
 	}
 	else if (player[player_id].order_y == DOWN)
 	{
-		counter_y[player_id] += 1;
-		if (counter_y[player_id] == COUNTER_LIMIT)
+		if (player[player_id].speed_y < player[player_id].max_speed_y)
 		{
-			counter_y[player_id] = 0;
-			if (player[player_id].speed_y < player[player_id].max_speed_y)
+			if (frame_counter % 5 == 0)
 			{
 				player[player_id].speed_y += 1;
 			}
@@ -1291,7 +1237,6 @@ static void controlYAcceleration(int player_id)
 	}
 	else if (player[player_id].order_y == NEUTRAL)
 	{
-		counter_y[player_id] = 0;
 		player[player_id].speed_y = 0;
 	}
 }
@@ -1376,84 +1321,65 @@ static void controlAttackTimer(int player_id)
 	}
 }
 
-// static void controlMapBoundaries(int player_id)
-//{
-//	if ((player[player_id].pos_x + BOX_LEFT_OFFSET) == MIN_POS_X)
-//	{
-//		player[player_id].pos_x = (MIN_POS_X - BOX_LEFT_OFFSET);
-//	}
-//	else if (((player[player_id].pos_x + player[player_id].width) - BOX_RIGHT_OFFSET) > MAX_POS_X)
-//	{
-//		player[player_id].pos_x = (MAX_POS_X - player[player_id].width) + BOX_RIGHT_OFFSET;
-//	}
-//
-//	if ((player[player_id].pos_y + BOX_TOP_OFFSET) == MIN_POS_Y)
-//	{
-//		player[player_id].pos_y = (MIN_POS_Y - BOX_TOP_OFFSET);
-//	}
-//	else if (((player[player_id].pos_y + player[player_id].height) - BOX_BOTTON_OFFSET) > MAX_POS_Y)
-//	{
-//		player[player_id].pos_y = (MAX_POS_Y - player[player_id].height) + BOX_BOTTON_OFFSET;
-//	}
-// }
-
 static void updateCamera(int player_id)
 {
-	player_x_on_map = player[player_id].pos_x;
-	player_y_on_map = player[player_id].pos_y;
-	player_x_on_screen = (player_x_on_map - camera.cur_pos_x);
-	player_y_on_screen = (player_y_on_map - camera.cur_pos_y);
+	camera.entity_x_on_map = player[player_id].pos_x;
+	camera.entity_y_on_map = player[player_id].pos_y;
+	camera.entity_x_on_screen = (camera.entity_x_on_map - camera.cur_pos_x);
+	camera.entity_y_on_screen = (camera.entity_y_on_map - camera.cur_pos_y);
 
-	if (player_x_on_screen > HOW_FAR_TO_RIGHT)
+	// camera horizontal movement
+	if (camera.entity_x_on_screen > HOW_FAR_TO_RIGHT)
 	{
-		update_camera_x = (player_x_on_map - HOW_FAR_TO_RIGHT);
+		camera.new_pos_x = (camera.entity_x_on_map - HOW_FAR_TO_RIGHT);
 	}
-	else if (player_x_on_screen < HOW_FAR_TO_LEFT)
+	else if (camera.entity_x_on_screen < HOW_FAR_TO_LEFT)
 	{
-		update_camera_x = (player_x_on_map - HOW_FAR_TO_LEFT);
+		camera.new_pos_x = (camera.entity_x_on_map - HOW_FAR_TO_LEFT);
 	}
 	else
 	{
-		update_camera_x = camera.cur_pos_x;
+		camera.new_pos_x = camera.cur_pos_x;
 	}
 
-	if (player_y_on_screen > HOW_FAR_TO_BOTTON)
+	// camera vertical movement
+	if (camera.entity_y_on_screen > HOW_FAR_TO_BOTTON)
 	{
-		update_camera_y = (player_y_on_map - HOW_FAR_TO_BOTTON);
+		camera.new_pos_y = (camera.entity_y_on_map - HOW_FAR_TO_BOTTON);
 	}
-	else if (player_y_on_screen < HOW_FAR_TO_TOP)
+	else if (camera.entity_y_on_screen < HOW_FAR_TO_TOP)
 	{
-		update_camera_y = (player_y_on_map - HOW_FAR_TO_TOP);
+		camera.new_pos_y = (camera.entity_y_on_map - HOW_FAR_TO_TOP);
 	}
 	else
 	{
-		update_camera_y = camera.cur_pos_y;
+		camera.new_pos_y = camera.cur_pos_y;
 	}
 
 	// stop camera from going beyond map boundaries
-	if (update_camera_x < 0)
+	if (camera.new_pos_x < LEFT_SCREEN_LIMIT)
 	{
-		update_camera_x = 0;
+		camera.new_pos_x = LEFT_SCREEN_LIMIT;
 	}
-	else if (update_camera_x > (MAP_WIDTH - HORIZONTAL_RESOLUTION))
+	else if (camera.new_pos_x > RIGHT_SCREEN_LIMIT)
 	{
-		update_camera_x = (MAP_WIDTH - HORIZONTAL_RESOLUTION);
+		camera.new_pos_x = RIGHT_SCREEN_LIMIT;
 	}
 
-	if (update_camera_y < 0)
+	if (camera.new_pos_y < TOP_SCREEN_LIMIT)
 	{
-		update_camera_y = 0;
+		camera.new_pos_y = TOP_SCREEN_LIMIT;
 	}
-	else if (update_camera_y > (MAP_HEIGTH - VERTICAL_RESOLUTION))
+	else if (camera.new_pos_y > BOTTON_SCREEN_LIMIT)
 	{
-		update_camera_y = (MAP_HEIGTH - VERTICAL_RESOLUTION);
+		camera.new_pos_y = BOTTON_SCREEN_LIMIT;
 	}
 
 	// update current camera X & Y
-	if ((camera.cur_pos_x != update_camera_x) || (camera.cur_pos_y != update_camera_y))
+	if ((camera.cur_pos_x != camera.new_pos_x) || (camera.cur_pos_y != camera.new_pos_y))
 	{
-		camera.cur_pos_x = update_camera_x;
-		camera.cur_pos_y = update_camera_y;
+		camera.cur_pos_x = camera.new_pos_x;
+		camera.cur_pos_y = camera.new_pos_y;
 	}
 };
 
@@ -1563,24 +1489,6 @@ static void controlPlayerMapCollision(int player_id)
 	default:
 		break;
 	}
-
-	// sprintf(buffer_a, "posx:%d", spr_element[0].pos_x);
-	// sprintf(buffer_b, "posx:%d", player[0].pos_x);
-	//  sprintf(buffer_c, "posx:%d", player[0].pos_x);
-	//  sprintf(buffer_d, "posx:%d", player[0].pos_x);
-
-	// VDP_clearTextBG(BG_A, 28, 5, 10);
-	// VDP_clearTextBG(BG_A, 28, 6, 10);
-	//  VDP_clearTextBG(BG_A, 28, 7, 10);
-	//  VDP_clearTextBG(BG_A, 28, 8, 10);
-
-	// VDP_setTextPriority(TRUE);
-	// PAL_setColor(15, RGB24_TO_VDPCOLOR(0xffff00));
-
-	// VDP_drawTextBG(BG_A, buffer_a, 28, 5);
-	// VDP_drawTextBG(BG_A, buffer_b, 28, 6);
-	//  VDP_drawTextBG(BG_A, buffer_c, 28, 7);
-	//  VDP_drawTextBG(BG_A, buffer_d, 28, 8);
 }
 
 static void checkBottonCollision(int player_id)
@@ -1603,3 +1511,13 @@ static void checkTopCollision(int player_id)
 		player[player_id].order_y = NEUTRAL;
 	}
 }
+
+// make GDK=/path/to/sgdk -f /path/to/sgdk/makefile_wine.gen
+// make GDK=${HOME}/SGDK -f ${HOME}/SGDK/makefile_wine.gen
+
+// https://gameprogrammingpatterns.com/state.html
+// https://www.youtube.com/watch?v=xldCreKST3s
+// OHSAT Games Tutorials
+// https://www.ohsat.com/tutorial/mdmisc/sor-style-text-crawl/
+// PIGSY Retro Game Sega Genesis Tutorials
+// https://www.youtube.com/watch?v=BnGqc5OTTY4&list=PL1xqkpO_SvY2_rSwHTBIBxXMqmek--GAb
