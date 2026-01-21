@@ -303,7 +303,6 @@ Option options[NUM_OPTIONS] = {
 
 u8 currentIndex = 0;
 Sprite *ptr_cursor;
-Sprite *ptr_start;
 static void updateCursorPosition();
 static void moveUp();
 static void moveDown();
@@ -460,9 +459,9 @@ static void processGameTitle()
 
 	ind = TILE_USER_INDEX;
 	base_tile_index[BG_B] = ind;
-	VDP_loadTileSet(&title_bgb_tileset, base_tile_index[BG_B], DMA);
-	PAL_setPalette(PAL0, title_bgb_palette.data, DMA);
-	bgb = MAP_create(&title_bgb_map, BG_B, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, ind));
+	VDP_loadTileSet(&bgb_tileset, base_tile_index[BG_B], DMA);
+	PAL_setPalette(PAL0, bgb_palette.data, DMA);
+	bgb = MAP_create(&bgb_map, BG_B, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, ind));
 	MAP_scrollTo(bgb, 0, 0);
 
 	// ind += title_bgb_tileset.numTile;
@@ -477,9 +476,6 @@ static void processGameTitle()
 	// MENU
 	ptr_cursor = SPR_addSprite(&fire, 0, 0, TILE_ATTR(PAL2, FALSE, FALSE, FALSE));
 	PAL_setPalette(PAL2, fire.palette->data, DMA);
-
-	ptr_start = SPR_addSprite(&start, 200, 140, TILE_ATTR(PAL3, FALSE, FALSE, FALSE));
-	PAL_setPalette(PAL3, start.palette->data, DMA);
 
 	// Draw options
 	VDP_setTextPriority(TRUE);
@@ -500,7 +496,6 @@ static void processGameTitle()
 	MEM_free(bga);
 	MEM_free(bgb);
 	MEM_free(ptr_cursor);
-	MEM_free(ptr_start);
 	releaseMemory();
 }
 

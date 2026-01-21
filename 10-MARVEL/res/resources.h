@@ -17,6 +17,5 @@ extern const SpriteDefinition dead;
 extern const SpriteDefinition ball;
 extern const SpriteDefinition knight;
 extern const SpriteDefinition fire;
-extern const SpriteDefinition start;
 
 #endif // _RES_RESOURCES_H_

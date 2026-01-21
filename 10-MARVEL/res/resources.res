@@ -15,4 +15,3 @@ SPRITE dead "sprites/dead_10_10.png" 10 10 FAST 10
 SPRITE ball "sprites/fire_ball_5_2.png" 5 2 FAST 10
 SPRITE knight "sprites/knight_12_8.png" 12 8 FAST 8
 SPRITE fire "sprites/fire_4_6.png" 4 6 FAST 6
-SPRITE start "sprites/press_start_11_2.png" 11 2 NONE 0
