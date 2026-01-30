@@ -133,6 +133,7 @@ enum PlayerState
 	STATE_ATTACK_1,
 	STATE_ATTACK_2,
 	STATE_ATTACK_3,
+	STATE_PARRY,
 	STATE_DEFEND,
 	STATE_HURT,
 	STATE_DEATH
@@ -143,7 +144,8 @@ enum TimeOfAnimation
 	TIME_ATTACK_1 = 48,
 	TIME_ATTACK_2 = 40,
 	TIME_ATTACK_3 = 48,
-	TIME_HURT = 32
+	TIME_HURT = 32,
+	TIME_PARRY = 48
 };
 
 u16 attack_timer[2] = {0, 0};
@@ -303,6 +305,7 @@ Option options[NUM_OPTIONS] = {
 
 u8 currentIndex = 0;
 Sprite *ptr_cursor;
+Sprite *ptr_start;
 static void updateCursorPosition();
 static void moveUp();
 static void moveDown();
@@ -459,9 +462,9 @@ static void processGameTitle()
 
 	ind = TILE_USER_INDEX;
 	base_tile_index[BG_B] = ind;
-	VDP_loadTileSet(&bgb_tileset, base_tile_index[BG_B], DMA);
-	PAL_setPalette(PAL0, bgb_palette.data, DMA);
-	bgb = MAP_create(&bgb_map, BG_B, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, ind));
+	VDP_loadTileSet(&title_bgb_tileset, base_tile_index[BG_B], DMA);
+	PAL_setPalette(PAL0, title_bgb_palette.data, DMA);
+	bgb = MAP_create(&title_bgb_map, BG_B, TILE_ATTR_FULL(PAL0, FALSE, FALSE, FALSE, ind));
 	MAP_scrollTo(bgb, 0, 0);
 
 	// ind += title_bgb_tileset.numTile;
@@ -474,28 +477,48 @@ static void processGameTitle()
 	// ind += title_bga_tileset.numTile;
 
 	// MENU
-	ptr_cursor = SPR_addSprite(&fire, 0, 0, TILE_ATTR(PAL2, FALSE, FALSE, FALSE));
-	PAL_setPalette(PAL2, fire.palette->data, DMA);
+	//ptr_cursor = SPR_addSprite(&fire, 0, 0, TILE_ATTR(PAL2, FALSE, FALSE, FALSE));
+	//PAL_setPalette(PAL2, fire.palette->data, DMA);
+
+	ptr_start = SPR_addSprite(&start, 116, 180, TILE_ATTR(PAL3, FALSE, FALSE, FALSE));
+	PAL_setPalette(PAL3, start.palette->data, DMA);
+	bool is_visible = TRUE;
 
 	// Draw options
-	VDP_setTextPriority(TRUE);
-	PAL_setColor(15, RGB24_TO_VDPCOLOR(0xffff00));
-	VDP_drawTextBG(BG_A, options[0].label, options[0].x, options[0].y);
-	VDP_drawTextBG(BG_A, options[1].label, options[1].x, options[1].y);
-	VDP_drawTextBG(BG_A, options[2].label, options[2].x, options[2].y);
+	//VDP_setTextPriority(TRUE);
+	//PAL_setColor(15, RGB24_TO_VDPCOLOR(0xffff00));
+	//VDP_drawTextBG(BG_A, options[0].label, options[0].x, options[0].y);
+	//VDP_drawTextBG(BG_A, options[1].label, options[1].x, options[1].y);
+	//VDP_drawTextBG(BG_A, options[2].label, options[2].x, options[2].y);
 
 	while (current_game_state == TITLE)
 	{
-		updateCursorPosition();
+		frame_counter++;
+		if (frame_counter >= 59)
+		{
+			if (is_visible)
+			{
+				SPR_setVisibility(ptr_start, HIDDEN);
+				is_visible = FALSE;
+			}
+			else
+			{
+				SPR_setVisibility(ptr_start, VISIBLE);
+				is_visible = TRUE;
+			}
+			frame_counter = 0;
+		}
+		//updateCursorPosition();
 		SPR_update();
 		SYS_doVBlankProcessEx(ON_VBLANK_START);
 	}
-	VDP_clearTextBG(BG_A, options[0].x, options[0].y, 20);
-	VDP_clearTextBG(BG_A, options[1].x, options[1].y, 20);
-	VDP_clearTextBG(BG_A, options[2].x, options[2].y, 20);
-	MEM_free(bga);
+	//VDP_clearTextBG(BG_A, options[0].x, options[0].y, 20);
+	//VDP_clearTextBG(BG_A, options[1].x, options[1].y, 20);
+	//VDP_clearTextBG(BG_A, options[2].x, options[2].y, 20);
+	//MEM_free(bga);
 	MEM_free(bgb);
-	MEM_free(ptr_cursor);
+	//MEM_free(ptr_cursor);
+	MEM_free(ptr_start);
 	releaseMemory();
 }
 
@@ -631,21 +654,21 @@ static void processMainGame()
 			frame_counter = 0;
 		}
 
-		finiteStateMachine(HERO);		
-		updateCamera(HERO);		
+		finiteStateMachine(HERO);
+		updateCamera(HERO);
 
 		updateEntityPosition(HERO);
 		controlEntityMapCollision(HERO);
 		checkBottonCollision(HERO);
-		checkTopCollision(HERO);		
+		checkTopCollision(HERO);
 
-		controlHorizontalFlip(HERO);		
+		controlHorizontalFlip(HERO);
 		controlXAcceleration(HERO);
 		controlYAcceleration(HERO);
 		controlAttackTimer(HERO);
 
-		//debug();
-		
+		// debug();
+
 		// controlProjectile(FIREBALL);
 
 		if ((*ptr_entity)[HERO].is_full_anim)
@@ -678,13 +701,13 @@ static void processMainGame()
 
 		MAP_scrollTo(bga, camera.cur_pos_x, camera.cur_pos_y);
 		MAP_scrollTo(bgb, 0, 0);
-		// MAP_scrollTo(bgb, camera.cur_pos_x, camera.cur_pos_y);
+		//  MAP_scrollTo(bgb, camera.cur_pos_x, camera.cur_pos_y);
 
 		SPR_update();
 		SYS_doVBlankProcessEx(ON_VBLANK_START);
 	}
 	MEM_free(bga);
-	MEM_free(bgb);
+	// MEM_free(bgb);
 	MEM_free((*ptr_entity)[HERO].sprite);
 	MEM_free((*ptr_entity)[BOSS].sprite);
 	releaseMemory();
@@ -940,8 +963,10 @@ static void finiteStateMachine(int entity_id)
 		if ((*ptr_joy)[entity_id].btn_y /*  && (*ptr_entity)[entity_id].has_stamina */)
 		{
 			(*ptr_entity)[entity_id].order_x = NEUTRAL;
+			(*ptr_entity)[entity_id].is_attacking = TRUE;
 			// (*ptr_entity)[entity_id].has_stamina = FALSE;
-			(*ptr_entity)[entity_id].state = STATE_DEFEND;
+			anim_duration[entity_id] = TIME_PARRY;
+			(*ptr_entity)[entity_id].state = STATE_PARRY;
 			(*ptr_entity)[entity_id].anim = ANIM_DEFEND;
 			(*ptr_entity)[entity_id].is_full_anim = TRUE;
 			SPR_setAnimationLoop((*ptr_entity)[entity_id].sprite, FALSE);
@@ -995,8 +1020,10 @@ static void finiteStateMachine(int entity_id)
 		if ((*ptr_joy)[entity_id].btn_y /*  && (*ptr_entity)[entity_id].has_stamina */)
 		{
 			(*ptr_entity)[entity_id].order_x = NEUTRAL;
+			(*ptr_entity)[entity_id].is_attacking = TRUE;
 			// (*ptr_entity)[entity_id].has_stamina = FALSE;
-			(*ptr_entity)[entity_id].state = STATE_DEFEND;
+			anim_duration[entity_id] = TIME_PARRY;
+			(*ptr_entity)[entity_id].state = STATE_PARRY;
 			(*ptr_entity)[entity_id].anim = ANIM_DEFEND;
 			(*ptr_entity)[entity_id].is_full_anim = TRUE;
 			SPR_setAnimationLoop((*ptr_entity)[entity_id].sprite, FALSE);
@@ -1050,8 +1077,10 @@ static void finiteStateMachine(int entity_id)
 		if ((*ptr_joy)[entity_id].btn_y /*  && (*ptr_entity)[entity_id].has_stamina */)
 		{
 			(*ptr_entity)[entity_id].order_x = NEUTRAL;
+			(*ptr_entity)[entity_id].is_attacking = TRUE;
 			// (*ptr_entity)[entity_id].has_stamina = FALSE;
-			(*ptr_entity)[entity_id].state = STATE_DEFEND;
+			anim_duration[entity_id] = TIME_PARRY;
+			(*ptr_entity)[entity_id].state = STATE_PARRY;
 			(*ptr_entity)[entity_id].anim = ANIM_DEFEND;
 			(*ptr_entity)[entity_id].is_full_anim = TRUE;
 			SPR_setAnimationLoop((*ptr_entity)[entity_id].sprite, FALSE);
@@ -1253,13 +1282,16 @@ static void finiteStateMachine(int entity_id)
 		}
 		break;
 
-	case STATE_DEFEND:
-		if (!(*ptr_joy)[entity_id].btn_y)
+	case STATE_PARRY:
+		if (!(*ptr_entity)[entity_id].is_attacking)
 		{
-			(*ptr_entity)[entity_id].state = STATE_STANDING;
-			(*ptr_entity)[entity_id].anim = ANIM_STANDING;
-			(*ptr_entity)[entity_id].is_full_anim = TRUE;
-			SPR_setAnimationLoop((*ptr_entity)[entity_id].sprite, TRUE);
+			if (!(*ptr_joy)[entity_id].btn_y)
+			{
+				(*ptr_entity)[entity_id].state = STATE_STANDING;
+				(*ptr_entity)[entity_id].anim = ANIM_STANDING;
+				(*ptr_entity)[entity_id].is_full_anim = TRUE;
+				SPR_setAnimationLoop((*ptr_entity)[entity_id].sprite, TRUE);
+			}			
 		}
 		break;
 
@@ -1526,7 +1558,7 @@ static void controlEntityMapCollision(int entity_id)
 		else
 		{
 			min_x_coord[entity_id] = (MIN_POS_X - BOX_LEFT_OFFSET);
-			//min_x_coord[entity_id] = (camera.cur_pos_x - BOX_LEFT_OFFSET);
+			// min_x_coord[entity_id] = (camera.cur_pos_x - BOX_LEFT_OFFSET);
 		}
 		break;
 
@@ -1540,7 +1572,7 @@ static void controlEntityMapCollision(int entity_id)
 		else
 		{
 			max_x_coord[entity_id] = (MAX_POS_X - (*ptr_entity)[entity_id].width) + BOX_RIGHT_OFFSET;
-			//max_x_coord[entity_id] = ((camera.cur_pos_x + HORIZONTAL_RESOLUTION) - (*ptr_entity)[entity_id].width) + BOX_RIGHT_OFFSET;
+			// max_x_coord[entity_id] = ((camera.cur_pos_x + HORIZONTAL_RESOLUTION) - (*ptr_entity)[entity_id].width) + BOX_RIGHT_OFFSET;
 		}
 		break;
 
