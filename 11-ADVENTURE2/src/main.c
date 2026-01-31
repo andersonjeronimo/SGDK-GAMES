@@ -56,18 +56,18 @@ const u8 BGA_COLLISION_MATRIX[28][64] =
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -348,20 +348,20 @@ static void debug()
 	// PAL_setColor(15, RGB24_TO_VDPCOLOR(0xffff00));
 
 	// u32 tick = getTick() / 300;
-	sprintf(buffer_a, "order X:%d", p1->last_order_x);
-	sprintf(buffer_b, "order Y:%d", p1->order_y);
-	//    sprintf(buffer_c, "posx:%d", (*ptr_entity)[0].pos_x);
-	//    sprintf(buffer_d, "posx:%d", (*ptr_entity)[0].pos_x);
+	sprintf(buffer_a, "poxX:%d", p1->pos_x);
+	sprintf(buffer_b, "velY:%d", p1->vel_y);
+	sprintf(buffer_c, "state:%d", p1->state);
+	sprintf(buffer_d, "orderY:%d", p1->order_y);
 
 	VDP_clearTextBG(BG_A, 28, 5, 10);
 	VDP_clearTextBG(BG_A, 28, 6, 10);
-	//    VDP_clearTextBG(BG_A, 28, 7, 10);
-	//    VDP_clearTextBG(BG_A, 28, 8, 10);
+	VDP_clearTextBG(BG_A, 28, 7, 10);
+	VDP_clearTextBG(BG_A, 28, 8, 10);
 
 	VDP_drawTextBG(BG_A, buffer_a, 28, 5);
 	VDP_drawTextBG(BG_A, buffer_b, 28, 6);
-	//    VDP_drawTextBG(BG_A, buffer_c, 28, 7);
-	//    VDP_drawTextBG(BG_A, buffer_d, 28, 8);
+	VDP_drawTextBG(BG_A, buffer_c, 28, 7);
+	VDP_drawTextBG(BG_A, buffer_d, 28, 8);
 }
 
 static void updateCursorPosition()
@@ -624,9 +624,9 @@ static void processMainGame()
 		updateEntityPosition(p1);
 		calculateEntityMapCollision(p1);
 		checkBottonCollision(p1);
-		checkTopCollision(p1);
 		checkLeftCollision(p1);
 		checkRightCollision(p1);
+		checkTopCollision(p1);
 		controlHorizontalFlip(p1);
 		controlXAcceleration(p1);
 		controlYAcceleration(p1);
@@ -1155,7 +1155,7 @@ static void finiteStateMachine(Entity *p)
 				p->is_full_anim = TRUE;
 				SPR_setAnimationLoop(p->sprite, TRUE);
 			}
-			else
+			else if (p->vel_x == 0)
 			{
 				p->state = STATE_STANDING;
 				p->anim = ANIM_STANDING;
@@ -1163,6 +1163,7 @@ static void finiteStateMachine(Entity *p)
 				SPR_setAnimationLoop(p->sprite, TRUE);
 			}
 		}
+
 		break;
 
 	case STATE_FALL_LOOP:
@@ -1185,11 +1186,20 @@ static void finiteStateMachine(Entity *p)
 		}
 		else if (p->order_y == NEUTRAL)
 		{
-			p->order_x = NEUTRAL;
-			p->state = STATE_STANDING;
-			p->anim = ANIM_STANDING;
-			p->is_full_anim = TRUE;
-			SPR_setAnimationLoop(p->sprite, TRUE);
+			if (p->vel_x > 0)
+			{
+				p->anim = ANIM_RUN;
+				p->state = STATE_RUN;
+				p->is_full_anim = TRUE;
+				SPR_setAnimationLoop(p->sprite, TRUE);
+			}
+			else if (p->vel_x == 0)
+			{
+				p->state = STATE_STANDING;
+				p->anim = ANIM_STANDING;
+				p->is_full_anim = TRUE;
+				SPR_setAnimationLoop(p->sprite, TRUE);
+			}
 		}
 		break;
 
@@ -1274,6 +1284,10 @@ static void finiteStateMachine(Entity *p)
 		break;
 
 	default:
+		p->state = STATE_STANDING;
+		p->anim = ANIM_STANDING;
+		p->is_full_anim = TRUE;
+		SPR_setAnimationLoop(p->sprite, TRUE);
 		break;
 	}
 }
@@ -1335,9 +1349,25 @@ static void controlYAcceleration(Entity *p)
 			}
 		}
 	}
-	else if (p->order_y == NEUTRAL)
+	else
 	{
-		p->vel_y = 0;
+		if (p->order_y == NEUTRAL)
+		{
+			p->vel_y = 0;
+		}
+	}
+}
+
+static void checkBottonCollision(Entity *p)
+{
+	if ((p->order_y == NEUTRAL) && (p->pos_y < max_y_coord[p->player_id]))
+	{
+		p->order_y = DOWN;
+	}
+	else if ((p->order_y == DOWN) && (p->pos_y >= max_y_coord[p->player_id]))
+	{
+		p->order_y = NEUTRAL;
+		p->pos_y = max_y_coord[p->player_id];
 	}
 }
 
@@ -1360,6 +1390,7 @@ static void updateEntityPosition(Entity *p)
 			}
 		}
 	}
+
 	if (p->vel_y > 0)
 	{
 		if (p->order_y == UP)
@@ -1502,6 +1533,10 @@ static void calculateEntityMapCollision(Entity *p)
 	s16 botton_edge_line = (p->coll_box.h / TILE_IN_PIXELS);
 
 	// isso corrige um glitch
+	if (left_edge_column < 0)
+		left_edge_column = 0;
+	if (top_edge_line < 0)
+		top_edge_line = 0;
 	if (right_edge_column > MATRIX_MAX_COL_INDEX)
 		right_edge_column = MATRIX_MAX_COL_INDEX;
 	if (botton_edge_line > MATRIX_MAX_LIN_INDEX)
@@ -1535,51 +1570,7 @@ static void calculateEntityMapCollision(Entity *p)
 	//   {8, 8,}<-D->8 8 8 8 8 8 8 8 8 8 8 8<-C->
 	//   {8, 8,}     8 8 8 8 8 8 8 8 8 8 8 8
 
-	/* A_vertex = BGA_COLLISION_MATRIX[top_edge_line + 1][left_edge_column];
-	D_vertex = BGA_COLLISION_MATRIX[botton_edge_line - 1][left_edge_column];
-	if (A_vertex == SOLID_TILE || D_vertex == SOLID_TILE)
-	{
-		min_x_coord[p->player_id] = ((left_edge_column * TILE_IN_PIXELS) + TILE_IN_PIXELS) - BOX_LEFT_OFFSET;
-	}
-	else
-	{
-		min_x_coord[p->player_id] = (MIN_POS_X - BOX_LEFT_OFFSET);
-	}
-
-	B_vertex = BGA_COLLISION_MATRIX[top_edge_line + 1][right_edge_column];
-	C_vertex = BGA_COLLISION_MATRIX[botton_edge_line - 1][right_edge_column];
-	if (B_vertex == SOLID_TILE || C_vertex == SOLID_TILE)
-	{
-		max_x_coord[p->player_id] = ((right_edge_column * TILE_IN_PIXELS) - p->width) + BOX_RIGHT_OFFSET;
-	}
-	else
-	{
-		max_x_coord[p->player_id] = (MAX_POS_X - p->width) + BOX_RIGHT_OFFSET;
-	}
-
-	A_vertex = BGA_COLLISION_MATRIX[top_edge_line][left_edge_column + 1];
-	B_vertex = BGA_COLLISION_MATRIX[top_edge_line][right_edge_column - 1];
-	if (A_vertex == SOLID_TILE || B_vertex == SOLID_TILE)
-	{
-		min_y_coord[p->player_id] = ((top_edge_line * TILE_IN_PIXELS) + TILE_IN_PIXELS) - BOX_TOP_OFFSET;
-	}
-	else
-	{
-		min_y_coord[p->player_id] = (MIN_POS_Y - BOX_TOP_OFFSET);
-	}
-
-	C_vertex = BGA_COLLISION_MATRIX[botton_edge_line][right_edge_column - 1];
-	D_vertex = BGA_COLLISION_MATRIX[botton_edge_line][left_edge_column + 1];
-	if (C_vertex == SOLID_TILE || D_vertex == SOLID_TILE)
-	{
-		max_y_coord[p->player_id] = ((botton_edge_line * TILE_IN_PIXELS) - p->height) + BOX_BOTTON_OFFSET;
-	}
-	else
-	{
-		max_y_coord[p->player_id] = (MAX_POS_Y - p->height) + BOX_BOTTON_OFFSET;
-	} */
-
-	switch (p->order_x)
+	switch (p->last_order_x)
 	{
 	case LEFT:
 		A_vertex = BGA_COLLISION_MATRIX[top_edge_line + 1][left_edge_column];
@@ -1605,7 +1596,7 @@ static void calculateEntityMapCollision(Entity *p)
 		{
 			max_x_coord[p->player_id] = (MAX_POS_X - p->width) + BOX_RIGHT_OFFSET;
 		}
-		break;	
+		break;
 
 	default:
 		break;
@@ -1657,43 +1648,29 @@ static void calculateEntityMapCollision(Entity *p)
 	}
 }
 
-static void checkBottonCollision(Entity *p)
-{
-	if ((p->order_y == NEUTRAL) && (p->pos_y < max_y_coord[p->player_id]))
-	{
-		p->order_y = DOWN;
-	}
-	else if ((p->order_y == DOWN) && (p->pos_y >= max_y_coord[p->player_id]))
-	{
-		p->order_y = NEUTRAL;
-		p->pos_y = max_y_coord[p->player_id];
-	}
-}
-
 static void checkTopCollision(Entity *p)
 {
 	if ((p->order_y == UP) && (p->pos_y <= min_y_coord[p->player_id]))
 	{
 		p->order_y = NEUTRAL;
+		p->pos_y = min_y_coord[p->player_id];
 	}
 }
 
 static void checkLeftCollision(Entity *p)
 {
-	if ((p->last_order_x == LEFT) && (p->pos_x <= min_x_coord[p->player_id]))
+	if (p->last_order_x == LEFT && (p->pos_x <= min_x_coord[p->player_id]))
 	{
 		p->order_x = NEUTRAL;
-		p->last_order_x = NEUTRAL;
 		p->pos_x = min_x_coord[p->player_id];
 	}
 }
 
 static void checkRightCollision(Entity *p)
 {
-	if ((p->last_order_x == RIGHT) && (p->pos_x >= max_x_coord[p->player_id]))
+	if (p->last_order_x == RIGHT && (p->pos_x >= max_x_coord[p->player_id]))
 	{
 		p->order_x = NEUTRAL;
-		p->last_order_x = NEUTRAL;
 		p->pos_x = max_x_coord[p->player_id];
 	}
 }
