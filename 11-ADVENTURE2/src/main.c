@@ -1092,19 +1092,30 @@ static void finiteStateMachine(Entity *p)
 		}
 		else if (p->order_y == NEUTRAL)
 		{
-			if (p->joy->btn_left)
+			if (p->pos_y < max_y_coord[p->player_id])
 			{
-				p->order_x = LEFT;
-				p->last_order_x = LEFT;
+				if (p->joy->btn_left)
+				{
+					p->order_x = LEFT;
+					p->last_order_x = LEFT;
+				}
+				else if (p->joy->btn_right)
+				{
+					p->order_x = RIGHT;
+					p->last_order_x = RIGHT;
+				}
+				else if (!(p->joy->btn_left) && !(p->joy->btn_right))
+				{
+					p->order_x = NEUTRAL;
+				}
 			}
-			else if (p->joy->btn_right)
-			{
-				p->order_x = RIGHT;
-				p->last_order_x = RIGHT;
-			}
-			else if (!(p->joy->btn_left) && !(p->joy->btn_right))
+			else if (p->pos_y >= max_y_coord[p->player_id])
 			{
 				p->order_x = NEUTRAL;
+				p->state = STATE_STANDING;
+				p->anim = ANIM_STANDING;
+				p->is_full_anim = TRUE;
+				SPR_setAnimationLoop(p->sprite, TRUE);
 			}
 		}
 		else if (p->order_y == DOWN)
@@ -1147,21 +1158,12 @@ static void finiteStateMachine(Entity *p)
 			}
 		}
 		else if (p->order_y == NEUTRAL)
-		{
-			if (p->vel_x > 0)
-			{
-				p->anim = ANIM_RUN;
-				p->state = STATE_RUN;
-				p->is_full_anim = TRUE;
-				SPR_setAnimationLoop(p->sprite, TRUE);
-			}
-			else if (p->vel_x == 0)
-			{
-				p->state = STATE_STANDING;
-				p->anim = ANIM_STANDING;
-				p->is_full_anim = TRUE;
-				SPR_setAnimationLoop(p->sprite, TRUE);
-			}
+		{			
+			p->order_x = NEUTRAL;
+			p->state = STATE_STANDING;
+			p->anim = ANIM_STANDING;
+			p->is_full_anim = TRUE;
+			SPR_setAnimationLoop(p->sprite, TRUE);		
 		}
 
 		break;
@@ -1185,21 +1187,12 @@ static void finiteStateMachine(Entity *p)
 			}
 		}
 		else if (p->order_y == NEUTRAL)
-		{
-			if (p->vel_x > 0)
-			{
-				p->anim = ANIM_RUN;
-				p->state = STATE_RUN;
-				p->is_full_anim = TRUE;
-				SPR_setAnimationLoop(p->sprite, TRUE);
-			}
-			else if (p->vel_x == 0)
-			{
-				p->state = STATE_STANDING;
-				p->anim = ANIM_STANDING;
-				p->is_full_anim = TRUE;
-				SPR_setAnimationLoop(p->sprite, TRUE);
-			}
+		{			
+			p->order_x = NEUTRAL;
+			p->state = STATE_STANDING;
+			p->anim = ANIM_STANDING;
+			p->is_full_anim = TRUE;
+			SPR_setAnimationLoop(p->sprite, TRUE);		
 		}
 		break;
 
@@ -1653,6 +1646,7 @@ static void checkTopCollision(Entity *p)
 	if ((p->order_y == UP) && (p->pos_y <= min_y_coord[p->player_id]))
 	{
 		p->order_y = NEUTRAL;
+		p->vel_y = 0;
 		p->pos_y = min_y_coord[p->player_id];
 	}
 }
@@ -1662,6 +1656,7 @@ static void checkLeftCollision(Entity *p)
 	if (p->last_order_x == LEFT && (p->pos_x <= min_x_coord[p->player_id]))
 	{
 		p->order_x = NEUTRAL;
+		p->vel_x = 0;
 		p->pos_x = min_x_coord[p->player_id];
 	}
 }
@@ -1671,6 +1666,7 @@ static void checkRightCollision(Entity *p)
 	if (p->last_order_x == RIGHT && (p->pos_x >= max_x_coord[p->player_id]))
 	{
 		p->order_x = NEUTRAL;
+		p->vel_x = 0;
 		p->pos_x = max_x_coord[p->player_id];
 	}
 }
