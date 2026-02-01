@@ -32,9 +32,11 @@
 #define BOX_TOP_OFFSET 28
 #define BOX_BOTTON_OFFSET 0
 
-// Hero
 #define PLAYER_1_WIDTH 96
 #define PLAYER_1_HEIGTH 64
+
+#define PLAYER_2_WIDTH 96
+#define PLAYER_2_HEIGTH 64
 
 #define SOLID_TILE 1
 #define TILE_IN_PIXELS 8
@@ -73,10 +75,22 @@ const u8 BGA_COLLISION_MATRIX[28][64] =
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
 
+// arestas: a1, a2, a3, a4
+s16 left_edge_column;
+s16 right_edge_column;
+s16 top_edge_line;
+s16 botton_edge_line;
+
+// vértices: A,B,C,D    //  A---a2----B
+u8 top_left_vertex;		//  |         |
+u8 top_right_vertex;	// a1         a3
+u8 botton_right_vertex; //  |         |
+u8 botton_left_vertex;	//  D---a4----C
+
 s16 min_x_coord[2] = {(MIN_POS_X - BOX_LEFT_OFFSET), (MIN_POS_X - BOX_LEFT_OFFSET)};
-s16 max_x_coord[2] = {(MAX_POS_X - PLAYER_1_WIDTH) + BOX_RIGHT_OFFSET, MAX_POS_X};
+s16 max_x_coord[2] = {(MAX_POS_X - PLAYER_1_WIDTH) + BOX_RIGHT_OFFSET, (MAX_POS_X - PLAYER_2_WIDTH) + BOX_RIGHT_OFFSET};
 s16 min_y_coord[2] = {(MIN_POS_Y - BOX_TOP_OFFSET), (MIN_POS_Y - BOX_TOP_OFFSET)};
-s16 max_y_coord[2] = {(MAX_POS_Y - PLAYER_1_HEIGTH) + BOX_BOTTON_OFFSET, MAX_POS_Y};
+s16 max_y_coord[2] = {(MAX_POS_Y - PLAYER_1_HEIGTH) + BOX_BOTTON_OFFSET, (MAX_POS_Y - PLAYER_2_HEIGTH) + BOX_BOTTON_OFFSET};
 
 typedef struct
 {
@@ -133,7 +147,7 @@ u16 attack_timer[2] = {0, 0};
 u16 effect_timer[2] = {0, 0};
 
 #define HERO 0
-#define BOSS 1
+#define ENEMY 1
 #define FIREBALL 2
 #define POINTER 3
 
@@ -623,11 +637,11 @@ static void processMainGame()
 		finiteStateMachine(p1);
 		updateCamera(p1);
 		updateEntityPosition(p1);
-		// calculateEntityMapCollision(p1);
-		// checkBottonCollision(p1);
-		// checkLeftCollision(p1);
-		// checkRightCollision(p1);
-		// checkTopCollision(p1);
+		calculateEntityMapCollision(p1);
+		checkBottonCollision(p1);
+		checkLeftCollision(p1);
+		checkRightCollision(p1);
+		checkTopCollision(p1);
 		controlHorizontalFlip(p1);
 		controlXAcceleration(p1);
 		controlYAcceleration(p1);
@@ -1573,41 +1587,32 @@ static void calculateEntityMapCollision(Entity *p)
 	// https://cse442--17f-github-io.translate.goog/Gilbert-Johnson-Keerthi-Distance-Algorithm/?_x_tr_sl=en&_x_tr_tl=pt&_x_tr_hl=pt&_x_tr_pto=tc
 	// https://www.jeffreythompson.org/collision-detection/table_of_contents.php
 
-	// define a caixa de colisão do personagem
-	p->coll_box.x = (p->pos_x + BOX_LEFT_OFFSET);
-	p->coll_box.w = ((p->pos_x + p->width) - BOX_RIGHT_OFFSET);
-	p->coll_box.y = (p->pos_y + BOX_TOP_OFFSET);
-	p->coll_box.h = ((p->pos_y + p->height) - BOX_BOTTON_OFFSET);
-
-	// arestas:
-	// verifica com qual indice da matriz cada aresta está colidindo
-	s16 left_edge_column = (p->coll_box.x / TILE_IN_PIXELS);
-	s16 right_edge_column = (p->coll_box.w / TILE_IN_PIXELS);
-	s16 top_edge_line = (p->coll_box.y / TILE_IN_PIXELS);
-	s16 botton_edge_line = (p->coll_box.h / TILE_IN_PIXELS);
-
 	// isso corrige um glitch
-	if (left_edge_column < 0)
-		left_edge_column = 0;
-	if (top_edge_line < 0)
-		top_edge_line = 0;
-	if (right_edge_column > MATRIX_MAX_COL_INDEX)
-		right_edge_column = MATRIX_MAX_COL_INDEX;
-	if (botton_edge_line > MATRIX_MAX_LIN_INDEX)
-		botton_edge_line = MATRIX_MAX_LIN_INDEX;
-
-	// vértices: (A,B,C,D)
-	u8 A_vertex; // A-------B
-	u8 B_vertex; // |       |
-	u8 C_vertex; // |       |
-	u8 D_vertex; // D-------C
+	// if (left_edge_column < 0)
+	//	left_edge_column = 0;
+	// if (top_edge_line < 0)
+	//	top_edge_line = 0;
+	// if (right_edge_column > MATRIX_MAX_COL_INDEX)
+	//	right_edge_column = MATRIX_MAX_COL_INDEX;
+	// if (botton_edge_line > MATRIX_MAX_LIN_INDEX)
+	//	botton_edge_line = MATRIX_MAX_LIN_INDEX;
 
 	switch (p->last_order_x)
 	{
-	case LEFT:
-		A_vertex = BGA_COLLISION_MATRIX[top_edge_line - 1][left_edge_column];
-		D_vertex = BGA_COLLISION_MATRIX[botton_edge_line + 1][left_edge_column];
-		if (A_vertex == SOLID_TILE || D_vertex == SOLID_TILE)
+	case LEFT:		
+		p->coll_box.x = (p->pos_x + BOX_LEFT_OFFSET);
+		// p->coll_box.w = ((p->pos_x + p->width) - BOX_RIGHT_OFFSET);
+		p->coll_box.y = (p->pos_y + BOX_TOP_OFFSET);
+		p->coll_box.h = ((p->pos_y + p->height) - BOX_BOTTON_OFFSET);
+
+		left_edge_column = (p->coll_box.x / TILE_IN_PIXELS);
+		// right_edge_column = (p->coll_box.w / TILE_IN_PIXELS);
+		top_edge_line = (p->coll_box.y / TILE_IN_PIXELS);
+		botton_edge_line = (p->coll_box.h / TILE_IN_PIXELS);
+
+		top_left_vertex = BGA_COLLISION_MATRIX[top_edge_line + 1][left_edge_column];
+		botton_left_vertex = BGA_COLLISION_MATRIX[botton_edge_line - 1][left_edge_column];
+		if (top_left_vertex == SOLID_TILE || botton_left_vertex == SOLID_TILE)
 		{
 			min_x_coord[p->player_id] = ((left_edge_column * TILE_IN_PIXELS) + TILE_IN_PIXELS) - BOX_LEFT_OFFSET;
 		}
@@ -1617,10 +1622,20 @@ static void calculateEntityMapCollision(Entity *p)
 		}
 		break;
 
-	case RIGHT:
-		B_vertex = BGA_COLLISION_MATRIX[top_edge_line - 1][right_edge_column];
-		C_vertex = BGA_COLLISION_MATRIX[botton_edge_line + 1][right_edge_column];
-		if (B_vertex == SOLID_TILE || C_vertex == SOLID_TILE)
+	case RIGHT:		
+		// p->coll_box.x = (p->pos_x + BOX_LEFT_OFFSET);
+		p->coll_box.w = ((p->pos_x + p->width) - BOX_RIGHT_OFFSET);
+		p->coll_box.y = (p->pos_y + BOX_TOP_OFFSET);
+		p->coll_box.h = ((p->pos_y + p->height) - BOX_BOTTON_OFFSET);
+
+		// left_edge_column = (p->coll_box.x / TILE_IN_PIXELS);
+		right_edge_column = (p->coll_box.w / TILE_IN_PIXELS);
+		top_edge_line = (p->coll_box.y / TILE_IN_PIXELS);
+		botton_edge_line = (p->coll_box.h / TILE_IN_PIXELS);
+
+		top_right_vertex = BGA_COLLISION_MATRIX[top_edge_line + 1][right_edge_column];
+		botton_right_vertex = BGA_COLLISION_MATRIX[botton_edge_line - 1][right_edge_column];
+		if (top_right_vertex == SOLID_TILE || botton_right_vertex == SOLID_TILE)
 		{
 			max_x_coord[p->player_id] = ((right_edge_column * TILE_IN_PIXELS) - p->width) + BOX_RIGHT_OFFSET;
 		}
@@ -1636,10 +1651,20 @@ static void calculateEntityMapCollision(Entity *p)
 
 	switch (p->last_order_y)
 	{
-	case UP:
-		A_vertex = BGA_COLLISION_MATRIX[top_edge_line][left_edge_column + 1];
-		B_vertex = BGA_COLLISION_MATRIX[top_edge_line][right_edge_column - 1];
-		if (A_vertex == SOLID_TILE || B_vertex == SOLID_TILE)
+	case UP:		
+		p->coll_box.x = (p->pos_x + BOX_LEFT_OFFSET);
+		p->coll_box.w = ((p->pos_x + p->width) - BOX_RIGHT_OFFSET);
+		p->coll_box.y = (p->pos_y + BOX_TOP_OFFSET);
+		// p->coll_box.h = ((p->pos_y + p->height) - BOX_BOTTON_OFFSET);
+
+		left_edge_column = (p->coll_box.x / TILE_IN_PIXELS);
+		right_edge_column = (p->coll_box.w / TILE_IN_PIXELS);
+		top_edge_line = (p->coll_box.y / TILE_IN_PIXELS);
+		// botton_edge_line = (p->coll_box.h / TILE_IN_PIXELS);
+
+		top_left_vertex = BGA_COLLISION_MATRIX[top_edge_line][left_edge_column + 1];
+		top_right_vertex = BGA_COLLISION_MATRIX[top_edge_line][right_edge_column - 1];
+		if (top_left_vertex == SOLID_TILE || top_right_vertex == SOLID_TILE)
 		{
 			min_y_coord[p->player_id] = ((top_edge_line * TILE_IN_PIXELS) + TILE_IN_PIXELS) - BOX_TOP_OFFSET;
 		}
@@ -1648,11 +1673,20 @@ static void calculateEntityMapCollision(Entity *p)
 			min_y_coord[p->player_id] = (MIN_POS_Y - BOX_TOP_OFFSET);
 		}
 		break;
+	case DOWN:		
+		p->coll_box.x = (p->pos_x + BOX_LEFT_OFFSET);
+		p->coll_box.w = ((p->pos_x + p->width) - BOX_RIGHT_OFFSET);
+		//p->coll_box.y = (p->pos_y + BOX_TOP_OFFSET);
+		p->coll_box.h = ((p->pos_y + p->height) - BOX_BOTTON_OFFSET);
 
-	case DOWN:
-		C_vertex = BGA_COLLISION_MATRIX[botton_edge_line][right_edge_column - 1];
-		D_vertex = BGA_COLLISION_MATRIX[botton_edge_line][left_edge_column + 1];
-		if (C_vertex == SOLID_TILE || D_vertex == SOLID_TILE)
+		left_edge_column = (p->coll_box.x / TILE_IN_PIXELS);
+		right_edge_column = (p->coll_box.w / TILE_IN_PIXELS);
+		//top_edge_line = (p->coll_box.y / TILE_IN_PIXELS);
+		botton_edge_line = (p->coll_box.h / TILE_IN_PIXELS);
+
+		botton_right_vertex = BGA_COLLISION_MATRIX[botton_edge_line][right_edge_column - 1];
+		botton_left_vertex = BGA_COLLISION_MATRIX[botton_edge_line][left_edge_column + 1];
+		if (botton_right_vertex == SOLID_TILE || botton_left_vertex == SOLID_TILE)
 		{
 			max_y_coord[p->player_id] = ((botton_edge_line * TILE_IN_PIXELS) - p->height) + BOX_BOTTON_OFFSET;
 		}
@@ -1661,11 +1695,10 @@ static void calculateEntityMapCollision(Entity *p)
 			max_y_coord[p->player_id] = (MAX_POS_Y - p->height) + BOX_BOTTON_OFFSET;
 		}
 		break;
-
-		// case NEUTRAL:
-		//	C_vertex = BGA_COLLISION_MATRIX[botton_edge_line][right_edge_column];
-		//	D_vertex = BGA_COLLISION_MATRIX[botton_edge_line][left_edge_column];
-		//	if (C_vertex == SOLID_TILE || D_vertex == SOLID_TILE)
+		// case NEUTRAL   :
+		//	botton_right  _vertex = BGA_COLLISION_MATRIX[botton_edge_line][right_edge_column];
+		//	botton_left_vetex = BGA_COLLISION_MATRIX[botton_edge_line][left_edge_column];
+		//	if (botton_right_vertex == SOLID_TILE || botton_left_vertex == SOLID_TILE)
 		//	{
 		//		max_y_coord[p->player_id] = ((botton_edge_line * TILE_IN_PIXELS) - p->height) + BOX_BOTTON_OFFSET;
 		//	}
