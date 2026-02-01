@@ -21,20 +21,22 @@
 #define MAX_POS_Y MAP_HEIGTH
 
 //  How far to (left, right, up, down) before camera moves
-#define HOW_FAR_TO_LEFT 112	  //(MAP_WIDTH / 2 - PLAYER_WIDTH)
+#define HOW_FAR_TO_LEFT 64	  //(MAP_WIDTH / 2 - PLAYER_WIDTH)
 #define HOW_FAR_TO_RIGHT 160  //(MAP_WIDTH / 2)
-#define HOW_FAR_TO_TOP 64	  //(MAP_HEIGTH / 2 - PLAYER_HEIGTH)
+#define HOW_FAR_TO_TOP 48	  //(MAP_HEIGTH / 2 - PLAYER_HEIGTH)
 #define HOW_FAR_TO_BOTTON 112 //(MAP_HEIGTH / 2)
 
 // (*ptr_entity) collision box offset
-#define BOX_LEFT_OFFSET 8
-#define BOX_RIGHT_OFFSET 8
-#define BOX_TOP_OFFSET 8
+#define BOX_LEFT_OFFSET 40
+#define BOX_RIGHT_OFFSET 40
+#define BOX_TOP_OFFSET 28
 #define BOX_BOTTON_OFFSET 0
 
-// Hero
-#define PLAYER_1_WIDTH 48
-#define PLAYER_1_HEIGTH 48
+#define PLAYER_1_WIDTH 96
+#define PLAYER_1_HEIGTH 64
+
+#define PLAYER_2_WIDTH 96
+#define PLAYER_2_HEIGTH 64
 
 #define SOLID_TILE 1
 #define TILE_IN_PIXELS 8
@@ -56,27 +58,39 @@ const u8 BGA_COLLISION_MATRIX[28][64] =
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		{1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 		{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
 
+// arestas: a1, a2, a3, a4
+s16 left_edge_column;
+s16 right_edge_column;
+s16 top_edge_line;
+s16 botton_edge_line;
+
+// vértices: A,B,C,D    //  A---a2----B
+u8 top_left_vertex;		//  |         |
+u8 top_right_vertex;	// a1         a3
+u8 botton_right_vertex; //  |         |
+u8 botton_left_vertex;	//  D---a4----C
+
 s16 min_x_coord[2] = {(MIN_POS_X - BOX_LEFT_OFFSET), (MIN_POS_X - BOX_LEFT_OFFSET)};
-s16 max_x_coord[2] = {MAX_POS_X, MAX_POS_X};
+s16 max_x_coord[2] = {(MAX_POS_X - PLAYER_1_WIDTH) + BOX_RIGHT_OFFSET, (MAX_POS_X - PLAYER_2_WIDTH) + BOX_RIGHT_OFFSET};
 s16 min_y_coord[2] = {(MIN_POS_Y - BOX_TOP_OFFSET), (MIN_POS_Y - BOX_TOP_OFFSET)};
-s16 max_y_coord[2] = {(MAX_POS_Y - PLAYER_1_HEIGTH) + BOX_BOTTON_OFFSET, MAX_POS_Y};
+s16 max_y_coord[2] = {(MAX_POS_Y - PLAYER_1_HEIGTH) + BOX_BOTTON_OFFSET, (MAX_POS_Y - PLAYER_2_HEIGTH) + BOX_BOTTON_OFFSET};
 
 typedef struct
 {
@@ -92,10 +106,7 @@ typedef struct
 Camera camera;
 
 // players
-#define ANIM_CROUCH 0
-#define ANIM_LOOK_UP 1
-#define ANIM_STANDING 2
-
+#define ANIM_STANDING 0
 #define ANIM_WALK 1
 #define ANIM_RUN 2
 #define ANIM_JUMP 3
@@ -129,14 +140,15 @@ enum TimeOfAnimation
 	TIME_ATTACK_2 = 40,
 	TIME_ATTACK_3 = 48,
 	TIME_HURT = 32,
-	TIME_PARRY = 48
+	TIME_PARRY = 48,
+	TIME_JUMP = 16
 };
 
 u16 attack_timer[2] = {0, 0};
 u16 effect_timer[2] = {0, 0};
 
 #define HERO 0
-#define BOSS 1
+#define ENEMY 1
 #define FIREBALL 2
 #define POINTER 3
 
@@ -199,6 +211,7 @@ typedef struct
 	s16 max_vel_x;
 	s16 max_vel_y;
 	bool is_attacking;
+	bool is_jumping;
 	bool has_stamina;
 	bool is_visible;
 	bool is_active;
@@ -351,20 +364,21 @@ static void debug()
 	// PAL_setColor(15, RGB24_TO_VDPCOLOR(0xffff00));
 
 	// u32 tick = getTick() / 300;
-	sprintf(buffer_a, "poxX:%d", p1->pos_x);
+
+	sprintf(buffer_a, "ordY:%d", p1->order_y);
 	sprintf(buffer_b, "velY:%d", p1->vel_y);
-	sprintf(buffer_c, "state:%d", p1->state);
-	sprintf(buffer_d, "orderY:%d", p1->order_y);
+	// sprintf(buffer_c, "cb.y:%d", (p1->pos_y + BOX_TOP_OFFSET));
+	// sprintf(buffer_d, "cb.h:%d", ((p1->pos_y + p1->height) - BOX_BOTTON_OFFSET));
 
 	VDP_clearTextBG(BG_A, 28, 5, 10);
 	VDP_clearTextBG(BG_A, 28, 6, 10);
-	VDP_clearTextBG(BG_A, 28, 7, 10);
-	VDP_clearTextBG(BG_A, 28, 8, 10);
+	// VDP_clearTextBG(BG_A, 28, 7, 10);
+	// VDP_clearTextBG(BG_A, 28, 8, 10);
 
 	VDP_drawTextBG(BG_A, buffer_a, 28, 5);
 	VDP_drawTextBG(BG_A, buffer_b, 28, 6);
-	VDP_drawTextBG(BG_A, buffer_c, 28, 7);
-	VDP_drawTextBG(BG_A, buffer_d, 28, 8);
+	// VDP_drawTextBG(BG_A, buffer_c, 28, 7);
+	// VDP_drawTextBG(BG_A, buffer_d, 28, 8);
 }
 
 static void updateCursorPosition()
@@ -569,18 +583,19 @@ static void processMainGame()
 	p1->flip_v = FALSE;
 	p1->flip_h = FALSE;
 	p1->impulse_x = 4;
-	p1->impulse_y = 6;
+	p1->impulse_y = 4;
 	p1->max_vel_x = 2;
-	p1->max_vel_y = 4;
+	p1->max_vel_y = 2;
 	p1->order_x = NEUTRAL;
 	p1->order_y = NEUTRAL;
 	p1->last_order_x = RIGHT;
 	p1->last_order_y = NEUTRAL;
 	p1->pos_x = HOW_FAR_TO_LEFT;
-	p1->pos_y = MIN_POS_Y - PLAYER_1_HEIGTH;
+	p1->pos_y = HOW_FAR_TO_TOP;
 	p1->vel_x = 0;
 	p1->vel_y = 0;
 	p1->is_attacking = FALSE;
+	p1->is_jumping = FALSE;
 	p1->has_stamina = TRUE;
 	p1->sprite = SPR_addSprite(&knight, p1->pos_x, p1->pos_y, TILE_ATTR(PAL2, FALSE, p1->flip_v, p1->flip_h));
 	PAL_setPalette(PAL2, knight.palette->data, DMA);
@@ -595,15 +610,15 @@ static void processMainGame()
 	box.flip_v = FALSE;
 	box.flip_h = TRUE;
 	box.impulse_x = 4;
-	box.impulse_y = 6;
+	box.impulse_y = 4;
 	box.max_vel_x = 2;
-	box.max_vel_y = 4;
+	box.max_vel_y = 2;
 	box.order_x = NEUTRAL;
 	box.order_y = NEUTRAL;
 	box.last_order_x = RIGHT;
 	box.last_order_y = NEUTRAL;
 	box.pos_x = HOW_FAR_TO_LEFT;
-	box.pos_y = MIN_POS_Y - PLAYER_1_HEIGTH;
+	box.pos_y = HOW_FAR_TO_TOP;
 	box.vel_x = 0;
 	box.vel_y = 0;
 	box.is_attacking = FALSE;
@@ -672,7 +687,7 @@ static void processMainGame()
 		SYS_doVBlankProcessEx(ON_VBLANK_START);
 	}
 	MEM_free(bga);
-	// MEM_free(bgb);
+	MEM_free(bgb);
 	MEM_free(p1->sprite);
 	MEM_free(p_box->sprite);
 	MEM_free(p1);
@@ -882,17 +897,39 @@ static void finiteStateMachine(Entity *p)
 			p->is_full_anim = TRUE;
 			SPR_setAnimationLoop(p->sprite, TRUE);
 		}
+
+		// if (p->joy->btn_up)
+		//{
+		//	// p->has_stamina = FALSE;
+		//	// frame_counter = 1;
+		//	p->order_y = UP;
+		//	p->last_order_y = UP;
+		//	p->state = STATE_JUMP;
+		//	p->anim = ANIM_JUMP;
+		//	p->is_full_anim = TRUE;
+		//	SPR_setAnimationLoop(p->sprite, FALSE);
+		// }
+		// else if (p->joy->btn_down)
+		//{
+		//	p->order_y = DOWN;
+		//	p->last_order_y = DOWN;
+		//	p->state = STATE_FALL;
+		//	p->anim = ANIM_JUMP;
+		//	p->is_full_anim = FALSE;
+		//	p->frame = 4;
+		//	SPR_setAnimationLoop(p->sprite, FALSE);
+		//}
+
 		if (p->joy->btn_z /*  && p->has_stamina */)
 		{
 			// p->has_stamina = FALSE;
-			frame_counter = 1;
+			// frame_counter = 1;
+			p->order_y = UP;
+			p->is_jumping = TRUE;
+			p->anim_duration = TIME_JUMP;
+			p->last_order_y = UP;
 			p->state = STATE_JUMP;
 			p->anim = ANIM_JUMP;
-			p->order_y = UP;
-			if (p->vel_y == 0)
-			{
-				p->vel_y += p->impulse_y;
-			}
 			p->is_full_anim = TRUE;
 			SPR_setAnimationLoop(p->sprite, FALSE);
 		}
@@ -919,6 +956,7 @@ static void finiteStateMachine(Entity *p)
 		if (p->joy->btn_x /*  && p->has_stamina */)
 		{
 			p->order_x = NEUTRAL;
+			p->order_y = NEUTRAL;
 			p->is_attacking = TRUE;
 			// p->has_stamina = FALSE;
 			p->anim_duration = TIME_ATTACK_1;
@@ -931,6 +969,7 @@ static void finiteStateMachine(Entity *p)
 		if (p->joy->btn_y /*  && p->has_stamina */)
 		{
 			p->order_x = NEUTRAL;
+			p->order_y = NEUTRAL;
 			p->is_attacking = TRUE;
 			// p->has_stamina = FALSE;
 			p->anim_duration = TIME_PARRY;
@@ -944,6 +983,7 @@ static void finiteStateMachine(Entity *p)
 	case STATE_WALK:
 		// (p->impulse_x / 2);
 		p->max_vel_x = F16_div(p->impulse_x, FIX16(2));
+		p->max_vel_y = F16_div(p->impulse_y, FIX16(2));
 		if (p->order_y == DOWN)
 		{
 			p->state = STATE_FALL;
@@ -952,23 +992,24 @@ static void finiteStateMachine(Entity *p)
 			p->frame = 4;
 			SPR_setAnimationLoop(p->sprite, FALSE);
 		}
+
 		if (p->joy->btn_z /* && p->has_stamina */)
 		{
 			// p->has_stamina = FALSE;
-			frame_counter = 1;
+			// frame_counter = 1;
+			p->order_y = UP;
+			p->is_jumping = TRUE;
+			p->anim_duration = TIME_JUMP;
+			p->last_order_y = UP;
 			p->state = STATE_JUMP;
 			p->anim = ANIM_JUMP;
-			p->order_y = UP;
-			if (p->vel_y == 0)
-			{
-				p->vel_y += p->impulse_y;
-			}
 			p->is_full_anim = TRUE;
 			SPR_setAnimationLoop(p->sprite, FALSE);
 		}
 		if (p->joy->btn_c)
 		{
 			p->max_vel_x = p->impulse_x;
+			p->max_vel_y = p->impulse_x;
 			p->state = STATE_RUN;
 			p->anim = ANIM_RUN;
 			p->is_full_anim = TRUE;
@@ -978,6 +1019,7 @@ static void finiteStateMachine(Entity *p)
 		if (p->joy->btn_x /*  && p->has_stamina */)
 		{
 			p->order_x = NEUTRAL;
+			p->order_y = NEUTRAL;
 			p->is_attacking = TRUE;
 			// p->has_stamina = FALSE;
 			p->anim_duration = TIME_ATTACK_1;
@@ -990,6 +1032,7 @@ static void finiteStateMachine(Entity *p)
 		if (p->joy->btn_y /*  && p->has_stamina */)
 		{
 			p->order_x = NEUTRAL;
+			p->order_y = NEUTRAL;
 			p->is_attacking = TRUE;
 			// p->has_stamina = FALSE;
 			p->anim_duration = TIME_PARRY;
@@ -999,9 +1042,10 @@ static void finiteStateMachine(Entity *p)
 			SPR_setAnimationLoop(p->sprite, FALSE);
 		}
 
-		if (!(p->joy->btn_left) && !(p->joy->btn_right))
+		if (!(p->joy->btn_left) && !(p->joy->btn_right) /*  && !(p->joy->btn_up) && !(p->joy->btn_down) */)
 		{
 			p->order_x = NEUTRAL;
+			p->order_y = NEUTRAL;
 			p->state = STATE_STANDING;
 			p->anim = ANIM_STANDING;
 			p->is_full_anim = TRUE;
@@ -1018,17 +1062,21 @@ static void finiteStateMachine(Entity *p)
 			p->frame = 4;
 			SPR_setAnimationLoop(p->sprite, FALSE);
 		}
+
 		if (p->joy->btn_z /* && p->has_stamina */)
 		{
 			// p->has_stamina = FALSE;
-			frame_counter = 1;
+			// frame_counter = 1;
+			p->order_y = UP;
+			p->is_jumping = TRUE;
+			p->anim_duration = TIME_JUMP;
+			p->last_order_y = UP;
 			p->state = STATE_JUMP;
 			p->anim = ANIM_JUMP;
-			p->order_y = UP;
-			if (p->vel_y == 0)
-			{
-				p->vel_y += p->impulse_y;
-			}
+			// if (p->vel_y == 0)
+			//{
+			//	p->vel_y += p->impulse_y;
+			// }
 			p->is_full_anim = TRUE;
 			SPR_setAnimationLoop(p->sprite, FALSE);
 		}
@@ -1036,6 +1084,7 @@ static void finiteStateMachine(Entity *p)
 		if (p->joy->btn_x /*  && p->has_stamina */)
 		{
 			p->order_x = NEUTRAL;
+			p->order_y = NEUTRAL;
 			p->is_attacking = TRUE;
 			// p->has_stamina = FALSE;
 			p->anim_duration = TIME_ATTACK_1;
@@ -1048,6 +1097,7 @@ static void finiteStateMachine(Entity *p)
 		if (p->joy->btn_y /*  && p->has_stamina */)
 		{
 			p->order_x = NEUTRAL;
+			p->order_y = NEUTRAL;
 			p->is_attacking = TRUE;
 			// p->has_stamina = FALSE;
 			p->anim_duration = TIME_PARRY;
@@ -1065,18 +1115,20 @@ static void finiteStateMachine(Entity *p)
 			p->is_full_anim = TRUE;
 			SPR_setAnimationLoop(p->sprite, TRUE);
 		}
-
-		if (!(p->joy->btn_left) && !(p->joy->btn_right))
+		if (!(p->joy->btn_left) && !(p->joy->btn_right) /*  && !(p->joy->btn_up) && !(p->joy->btn_down) */)
 		{
 			p->anim = ANIM_WALK;
 			p->state = STATE_WALK;
 			p->is_full_anim = TRUE;
 			SPR_setAnimationLoop(p->sprite, TRUE);
 		}
+
 		break;
 
 	case STATE_JUMP:
-		if (p->order_y == UP)
+		frame_counter = 1;
+		p->vel_y = p->impulse_y;
+		if (p->is_jumping)
 		{
 			if (p->joy->btn_left)
 			{
@@ -1093,42 +1145,30 @@ static void finiteStateMachine(Entity *p)
 				p->order_x = NEUTRAL;
 			}
 		}
-		else if (p->order_y == NEUTRAL)
+		else if (!p->is_jumping)
 		{
-			if (p->pos_y < max_y_coord[p->player_id])
-			{
-				if (p->joy->btn_left)
-				{
-					p->order_x = LEFT;
-					p->last_order_x = LEFT;
-				}
-				else if (p->joy->btn_right)
-				{
-					p->order_x = RIGHT;
-					p->last_order_x = RIGHT;
-				}
-				else if (!(p->joy->btn_left) && !(p->joy->btn_right))
-				{
-					p->order_x = NEUTRAL;
-				}
-			}
-			else if (p->pos_y >= max_y_coord[p->player_id])
-			{
-				p->order_x = NEUTRAL;
-				p->state = STATE_STANDING;
-				p->anim = ANIM_STANDING;
-				p->is_full_anim = TRUE;
-				SPR_setAnimationLoop(p->sprite, TRUE);
-			}
-		}
-		else if (p->order_y == DOWN)
-		{
+			p->order_y = DOWN;
+			p->order_x = NEUTRAL;
 			p->state = STATE_FALL;
 			p->anim = ANIM_JUMP;
 			p->is_full_anim = FALSE;
 			p->frame = 4;
 			SPR_setAnimationLoop(p->sprite, FALSE);
 		}
+
+		break;
+
+		// case STATE_FALL:
+		//	if (!p->joy->btn_down)
+		//	{
+		//		p->order_y = NEUTRAL;
+		//		p->order_x = NEUTRAL;
+		//		p->state = STATE_STANDING;
+		//		p->anim = ANIM_STANDING;
+		//		p->is_full_anim = TRUE;
+		//		SPR_setAnimationLoop(p->sprite, TRUE);
+		//	}
+
 		break;
 
 	case STATE_FALL:
@@ -1161,12 +1201,12 @@ static void finiteStateMachine(Entity *p)
 			}
 		}
 		else if (p->order_y == NEUTRAL)
-		{			
+		{
 			p->order_x = NEUTRAL;
 			p->state = STATE_STANDING;
 			p->anim = ANIM_STANDING;
 			p->is_full_anim = TRUE;
-			SPR_setAnimationLoop(p->sprite, TRUE);		
+			SPR_setAnimationLoop(p->sprite, TRUE);
 		}
 
 		break;
@@ -1190,12 +1230,12 @@ static void finiteStateMachine(Entity *p)
 			}
 		}
 		else if (p->order_y == NEUTRAL)
-		{			
+		{
 			p->order_x = NEUTRAL;
 			p->state = STATE_STANDING;
 			p->anim = ANIM_STANDING;
 			p->is_full_anim = TRUE;
-			SPR_setAnimationLoop(p->sprite, TRUE);		
+			SPR_setAnimationLoop(p->sprite, TRUE);
 		}
 		break;
 
@@ -1205,6 +1245,7 @@ static void finiteStateMachine(Entity *p)
 			if (p->joy->btn_x)
 			{
 				p->order_x = NEUTRAL;
+				p->order_y = NEUTRAL;
 				p->is_attacking = TRUE;
 				// p->has_stamina = FALSE;
 				p->anim_duration = TIME_ATTACK_2;
@@ -1215,6 +1256,8 @@ static void finiteStateMachine(Entity *p)
 			}
 			else
 			{
+				p->order_x = NEUTRAL;
+				p->order_y = NEUTRAL;
 				p->state = STATE_STANDING;
 				p->anim = ANIM_STANDING;
 				p->is_full_anim = TRUE;
@@ -1229,6 +1272,7 @@ static void finiteStateMachine(Entity *p)
 			if (p->joy->btn_x)
 			{
 				p->order_x = NEUTRAL;
+				p->order_y = NEUTRAL;
 				p->is_attacking = TRUE;
 				// p->has_stamina = FALSE;
 				p->anim_duration = TIME_ATTACK_3;
@@ -1239,6 +1283,8 @@ static void finiteStateMachine(Entity *p)
 			}
 			else
 			{
+				p->order_x = NEUTRAL;
+				p->order_y = NEUTRAL;
 				p->state = STATE_STANDING;
 				p->anim = ANIM_STANDING;
 				p->is_full_anim = TRUE;
@@ -1249,6 +1295,8 @@ static void finiteStateMachine(Entity *p)
 	case STATE_ATTACK_3:
 		if (!p->is_attacking)
 		{
+			p->order_x = NEUTRAL;
+			p->order_y = NEUTRAL;
 			p->state = STATE_STANDING;
 			p->anim = ANIM_STANDING;
 			p->is_full_anim = TRUE;
@@ -1261,6 +1309,8 @@ static void finiteStateMachine(Entity *p)
 		{
 			if (!p->joy->btn_y)
 			{
+				p->order_x = NEUTRAL;
+				p->order_y = NEUTRAL;
 				p->state = STATE_STANDING;
 				p->anim = ANIM_STANDING;
 				p->is_full_anim = TRUE;
@@ -1272,6 +1322,8 @@ static void finiteStateMachine(Entity *p)
 	case STATE_HURT:
 		if (!p->is_attacking)
 		{
+			p->order_x = NEUTRAL;
+			p->order_y = NEUTRAL;
 			p->state = STATE_STANDING;
 			p->anim = ANIM_STANDING;
 			p->is_full_anim = TRUE;
@@ -1280,6 +1332,8 @@ static void finiteStateMachine(Entity *p)
 		break;
 
 	default:
+		p->order_x = NEUTRAL;
+		p->order_y = NEUTRAL;
 		p->state = STATE_STANDING;
 		p->anim = ANIM_STANDING;
 		p->is_full_anim = TRUE;
@@ -1321,49 +1375,49 @@ static void controlXAcceleration(Entity *p)
 
 static void controlYAcceleration(Entity *p)
 {
+	// if (p->order_y != NEUTRAL)
+	//{
+	//	if (p->vel_y < p->max_vel_y)
+	//	{
+	//		if (frame_counter % 2 == 0)
+	//		{
+	//			p->vel_y += gravity;
+	//		}
+	//	}
+	//	else if (p->vel_y > p->max_vel_y)
+	//	{
+	//		if (frame_counter % 2 == 0)
+	//		{
+	//			p->vel_y -= gravity;
+	//		}
+	//	}
+	// }
 	if (p->order_y == UP)
 	{
-		if (p->vel_y > 0)
+		if (frame_counter % 2 == 0)
 		{
-			if (frame_counter % 3 == 0)
-			{
-				p->vel_y -= gravity;
-			}
-		}
-		else if (p->vel_y == 0)
-		{
-			p->order_y = NEUTRAL;
+			p->vel_y -= gravity;
 		}
 	}
 	else if (p->order_y == DOWN)
 	{
 		if (p->vel_y < p->max_vel_y)
 		{
-			if (frame_counter % 3 == 0)
+			if (frame_counter % 2 == 0)
 			{
 				p->vel_y += gravity;
 			}
 		}
 	}
-	else
+	else if (p->order_y == NEUTRAL)
 	{
-		if (p->order_y == NEUTRAL)
+		if (p->vel_y > 0)
 		{
-			p->vel_y = 0;
+			if (frame_counter % 2 == 0)
+			{
+				p->vel_y -= gravity;
+			}
 		}
-	}
-}
-
-static void checkBottonCollision(Entity *p)
-{
-	if ((p->order_y == NEUTRAL) && (p->pos_y < max_y_coord[p->player_id]))
-	{
-		p->order_y = DOWN;
-	}
-	else if ((p->order_y == DOWN) && (p->pos_y >= max_y_coord[p->player_id]))
-	{
-		p->order_y = NEUTRAL;
-		p->pos_y = max_y_coord[p->player_id];
 	}
 }
 
@@ -1389,14 +1443,14 @@ static void updateEntityPosition(Entity *p)
 
 	if (p->vel_y > 0)
 	{
-		if (p->order_y == UP)
+		if (p->last_order_y == UP || p->order_y == UP)
 		{
 			if (p->pos_y > min_y_coord[p->player_id])
 			{
 				p->pos_y -= p->vel_y;
 			}
 		}
-		else if (p->order_y == DOWN)
+		else if (p->last_order_y == DOWN || p->order_y == DOWN)
 		{
 			if (p->pos_y < max_y_coord[p->player_id])
 			{
@@ -1436,7 +1490,7 @@ static void controlVerticalFlip(Entity *p)
 
 static void controlAttackTimer(Entity *p)
 {
-	if (p->is_attacking)
+	if (p->is_attacking || p->is_jumping)
 	{
 		if (attack_timer[p->player_id] < p->anim_duration)
 			attack_timer[p->player_id]++;
@@ -1444,6 +1498,7 @@ static void controlAttackTimer(Entity *p)
 		{
 			attack_timer[p->player_id] = 0;
 			p->is_attacking = FALSE;
+			p->is_jumping = FALSE;
 		}
 	}
 }
@@ -1515,63 +1570,32 @@ static void calculateEntityMapCollision(Entity *p)
 	// https://cse442--17f-github-io.translate.goog/Gilbert-Johnson-Keerthi-Distance-Algorithm/?_x_tr_sl=en&_x_tr_tl=pt&_x_tr_hl=pt&_x_tr_pto=tc
 	// https://www.jeffreythompson.org/collision-detection/table_of_contents.php
 
-	// define a caixa de colisão do personagem
-	p->coll_box.x = (p->pos_x + BOX_LEFT_OFFSET);
-	p->coll_box.w = ((p->pos_x + p->width) - BOX_RIGHT_OFFSET);
-	p->coll_box.y = (p->pos_y + BOX_TOP_OFFSET);
-	p->coll_box.h = ((p->pos_y + p->height) - BOX_BOTTON_OFFSET);
-
-	// arestas:
-	// verifica com qual indice da matriz cada aresta está colidindo
-	s16 left_edge_column = (p->coll_box.x / TILE_IN_PIXELS);
-	s16 right_edge_column = (p->coll_box.w / TILE_IN_PIXELS);
-	s16 top_edge_line = (p->coll_box.y / TILE_IN_PIXELS);
-	s16 botton_edge_line = (p->coll_box.h / TILE_IN_PIXELS);
-
 	// isso corrige um glitch
-	if (left_edge_column < 0)
-		left_edge_column = 0;
-	if (top_edge_line < 0)
-		top_edge_line = 0;
-	if (right_edge_column > MATRIX_MAX_COL_INDEX)
-		right_edge_column = MATRIX_MAX_COL_INDEX;
-	if (botton_edge_line > MATRIX_MAX_LIN_INDEX)
-		botton_edge_line = MATRIX_MAX_LIN_INDEX;
-
-	// vértices: (A,B,C,D)
-	u8 A_vertex;
-	u8 B_vertex;
-	u8 C_vertex;
-	u8 D_vertex;
-	// A-------B
-	// |       |
-	// |       |
-	// D-------C
-
-	//   -coluna-
-	//   {8, 8,}
-	//   {8, 8,}
-	//   {8, 8,}
-	//   {8, 8,}
-	//   {8, 8,}
-	//   {8, 8,}		  -personagem-
-	//   {8, 8,}          64x96 pixels
-	//   {8, 8,}
-	//   {8, 8,}     8 8 8 8 8 8 8 8 8 8 8 8
-	//   {8, 8,}<-A->8 8 8 8 8 8 8 8 8 8 8 8<-B->
-	//   {8, 8,}     8 8 8 8 8 8 8 8 8 8 8 8
-	//   {8, 8,}     8 8 8 8 8 8 8 8 8 8 8 8
-	//   {8, 8,}     8 8 8 8 8 8 8 8 8 8 8 8
-	//   {8, 8,}     8 8 8 8 8 8 8 8 8 8 8 8
-	//   {8, 8,}<-D->8 8 8 8 8 8 8 8 8 8 8 8<-C->
-	//   {8, 8,}     8 8 8 8 8 8 8 8 8 8 8 8
+	// if (left_edge_column < 0)
+	//	left_edge_column = 0;
+	// if (top_edge_line < 0)
+	//	top_edge_line = 0;
+	// if (right_edge_column > MATRIX_MAX_COL_INDEX)
+	//	right_edge_column = MATRIX_MAX_COL_INDEX;
+	// if (botton_edge_line > MATRIX_MAX_LIN_INDEX)
+	//	botton_edge_line = MATRIX_MAX_LIN_INDEX;
 
 	switch (p->last_order_x)
 	{
 	case LEFT:
-		A_vertex = BGA_COLLISION_MATRIX[top_edge_line + 1][left_edge_column];
-		D_vertex = BGA_COLLISION_MATRIX[botton_edge_line - 1][left_edge_column];
-		if (A_vertex == SOLID_TILE || D_vertex == SOLID_TILE)
+		p->coll_box.x = (p->pos_x + BOX_LEFT_OFFSET);
+		// p->coll_box.w = ((p->pos_x + p->width) - BOX_RIGHT_OFFSET);
+		p->coll_box.y = (p->pos_y + BOX_TOP_OFFSET);
+		p->coll_box.h = ((p->pos_y + p->height) - BOX_BOTTON_OFFSET);
+
+		left_edge_column = (p->coll_box.x / TILE_IN_PIXELS);
+		// right_edge_column = (p->coll_box.w / TILE_IN_PIXELS);
+		top_edge_line = (p->coll_box.y / TILE_IN_PIXELS);
+		botton_edge_line = (p->coll_box.h / TILE_IN_PIXELS);
+
+		top_left_vertex = BGA_COLLISION_MATRIX[top_edge_line + 1][left_edge_column];
+		botton_left_vertex = BGA_COLLISION_MATRIX[botton_edge_line - 1][left_edge_column];
+		if (top_left_vertex == SOLID_TILE || botton_left_vertex == SOLID_TILE)
 		{
 			min_x_coord[p->player_id] = ((left_edge_column * TILE_IN_PIXELS) + TILE_IN_PIXELS) - BOX_LEFT_OFFSET;
 		}
@@ -1582,9 +1606,19 @@ static void calculateEntityMapCollision(Entity *p)
 		break;
 
 	case RIGHT:
-		B_vertex = BGA_COLLISION_MATRIX[top_edge_line + 1][right_edge_column];
-		C_vertex = BGA_COLLISION_MATRIX[botton_edge_line - 1][right_edge_column];
-		if (B_vertex == SOLID_TILE || C_vertex == SOLID_TILE)
+		// p->coll_box.x = (p->pos_x + BOX_LEFT_OFFSET);
+		p->coll_box.w = ((p->pos_x + p->width) - BOX_RIGHT_OFFSET);
+		p->coll_box.y = (p->pos_y + BOX_TOP_OFFSET);
+		p->coll_box.h = ((p->pos_y + p->height) - BOX_BOTTON_OFFSET);
+
+		// left_edge_column = (p->coll_box.x / TILE_IN_PIXELS);
+		right_edge_column = (p->coll_box.w / TILE_IN_PIXELS);
+		top_edge_line = (p->coll_box.y / TILE_IN_PIXELS);
+		botton_edge_line = (p->coll_box.h / TILE_IN_PIXELS);
+
+		top_right_vertex = BGA_COLLISION_MATRIX[top_edge_line + 1][right_edge_column];
+		botton_right_vertex = BGA_COLLISION_MATRIX[botton_edge_line - 1][right_edge_column];
+		if (top_right_vertex == SOLID_TILE || botton_right_vertex == SOLID_TILE)
 		{
 			max_x_coord[p->player_id] = ((right_edge_column * TILE_IN_PIXELS) - p->width) + BOX_RIGHT_OFFSET;
 		}
@@ -1598,12 +1632,22 @@ static void calculateEntityMapCollision(Entity *p)
 		break;
 	}
 
-	switch (p->order_y)
+	switch (p->last_order_y)
 	{
 	case UP:
-		A_vertex = BGA_COLLISION_MATRIX[top_edge_line][left_edge_column];
-		B_vertex = BGA_COLLISION_MATRIX[top_edge_line][right_edge_column];
-		if (A_vertex == SOLID_TILE || B_vertex == SOLID_TILE)
+		p->coll_box.x = (p->pos_x + BOX_LEFT_OFFSET);
+		p->coll_box.w = ((p->pos_x + p->width) - BOX_RIGHT_OFFSET);
+		p->coll_box.y = (p->pos_y + BOX_TOP_OFFSET);
+		// p->coll_box.h = ((p->pos_y + p->height) - BOX_BOTTON_OFFSET);
+
+		left_edge_column = (p->coll_box.x / TILE_IN_PIXELS);
+		right_edge_column = (p->coll_box.w / TILE_IN_PIXELS);
+		top_edge_line = (p->coll_box.y / TILE_IN_PIXELS);
+		// botton_edge_line = (p->coll_box.h / TILE_IN_PIXELS);
+
+		top_left_vertex = BGA_COLLISION_MATRIX[top_edge_line][left_edge_column + 1];
+		top_right_vertex = BGA_COLLISION_MATRIX[top_edge_line][right_edge_column - 1];
+		if (top_left_vertex == SOLID_TILE || top_right_vertex == SOLID_TILE)
 		{
 			min_y_coord[p->player_id] = ((top_edge_line * TILE_IN_PIXELS) + TILE_IN_PIXELS) - BOX_TOP_OFFSET;
 		}
@@ -1612,24 +1656,20 @@ static void calculateEntityMapCollision(Entity *p)
 			min_y_coord[p->player_id] = (MIN_POS_Y - BOX_TOP_OFFSET);
 		}
 		break;
-
 	case DOWN:
-		C_vertex = BGA_COLLISION_MATRIX[botton_edge_line][right_edge_column];
-		D_vertex = BGA_COLLISION_MATRIX[botton_edge_line][left_edge_column];
-		if (C_vertex == SOLID_TILE || D_vertex == SOLID_TILE)
-		{
-			max_y_coord[p->player_id] = ((botton_edge_line * TILE_IN_PIXELS) - p->height) + BOX_BOTTON_OFFSET;
-		}
-		else
-		{
-			max_y_coord[p->player_id] = (MAX_POS_Y - p->height) + BOX_BOTTON_OFFSET;
-		}
-		break;
+		p->coll_box.x = (p->pos_x + BOX_LEFT_OFFSET);
+		p->coll_box.w = ((p->pos_x + p->width) - BOX_RIGHT_OFFSET);
+		// p->coll_box.y = (p->pos_y + BOX_TOP_OFFSET);
+		p->coll_box.h = ((p->pos_y + p->height) - BOX_BOTTON_OFFSET);
 
-	case NEUTRAL:
-		C_vertex = BGA_COLLISION_MATRIX[botton_edge_line][right_edge_column];
-		D_vertex = BGA_COLLISION_MATRIX[botton_edge_line][left_edge_column];
-		if (C_vertex == SOLID_TILE || D_vertex == SOLID_TILE)
+		left_edge_column = (p->coll_box.x / TILE_IN_PIXELS);
+		right_edge_column = (p->coll_box.w / TILE_IN_PIXELS);
+		// top_edge_line = (p->coll_box.y / TILE_IN_PIXELS);
+		botton_edge_line = (p->coll_box.h / TILE_IN_PIXELS);
+
+		botton_right_vertex = BGA_COLLISION_MATRIX[botton_edge_line][right_edge_column - 1];
+		botton_left_vertex = BGA_COLLISION_MATRIX[botton_edge_line][left_edge_column + 1];
+		if (botton_right_vertex == SOLID_TILE || botton_left_vertex == SOLID_TILE)
 		{
 			max_y_coord[p->player_id] = ((botton_edge_line * TILE_IN_PIXELS) - p->height) + BOX_BOTTON_OFFSET;
 		}
@@ -1646,11 +1686,26 @@ static void calculateEntityMapCollision(Entity *p)
 
 static void checkTopCollision(Entity *p)
 {
-	if ((p->order_y == UP) && (p->pos_y <= min_y_coord[p->player_id]))
+	if ((p->last_order_y == UP) && (p->pos_y <= min_y_coord[p->player_id]))
 	{
 		p->order_y = NEUTRAL;
 		p->vel_y = 0;
 		p->pos_y = min_y_coord[p->player_id];
+	}
+}
+
+static void checkBottonCollision(Entity *p)
+{
+	if ((p->order_y == NEUTRAL) && (p->pos_y < max_y_coord[p->player_id]))
+	{
+		p->order_y = DOWN;
+		p->last_order_y = DOWN;
+	}
+	else if ((p->last_order_y == DOWN) && (p->pos_y >= max_y_coord[p->player_id]))
+	{
+		p->order_y = NEUTRAL;
+		p->vel_y = 0;
+		p->pos_y = max_y_coord[p->player_id];
 	}
 }
 

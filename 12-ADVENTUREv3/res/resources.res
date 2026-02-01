@@ -10,5 +10,7 @@ TILESET title_bgb_tileset "bgb/title.png" BEST ALL
 MAP title_bgb_map "bgb/title.png" title_bgb_tileset BEST 0
 PALETTE title_bgb_palette "bgb/title.png"
 
-SPRITE sonic "sprites/sonic3_all_anim_6_6.png" 6 6 BEST 10
+SPRITE wolf "sprites/werewolf_12_10.png" 12 10 FAST 8
+SPRITE knight "sprites/knight_12_8.png" 12 8 FAST 8
+SPRITE col_box "sprites/col_box_12_8.png" 12 8 NONE 0
 SPRITE start "sprites/press_start_11_2.png" 11 2 NONE 0

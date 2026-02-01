@@ -1405,38 +1405,7 @@ static void controlYAcceleration(Entity *p)
 				p->vel_y -= gravity;
 			}
 		}
-	}
-	// if (p->order_y == UP)
-	//{
-	//	if (p->vel_y > 0)
-	//	{
-	//		if (frame_counter % 3 == 0)
-	//		{
-	//			p->vel_y -= gravity;
-	//		}
-	//	}
-	//	else if (p->vel_y == 0)
-	//	{
-	//		p->order_y = NEUTRAL;
-	//	}
-	// }
-	// else if (p->order_y == DOWN)
-	//{
-	//	if (p->vel_y < p->max_vel_y)
-	//	{
-	//		if (frame_counter % 3 == 0)
-	//		{
-	//			p->vel_y += gravity;
-	//		}
-	//	}
-	// }
-	// else
-	//{
-	//	if (p->order_y == NEUTRAL)
-	//	{
-	//		p->vel_y = 0;
-	//	}
-	// }
+	}	
 }
 
 static void updateEntityPosition(Entity *p)
