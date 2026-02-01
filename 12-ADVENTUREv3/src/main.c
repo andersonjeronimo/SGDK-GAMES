@@ -140,8 +140,7 @@ enum TimeOfAnimation
 	TIME_ATTACK_2 = 40,
 	TIME_ATTACK_3 = 48,
 	TIME_HURT = 32,
-	TIME_PARRY = 48,
-	TIME_JUMP = 16
+	TIME_PARRY = 48
 };
 
 u16 attack_timer[2] = {0, 0};
@@ -211,7 +210,6 @@ typedef struct
 	s16 max_vel_x;
 	s16 max_vel_y;
 	bool is_attacking;
-	bool is_jumping;
 	bool has_stamina;
 	bool is_visible;
 	bool is_active;
@@ -282,6 +280,7 @@ char buffer_a[100];
 char buffer_b[100];
 char buffer_c[100];
 char buffer_d[100];
+char buffer_e[100];
 // para imprimir coordenadas durante o debug
 static void debug();
 
@@ -367,18 +366,21 @@ static void debug()
 
 	sprintf(buffer_a, "ordY:%d", p1->order_y);
 	sprintf(buffer_b, "velY:%d", p1->vel_y);
-	// sprintf(buffer_c, "cb.y:%d", (p1->pos_y + BOX_TOP_OFFSET));
-	// sprintf(buffer_d, "cb.h:%d", ((p1->pos_y + p1->height) - BOX_BOTTON_OFFSET));
+	sprintf(buffer_c, "state:%d", p1->state);
+	sprintf(buffer_d, "posY:%d", p1->pos_y);
+	sprintf(buffer_e, "maxY:%d", max_y_coord[p1->player_id]);
 
 	VDP_clearTextBG(BG_A, 28, 5, 10);
 	VDP_clearTextBG(BG_A, 28, 6, 10);
-	// VDP_clearTextBG(BG_A, 28, 7, 10);
-	// VDP_clearTextBG(BG_A, 28, 8, 10);
+	VDP_clearTextBG(BG_A, 28, 7, 10);
+	VDP_clearTextBG(BG_A, 28, 8, 10);
+	VDP_clearTextBG(BG_A, 28, 9, 10);
 
 	VDP_drawTextBG(BG_A, buffer_a, 28, 5);
 	VDP_drawTextBG(BG_A, buffer_b, 28, 6);
-	// VDP_drawTextBG(BG_A, buffer_c, 28, 7);
-	// VDP_drawTextBG(BG_A, buffer_d, 28, 8);
+	VDP_drawTextBG(BG_A, buffer_c, 28, 7);
+	VDP_drawTextBG(BG_A, buffer_d, 28, 8);
+	VDP_drawTextBG(BG_A, buffer_e, 28, 9);
 }
 
 static void updateCursorPosition()
@@ -583,9 +585,9 @@ static void processMainGame()
 	p1->flip_v = FALSE;
 	p1->flip_h = FALSE;
 	p1->impulse_x = 4;
-	p1->impulse_y = 4;
+	p1->impulse_y = 6;
 	p1->max_vel_x = 2;
-	p1->max_vel_y = 2;
+	p1->max_vel_y = 3;
 	p1->order_x = NEUTRAL;
 	p1->order_y = NEUTRAL;
 	p1->last_order_x = RIGHT;
@@ -595,7 +597,6 @@ static void processMainGame()
 	p1->vel_x = 0;
 	p1->vel_y = 0;
 	p1->is_attacking = FALSE;
-	p1->is_jumping = FALSE;
 	p1->has_stamina = TRUE;
 	p1->sprite = SPR_addSprite(&knight, p1->pos_x, p1->pos_y, TILE_ATTR(PAL2, FALSE, p1->flip_v, p1->flip_h));
 	PAL_setPalette(PAL2, knight.palette->data, DMA);
@@ -922,11 +923,11 @@ static void finiteStateMachine(Entity *p)
 
 		if (p->joy->btn_z /*  && p->has_stamina */)
 		{
+			frame_counter = 1;
+			p->vel_y = p->impulse_y;
 			// p->has_stamina = FALSE;
 			// frame_counter = 1;
 			p->order_y = UP;
-			p->is_jumping = TRUE;
-			p->anim_duration = TIME_JUMP;
 			p->last_order_y = UP;
 			p->state = STATE_JUMP;
 			p->anim = ANIM_JUMP;
@@ -995,11 +996,11 @@ static void finiteStateMachine(Entity *p)
 
 		if (p->joy->btn_z /* && p->has_stamina */)
 		{
+			frame_counter = 1;
+			p->vel_y = p->impulse_y;
 			// p->has_stamina = FALSE;
 			// frame_counter = 1;
 			p->order_y = UP;
-			p->is_jumping = TRUE;
-			p->anim_duration = TIME_JUMP;
 			p->last_order_y = UP;
 			p->state = STATE_JUMP;
 			p->anim = ANIM_JUMP;
@@ -1065,18 +1066,13 @@ static void finiteStateMachine(Entity *p)
 
 		if (p->joy->btn_z /* && p->has_stamina */)
 		{
+			frame_counter = 1;
+			p->vel_y = p->impulse_y;
 			// p->has_stamina = FALSE;
-			// frame_counter = 1;
 			p->order_y = UP;
-			p->is_jumping = TRUE;
-			p->anim_duration = TIME_JUMP;
 			p->last_order_y = UP;
 			p->state = STATE_JUMP;
 			p->anim = ANIM_JUMP;
-			// if (p->vel_y == 0)
-			//{
-			//	p->vel_y += p->impulse_y;
-			// }
 			p->is_full_anim = TRUE;
 			SPR_setAnimationLoop(p->sprite, FALSE);
 		}
@@ -1126,9 +1122,7 @@ static void finiteStateMachine(Entity *p)
 		break;
 
 	case STATE_JUMP:
-		frame_counter = 1;
-		p->vel_y = p->impulse_y;
-		if (p->is_jumping)
+		if (p->order_y == UP)
 		{
 			if (p->joy->btn_left)
 			{
@@ -1145,10 +1139,8 @@ static void finiteStateMachine(Entity *p)
 				p->order_x = NEUTRAL;
 			}
 		}
-		else if (!p->is_jumping)
+		else if (p->order_y == DOWN)
 		{
-			p->order_y = DOWN;
-			p->order_x = NEUTRAL;
 			p->state = STATE_FALL;
 			p->anim = ANIM_JUMP;
 			p->is_full_anim = FALSE;
@@ -1158,46 +1150,22 @@ static void finiteStateMachine(Entity *p)
 
 		break;
 
-		// case STATE_FALL:
-		//	if (!p->joy->btn_down)
-		//	{
-		//		p->order_y = NEUTRAL;
-		//		p->order_x = NEUTRAL;
-		//		p->state = STATE_STANDING;
-		//		p->anim = ANIM_STANDING;
-		//		p->is_full_anim = TRUE;
-		//		SPR_setAnimationLoop(p->sprite, TRUE);
-		//	}
-
-		break;
-
 	case STATE_FALL:
 		if (p->order_y == DOWN)
 		{
-			if (p->vel_y < p->max_vel_y)
+			if (p->joy->btn_left)
 			{
-				if (p->joy->btn_left)
-				{
-					p->order_x = LEFT;
-					p->last_order_x = LEFT;
-				}
-				else if (p->joy->btn_right)
-				{
-					p->order_x = RIGHT;
-					p->last_order_x = RIGHT;
-				}
-				else if (!(p->joy->btn_left) && !(p->joy->btn_right))
-				{
-					p->order_x = NEUTRAL;
-				}
+				p->order_x = LEFT;
+				p->last_order_x = LEFT;
 			}
-			else if (p->vel_y == p->max_vel_y)
+			else if (p->joy->btn_right)
 			{
-				p->state = STATE_FALL_LOOP;
-				p->anim = ANIM_JUMP;
-				p->is_full_anim = FALSE;
-				p->frame = 4;
-				SPR_setAnimationLoop(p->sprite, FALSE);
+				p->order_x = RIGHT;
+				p->last_order_x = RIGHT;
+			}
+			else if (!(p->joy->btn_left) && !(p->joy->btn_right))
+			{
+				p->order_x = NEUTRAL;
 			}
 		}
 		else if (p->order_y == NEUTRAL)
@@ -1212,7 +1180,7 @@ static void finiteStateMachine(Entity *p)
 		break;
 
 	case STATE_FALL_LOOP:
-		if (p->order_y == DOWN)
+		if (p->vel_y == p->max_vel_y)
 		{
 			if (p->joy->btn_left)
 			{
@@ -1229,7 +1197,7 @@ static void finiteStateMachine(Entity *p)
 				p->order_x = NEUTRAL;
 			}
 		}
-		else if (p->order_y == NEUTRAL)
+		else if (p->vel_y == 0)
 		{
 			p->order_x = NEUTRAL;
 			p->state = STATE_STANDING;
@@ -1331,6 +1299,18 @@ static void finiteStateMachine(Entity *p)
 		}
 		break;
 
+	case STATE_DEATH:
+		if (p->joy->btn_start /*  && p->has_stamina */)
+		{
+			p->order_x = NEUTRAL;
+			p->order_y = NEUTRAL;
+			p->state = STATE_STANDING;
+			p->anim = ANIM_STANDING;
+			p->is_full_anim = TRUE;
+			SPR_setAnimationLoop(p->sprite, TRUE);
+		}
+		break;
+
 	default:
 		p->order_x = NEUTRAL;
 		p->order_y = NEUTRAL;
@@ -1375,29 +1355,17 @@ static void controlXAcceleration(Entity *p)
 
 static void controlYAcceleration(Entity *p)
 {
-	// if (p->order_y != NEUTRAL)
-	//{
-	//	if (p->vel_y < p->max_vel_y)
-	//	{
-	//		if (frame_counter % 2 == 0)
-	//		{
-	//			p->vel_y += gravity;
-	//		}
-	//	}
-	//	else if (p->vel_y > p->max_vel_y)
-	//	{
-	//		if (frame_counter % 2 == 0)
-	//		{
-	//			p->vel_y -= gravity;
-	//		}
-	//	}
-	// }
-	if (p->order_y == UP)
+	if (p->order_y == UP && p->vel_y > 0)
 	{
-		if (frame_counter % 2 == 0)
+		if (frame_counter % 3 == 0)
 		{
 			p->vel_y -= gravity;
 		}
+	}
+	else if (p->order_y == UP && p->vel_y == 0)
+	{
+		p->order_y = NEUTRAL;
+		p->last_order_y = NEUTRAL;
 	}
 	else if (p->order_y == DOWN)
 	{
@@ -1406,16 +1374,6 @@ static void controlYAcceleration(Entity *p)
 			if (frame_counter % 2 == 0)
 			{
 				p->vel_y += gravity;
-			}
-		}
-	}
-	else if (p->order_y == NEUTRAL)
-	{
-		if (p->vel_y > 0)
-		{
-			if (frame_counter % 2 == 0)
-			{
-				p->vel_y -= gravity;
 			}
 		}
 	}
@@ -1490,7 +1448,7 @@ static void controlVerticalFlip(Entity *p)
 
 static void controlAttackTimer(Entity *p)
 {
-	if (p->is_attacking || p->is_jumping)
+	if (p->is_attacking)
 	{
 		if (attack_timer[p->player_id] < p->anim_duration)
 			attack_timer[p->player_id]++;
@@ -1498,7 +1456,6 @@ static void controlAttackTimer(Entity *p)
 		{
 			attack_timer[p->player_id] = 0;
 			p->is_attacking = FALSE;
-			p->is_jumping = FALSE;
 		}
 	}
 }
